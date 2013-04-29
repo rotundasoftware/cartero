@@ -165,7 +165,6 @@ module.exports = function(grunt) {
 		grunt.log.writeln( JSON.stringify( options, null, "\t") );
 		grunt.file.mkdir( options.assetLibraryDest );
 		grunt.file.mkdir( options.appPagesDest );
-		grunt.file.mkdir( kAssetBundlerDir );
 
 		var configOptions = {
 			assetLibrarySrc : options.assetLibrarySrc,
