@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h3>Testing some javascript library dependency.  The following shoudl show up as rendered JQuery tabs</h3>
+<h3>Testing some javascript library dependency.  The following should show up as rendered JQuery tabs</h3>
 
 <div id="tabs">
 <ul>
@@ -29,6 +29,15 @@
 	<span> this text should be bold </span>
 </div>
 <span>this text should not be bold</span>
+
+<h3>Testing less compilation.  The text below should be blue-ish.</h3>
+<div id="lessDemo"><span>this text should be blue-ish</span></div>
+
+<h3>Testing stylus compilation.  The text below should be orange.</h3>
+<div id="stylusDemo"><span>this text should be orange</span></div>
+
+<h3>Testing coffee compilation.  Clicking on the button below should popup a ""Button clicked!" message.</h3>
+<div id="coffeeDemo"><input type="button" id="coffeeDemoButton" value="Click me!"></input></div>
 
 {% endblock %}
 

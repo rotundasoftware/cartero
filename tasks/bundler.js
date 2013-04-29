@@ -22,6 +22,26 @@ module.exports = function(grunt) {
 	var kPageMapJSONFile = "pageMap.json";
 	var kAssetBundlerDir = "assetBundler/";
 
+	var compileAssetsMap = {
+		coffee : {
+			src : ".coffee",
+			dest : ".js"
+		},
+		sass : {
+			src : ".scss",
+			dest : ".css"
+		},
+		less : {
+			src : ".less",
+			dest : ".css"
+		},
+		//jade?
+		stylus : {
+			src : ".styl",
+			dest : ".css"
+		}
+	};
+
 	var options = {};
 
 	function resolveAssetFilePath( fileName ) {
@@ -74,15 +94,41 @@ module.exports = function(grunt) {
 
 		grunt.config( "clean", clean );
 
-		sass[ assetBundlerTaskPrefix + "_appPages" ] = {
-			expand: true,     // Enable dynamic expansion.
-			cwd: options.appPagesSrc,      // Src matches are relative to this path.
-			src: ['**/*.scss'], // Actual pattern(s) to match.
-			dest: options.appPagesDest,   // Destination path prefix.
-			ext: '.css'   // Dest filepaths will have this extension.
-		};
+//		sass[ assetBundlerTaskPrefix + "_appPages" ] = {
+//			expand: true,     // Enable dynamic expansion.
+//			cwd: options.appPagesSrc,      // Src matches are relative to this path.
+//			src: ['**/*.scss'], // Actual pattern(s) to match.
+//			dest: options.appPagesDest,   // Destination path prefix.
+//			ext: '.css'   // Dest filepaths will have this extension.
+//		};
+//
+//		grunt.config( "sass", sass );
 
-		grunt.config( "sass", sass );
+		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+
+			var task = grunt.config( task ) || {};
+
+			var taskOptions = compileAssetsMap[ taskName ];
+
+			task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+				expand: true,
+				cwd: options.assetLibrarySrc,
+				src: [ "**/*" + taskOptions.src ],
+				dest: options.assetLibraryDest,
+				ext: taskOptions.dest
+			};
+
+			task[ assetBundlerTaskPrefix + "_appPages" ] = {
+				expand: true,
+				cwd: options.appPagesSrc,
+				src: [ "**/*" + taskOptions.src ],
+				dest: options.appPagesDest,
+				ext: taskOptions.dest
+			};
+
+			grunt.config( taskName, task );
+
+		} );
 
 		concat[ assetBundlerTaskPrefix + "_js" ] = {
 			src : "<%= filesToConcatJS %>",
@@ -101,11 +147,16 @@ module.exports = function(grunt) {
 
 		grunt.config( "concat", concat );
 
-
 		if( mode === "dev" ) {
 			grunt.task.run( "clean:ASSET_BUNDLER" );
 			grunt.task.run( "prepare" );
 			grunt.task.run( "copy" );
+
+			_.each( _.keys( compileAssetsMap ), function( taskName ) {
+				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
+				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
+			} );
+
 			grunt.task.run( "sass" );
 			grunt.task.run( "buildBundleAndPageJSONs:dev" );
 			grunt.task.run( "saveBundleAndPageJSONs" );
@@ -115,7 +166,12 @@ module.exports = function(grunt) {
 			grunt.task.run( "clean:ASSET_BUNDLER" );
 			grunt.task.run( "prepare" );
 			grunt.task.run( "copy" );
-			grunt.task.run( "sass" );
+
+			_.each( _.keys( compileAssetsMap ), function( taskName ) {
+				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
+				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
+			} );
+
 			grunt.task.run( "buildBundleAndPageJSONs:prod" );
 			grunt.task.run( "buildKeepSeparateBundles" );
 			grunt.task.run( "buildPageBundles" );

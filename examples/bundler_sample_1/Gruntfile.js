@@ -15,8 +15,7 @@ module.exports = function( grunt ) {
 					assetLibrarySrc : "AssetLibrary/",
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",
-					appPagesDest : "WebServer/Static/AppPages-assets/",
-					tasksToRun : [ "" ]
+					appPagesDest : "WebServer/Static/AppPages-assets/"
 				}
 			}
 		}
@@ -25,9 +24,11 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-copy" );
 	grunt.loadNpmTasks( "grunt-contrib-clean" );
 	grunt.loadNpmTasks( "grunt-contrib-sass");
+	grunt.loadNpmTasks( "grunt-contrib-less");
+	grunt.loadNpmTasks( "grunt-contrib-coffee");
+	grunt.loadNpmTasks( "grunt-contrib-stylus");
 	grunt.loadNpmTasks( "grunt-contrib-concat" );
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-bundler" );
-
 
 };
