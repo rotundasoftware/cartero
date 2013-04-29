@@ -39,51 +39,17 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask('bundler', 'Your task description goes here.', function() {
 
-/*
-    // Merge task-specific and/or target-specific options with these defaults.
-    var options = this.options({
-      punctuation: '.',
-      separator: ', '
-    });
-
-    // Iterate over all specified file groups.
-    this.files.forEach(function(f) {
-      // Concat specified files.
-      var src = f.src.filter(function(filepath) {
-        // Warn on and remove invalid source files (if nonull was set).
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.warn('Source file "' + filepath + '" not found.');
-          return false;
-        } else {
-          return true;
-        }
-      }).map(function(filepath) {
-        // Read file source.
-        return grunt.file.read(filepath);
-      }).join(grunt.util.normalizelf(options.separator));
-
-      // Handle options.
-      src += options.punctuation;
-
-      // Write the destination file.
-      grunt.file.write(f.dest, src);
-
-      // Print a success message.
-      grunt.log.writeln('File "' + f.dest + '" created.');
-    });
-*/
-
 		options = this.options();
 
 		var mode = options.mode;
-		console.log( "mode: " + mode );
+		//console.log( "mode: " + mode );
 		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
 
 		var copy = grunt.config( "copy" ) || {};
 		var clean = grunt.config( "clean" ) || {};
-		var compass = grunt.config( "compass" ) || {};
 		var watch = grunt.config( "watch" ) || {};
 		var concat = grunt.config( "concat" ) || {};
+		var sass = grunt.config( "sass" ) || {};
 
 		copy[ assetBundlerTaskPrefix ] = {
 			files : [
@@ -108,17 +74,15 @@ module.exports = function(grunt) {
 
 		grunt.config( "clean", clean );
 
-		compass[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-			sassDir : options.assetLibrarySrc,
-			cssDir : options.assetLibraryDest
+		sass[ assetBundlerTaskPrefix + "_appPages" ] = {
+			expand: true,     // Enable dynamic expansion.
+			cwd: options.appPagesSrc,      // Src matches are relative to this path.
+			src: ['**/*.scss'], // Actual pattern(s) to match.
+			dest: options.appPagesDest,   // Destination path prefix.
+			ext: '.css'   // Dest filepaths will have this extension.
 		};
 
-		compass[ assetBundlerTaskPrefix + "_appPages" ] = {
-			sassDir : options.appPagesSrc,
-			cssDir : options.appPagesDest
-		};
-
-		grunt.config( "compass", compass );
+		grunt.config( "sass", sass );
 
 		concat[ assetBundlerTaskPrefix + "_js" ] = {
 			src : "<%= filesToConcatJS %>",
@@ -142,7 +106,7 @@ module.exports = function(grunt) {
 			grunt.task.run( "clean:ASSET_BUNDLER" );
 			grunt.task.run( "prepare" );
 			grunt.task.run( "copy" );
-			grunt.task.run( "compass" );
+			grunt.task.run( "sass" );
 			grunt.task.run( "buildBundleAndPageJSONs:dev" );
 			grunt.task.run( "saveBundleAndPageJSONs" );
 
@@ -151,7 +115,7 @@ module.exports = function(grunt) {
 			grunt.task.run( "clean:ASSET_BUNDLER" );
 			grunt.task.run( "prepare" );
 			grunt.task.run( "copy" );
-			grunt.task.run( "compass" );
+			grunt.task.run( "sass" );
 			grunt.task.run( "buildBundleAndPageJSONs:prod" );
 			grunt.task.run( "buildKeepSeparateBundles" );
 			grunt.task.run( "buildPageBundles" );

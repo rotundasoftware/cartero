@@ -4,6 +4,8 @@
 
 {% block content %}
 
+<h3>Testing some javascript library dependency.  The following shoudl show up as rendered JQuery tabs</h3>
+
 <div id="tabs">
 <ul>
 <li><a href="#tabs-1">Nunc tincidunt</a></li>
@@ -21,6 +23,12 @@
 <p>Duis cursus. Maecenas ligula eros, blandit nec, pharetra at, semper at, magna. Nullam ac lacus. Nulla facilisi. Praesent viverra justo vitae neque. Praesent blandit adipiscing velit. Suspendisse potenti. Donec mattis, pede vel pharetra blandit, magna ligula faucibus eros, id euismod lacus dolor eget odio. Nam scelerisque. Donec non libero sed nulla mattis commodo. Ut sagittis. Donec nisi lectus, feugiat porttitor, tempor ac, tempor vitae, pede. Aenean vehicula velit eu tellus interdum rutrum. Maecenas commodo. Pellentesque nec elit. Fusce in lacus. Vivamus a libero vitae lectus hendrerit hendrerit.</p>
 </div>
 </div>
+
+<h3>Testing scss compilation.  The text below should match its description.</h3>
+<div id="section2">
+	<span> this text should be bold </span>
+</div>
+<span>this text should not be bold</span>
 
 {% endblock %}
 

@@ -8,8 +8,6 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig( {
 
-		pkg: grunt.file.readJSON( "package.json" ),
-
 		bundler : {
 			dist : {
 				options : {
@@ -17,7 +15,8 @@ module.exports = function( grunt ) {
 					assetLibrarySrc : "AssetLibrary/",
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",
-					appPagesDest : "WebServer/Static/AppPages-assets/"
+					appPagesDest : "WebServer/Static/AppPages-assets/",
+					tasksToRun : [ "" ]
 				}
 			}
 		}
@@ -26,7 +25,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-copy" );
 	grunt.loadNpmTasks( "grunt-contrib-clean" );
 	grunt.loadNpmTasks( "grunt-contrib-sass");
-	grunt.loadNpmTasks( "grunt-contrib-compass");
 	grunt.loadNpmTasks( "grunt-contrib-concat" );
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-bundler" );
