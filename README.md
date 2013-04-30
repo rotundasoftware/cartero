@@ -1,89 +1,42 @@
-# grunt-bundler
+#INSTRUCTIONS
 
-> The best Grunt plugin ever.
-
-## Getting Started
-This plugin requires Grunt `~0.4.1`
-
-If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
-
+clone this repository
 ```shell
-npm install grunt-bundler --save-dev
+git clone https://github.com/rotundasoftware/assetBundler.git
+```
+cd to your application directory and install
+```shell
+npm install path/to/assetBundler/
+```
+update your package.json to include the following dependencies (list to be trimmed down)
+
+    "express": "3.1.0",
+    "grunt": "~0.4.1",
+    "underscore": "~1.4.4",
+    "underscore.string": "~2.3.1",
+    "findit": "~0.1.2",
+    "swig": "~0.13.5",
+    "consolidate": "~0.9.0",
+    "path": "~0.4.9",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.4.1",
+    "grunt-contrib-sass": "~0.3.0",
+    "grunt-contrib-less": "~0.5.1",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-stylus": "~0.5.0",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-watch": "~0.3.1",
+    "grunt-bundler": "~0.1.0",
+    "grunt-contrib-uglify": "~0.2.0",
+    "grunt-contrib-htmlmin": "~0.1.3",
+    "grunt-contrib-compass": "~0.2.0"
+    
+```shell
+npm install
 ```
 
-One the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
+copy the Gruntfile.js from examples/bundler_sample_1 and modify appropriately
 
-```js
-grunt.loadNpmTasks('grunt-bundler');
-```
-
-## The "bundler" task
-
-### Overview
-In your project's Gruntfile, add a section named `bundler` to the data object passed into `grunt.initConfig()`.
-
-```js
-grunt.initConfig({
-  bundler: {
-    options: {
-      // Task-specific options go here.
-    },
-    your_target: {
-      // Target-specific file lists and/or options go here.
-    },
-  },
-})
-```
-
-### Options
-
-#### options.separator
-Type: `String`
-Default value: `',  '`
-
-A string value that is used to do something with whatever.
-
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
-
-### Usage Examples
-
-#### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
-
-```js
-grunt.initConfig({
-  bundler: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-})
-```
-
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
-
-```js
-grunt.initConfig({
-  bundler: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-})
-```
-
-## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
-## Release History
-_(Nothing yet)_
+TODOs:
+* support "*" wildcard character for bundle dependencies
+* do more processing at build time vs runtime for pageMap.json and bundleMap.json
