@@ -27,7 +27,7 @@ module.exports = function(grunt) {
 			src : ".coffee",
 			dest : ".js"
 		},
-		sass : {
+		compass : {
 			src : ".scss",
 			dest : ".css"
 		},
@@ -111,21 +111,54 @@ module.exports = function(grunt) {
 
 			var taskOptions = compileAssetsMap[ taskName ];
 
-			task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-				expand: true,
-				cwd: options.assetLibrarySrc,
-				src: [ "**/*" + taskOptions.src ],
-				dest: options.assetLibraryDest,
-				ext: taskOptions.dest
-			};
+			var userSpecifiedOptions;
 
-			task[ assetBundlerTaskPrefix + "_appPages" ] = {
-				expand: true,
-				cwd: options.appPagesSrc,
-				src: [ "**/*" + taskOptions.src ],
-				dest: options.appPagesDest,
-				ext: taskOptions.dest
-			};
+			if( ! _.isUndefined( options.preprocessingOptions ) ) {
+				userSpecifiedOptions = options.preprocessingOptions[ taskName ];
+			}
+
+			if( taskName === "compass" ) {
+
+				if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
+				
+				userSpecifiedOptions.sassDir = options.assetLibrarySrc;
+				userSpecifiedOptions.cssDir = options.assetLibraryDest;
+
+				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+					options : userSpecifiedOptions
+				};
+
+				userSpecifiedOptions.sassDir = options.appPagesSrc;
+				userSpecifiedOptions.cssDir = options.appPagesDest;
+
+				task[ assetBundlerTaskPrefix + "_appPages" ] = {
+					options : userSpecifiedOptions
+				};
+
+			}
+			else {
+				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+						expand: true,
+					cwd: options.assetLibrarySrc,
+					src: [ "**/*" + taskOptions.src ],
+					dest: options.assetLibraryDest,
+					ext: taskOptions.dest
+				};
+
+				task[ assetBundlerTaskPrefix + "_appPages" ] = {
+					expand: true,
+					cwd: options.appPagesSrc,
+					src: [ "**/*" + taskOptions.src ],
+					dest: options.appPagesDest,
+					ext: taskOptions.dest
+				};
+
+				if( ! _.isUndefined( userSpecifiedOptions ) ) {
+					task[ assetBundlerTaskPrefix + "_assetLibrary" ].options = userSpecifiedOptions;
+					task[ assetBundlerTaskPrefix + "_appPages" ].options = userSpecifiedOptions;
+				}
+
+			}
 
 			grunt.config( taskName, task );
 
