@@ -92,6 +92,18 @@ module.exports = function(grunt) {
 
 		clean[ assetBundlerTaskPrefix ] = [ options.assetLibraryDest , options.appPagesDest, kAssetBundlerDir ];
 
+		clean[ assetBundlerTaskPrefix + "_js" ] = {
+			src : "<%= filesToCleanJS %>"
+		};
+
+		clean[ assetBundlerTaskPrefix + "_css" ] = {
+			src : "<%= filesToCleanCSS %>"
+		};
+
+		clean[ assetBundlerTaskPrefix + "_tmpl" ] = {
+			src : "<%= filesToCleanTMPL %>"
+		};
+
 		grunt.config( "clean", clean );
 
 //		sass[ assetBundlerTaskPrefix + "_appPages" ] = {
@@ -130,6 +142,35 @@ module.exports = function(grunt) {
 
 		} );
 
+		_.each( options.minTasks, function( taskConfig ) {
+
+			var task = grunt.config( taskConfig.name ) || {};
+
+			//TODO: add support for multiple suffixes
+			task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+				options : taskConfig.options,
+				expand: true,
+				cwd: options.assetLibraryDest,
+				src: [ "**/*" + taskConfig.suffixes[0] ],
+				rename: function(dest, src){ return dest + src; },
+				dest: options.assetLibraryDest
+				//ext: taskConfig.suffixes[0]
+			};
+
+			task[ assetBundlerTaskPrefix + "_appPages" ] = {
+				options : taskConfig.options,
+				expand: true,
+				cwd: options.appPagesDest,
+				src: [ "**/*" + taskConfig.suffixes[0] ],
+				rename: function(dest, src){ return dest + src; },
+				dest: options.appPagesDest
+				//ext: taskConfig.suffixes[0]
+			};
+
+			grunt.config( taskConfig.name, task );
+
+		} );
+
 		concat[ assetBundlerTaskPrefix + "_js" ] = {
 			src : "<%= filesToConcatJS %>",
 			dest : "<%= concatedFileDestJS %>"
@@ -147,40 +188,32 @@ module.exports = function(grunt) {
 
 		grunt.config( "concat", concat );
 
-		if( mode === "dev" ) {
-			grunt.task.run( "clean:ASSET_BUNDLER" );
-			grunt.task.run( "prepare" );
-			grunt.task.run( "copy" );
+		grunt.task.run( "clean:ASSET_BUNDLER" );
+		grunt.task.run( "prepare" );
+		grunt.task.run( "copy" );
 
-			_.each( _.keys( compileAssetsMap ), function( taskName ) {
-				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
-				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
-			} );
+		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
+			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
+		} );
 
-			grunt.task.run( "sass" );
-			grunt.task.run( "buildBundleAndPageJSONs:dev" );
-			grunt.task.run( "saveBundleAndPageJSONs" );
+		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
 
-		}
-		else if( mode === "prod" ) {
-			grunt.task.run( "clean:ASSET_BUNDLER" );
-			grunt.task.run( "prepare" );
-			grunt.task.run( "copy" );
-
-			_.each( _.keys( compileAssetsMap ), function( taskName ) {
-				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
-				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
-			} );
-
-			grunt.task.run( "buildBundleAndPageJSONs:prod" );
+		if( mode === "prod" ) {
 			grunt.task.run( "buildKeepSeparateBundles" );
 			grunt.task.run( "buildPageBundles" );
-			grunt.task.run( "saveBundleAndPageJSONs" );
+
+			//TODO: only run the asset bundler targets
+			_.each( options.minTasks, function( taskConfig ) {
+				grunt.task.run( taskConfig.name );
+			} );
 		}
+
+		grunt.task.run( "saveBundleAndPageJSONs" );
 
 	} );
 
-	grunt.registerTask( "prepare", "Prepare directories for build", function( mode ) {
+	grunt.registerTask( "prepare", "Prepare directories for build", function() {
 
 		grunt.log.writeln( JSON.stringify( options, null, "\t") );
 		grunt.file.mkdir( options.assetLibraryDest );
@@ -263,16 +296,23 @@ module.exports = function(grunt) {
 		} );
 
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
-		grunt.log.writeln( "Files to concat: " + filesToConcatJS.join("," ) );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
 		grunt.config.set( "concatedFileDestJS", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.js" );
 		grunt.config.set( "concatedFileDestCSS", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.css" );
 		grunt.config.set( "concatedFileDestTMPL", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.tmpl" );
-		
+
+		grunt.config.set( "filesToCleanJS", filesToConcatJS );
+		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
+		grunt.config.set( "filesToCleanTMPL", filesToConcatTMPL );
+
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_js" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_css" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_tmpl" );
+
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_js" );
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_css" );
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_tmpl" );
 		grunt.task.run( "buildKeepSeparateBundlesHelper" );
 
 	} );
@@ -365,6 +405,11 @@ module.exports = function(grunt) {
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
+
+		grunt.config.set( "filesToCleanJS", filesToConcatJS );
+		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
+		grunt.config.set( "filesToCleanTMPL", filesToConcatTMPL );
+
 		grunt.config.set( "concatedFileDestJS", options.appPagesDest + combinedPagePrefix + ".js" );
 		grunt.config.set( "concatedFileDestCSS", options.appPagesDest + combinedPagePrefix + ".css" );
 		grunt.config.set( "concatedFileDestTMPL", options.appPagesDest + combinedPagePrefix + ".tmpl" );
@@ -372,6 +417,11 @@ module.exports = function(grunt) {
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_js" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_css" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_tmpl" );
+
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_js" );
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_css" );
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_tmpl" );
+
 		grunt.task.run( "buildPageBundlesHelper" );
 
 		grunt.config.set( "pageMap", pageMap );

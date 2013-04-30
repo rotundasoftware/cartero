@@ -11,11 +11,27 @@ module.exports = function( grunt ) {
 		bundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					assetLibrarySrc : "AssetLibrary/",
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",
-					appPagesDest : "WebServer/Static/AppPages-assets/"
+					appPagesDest : "WebServer/Static/AppPages-assets/",
+					minTasks : [
+						{
+							name : "htmlmin",
+							suffixes : [ ".tmpl" ],
+							options : {
+								removeComments : true
+							}
+						},
+						{
+							name : "uglify",
+							suffixes : [ ".js" ],
+							options : {
+								mangle : false
+							}
+						}
+					]
 				}
 			}
 		}
@@ -29,6 +45,8 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-stylus");
 	grunt.loadNpmTasks( "grunt-contrib-concat" );
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
+	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
+	grunt.loadNpmTasks( "grunt-contrib-uglify" );
 	grunt.loadNpmTasks( "grunt-bundler" );
 
 };
