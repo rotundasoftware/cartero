@@ -15,7 +15,7 @@ module.exports = function( grunt ) {
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",
 					appPagesDest : "WebServer/Static/AppPages-assets/",
-					minTasks : [
+					minificationTasks : [
 						{
 							name : "htmlmin",
 							suffixes : [ ".tmpl" ],

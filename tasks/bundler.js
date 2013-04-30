@@ -131,7 +131,7 @@ module.exports = function(grunt) {
 
 		} );
 
-		_.each( options.minTasks, function( taskConfig ) {
+		_.each( options.minificationTasks, function( taskConfig ) {
 
 			var task = grunt.config( taskConfig.name ) || {};
 
@@ -266,7 +266,7 @@ module.exports = function(grunt) {
 			grunt.task.run( "buildPageBundles" );
 
 			//TODO: only run the asset bundler targets
-			_.each( options.minTasks, function( taskConfig ) {
+			_.each( options.minificationTasks, function( taskConfig ) {
 				grunt.task.run( taskConfig.name );
 			} );
 		}
@@ -280,19 +280,6 @@ module.exports = function(grunt) {
 		if( mode === "dev" ) {
 			grunt.task.run( "watch" );
 		}
-
-
-/*
-		if( mode === "dev" ) {
-			grunt.task.run( "watch" );
-		}
-
-
-		//TODO: do the right stuff
-		grunt.event.on('watch', function(action, filepath) {
-			grunt.config(['jshint'], filepath);
-		});
-*/
 
 	} );
 
