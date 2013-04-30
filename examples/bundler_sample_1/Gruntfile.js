@@ -7,11 +7,10 @@
 module.exports = function( grunt ) {
 
 	grunt.initConfig( {
-
 		bundler : {
 			dist : {
 				options : {
-					mode : "prod",
+					mode : "dev",
 					assetLibrarySrc : "AssetLibrary/",
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",

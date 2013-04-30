@@ -69,7 +69,6 @@ module.exports = function(grunt) {
 		var clean = grunt.config( "clean" ) || {};
 		var watch = grunt.config( "watch" ) || {};
 		var concat = grunt.config( "concat" ) || {};
-		var sass = grunt.config( "sass" ) || {};
 
 		copy[ assetBundlerTaskPrefix ] = {
 			files : [
@@ -105,16 +104,6 @@ module.exports = function(grunt) {
 		};
 
 		grunt.config( "clean", clean );
-
-//		sass[ assetBundlerTaskPrefix + "_appPages" ] = {
-//			expand: true,     // Enable dynamic expansion.
-//			cwd: options.appPagesSrc,      // Src matches are relative to this path.
-//			src: ['**/*.scss'], // Actual pattern(s) to match.
-//			dest: options.appPagesDest,   // Destination path prefix.
-//			ext: '.css'   // Dest filepaths will have this extension.
-//		};
-//
-//		grunt.config( "sass", sass );
 
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
 
@@ -188,6 +177,79 @@ module.exports = function(grunt) {
 
 		grunt.config( "concat", concat );
 
+		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+
+			var taskOptions = compileAssetsMap[ taskName ];
+
+			watch[ assetBundlerTaskPrefix + "_assetLibrary_" + taskName ] = {
+				files : [ options.assetLibrarySrc + "**/*" + taskOptions.src ],
+				tasks : [ "processFileChange" ],
+				options : {
+					nospawn : true
+				}
+			};
+
+			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
+				files : [ options.appPagesSrc + "**/*" + taskOptions.src ],
+				tasks : [ "processFileChange" ],
+				options : {
+					nospawn : true
+				}
+			};
+
+		} );
+
+		var assetFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
+			return options.assetLibrarySrc + extension;
+		} );
+
+		assetFilesToWatch = _.union( assetFilesToWatch, _.map( kAssetFileExtensions, function( extension ) {
+			return options.appPagesSrc + extension;
+		} ) );
+
+		watch[ assetBundlerTaskPrefix + "_copy" ] = {
+
+			files : assetFilesToWatch,
+			tasks : [ "processFileChange" ],
+			options : {
+				nospawn : true
+			}
+
+		};
+/*
+		var processFileChange = {};
+
+		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+			processFileChange[ taskName ] = {
+				options : {
+
+				}
+			};
+		} );
+
+		grunt.config( "processFileChange", processFileChange );
+		*/
+/*
+		grunt.event.on( "watch", function(action, filepath) {
+			grunt.log.writeln( "filepath: " + filepath);
+			_.each( _.keys( compileAssetsMap ), function( taskName ) {
+
+				var taskConfig = grunt.config( "processFileChange" );
+
+				taskConfig[ taskName ] = {
+					options : {
+						srcFile : filepath
+					}
+				};
+
+				grunt.config( "processFileChange", taskConfig );
+				//grunt.config([ "processFileChange:" + taskName ], filepath);
+			} );
+		});
+*/
+
+		grunt.config( "watch", watch );
+
 		grunt.task.run( "clean:ASSET_BUNDLER" );
 		grunt.task.run( "prepare" );
 		grunt.task.run( "copy" );
@@ -211,6 +273,72 @@ module.exports = function(grunt) {
 
 		grunt.task.run( "saveBundleAndPageJSONs" );
 
+		grunt.log.writeln("options: " + JSON.stringify( grunt.config( "watch" ), null, "\t" ) );
+
+		grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
+
+		if( mode === "dev" ) {
+			grunt.task.run( "watch" );
+		}
+
+
+/*
+		if( mode === "dev" ) {
+			grunt.task.run( "watch" );
+		}
+
+
+		//TODO: do the right stuff
+		grunt.event.on('watch', function(action, filepath) {
+			grunt.config(['jshint'], filepath);
+		});
+*/
+
+	} );
+
+	grunt.registerTask( "processFileChange", "", function() {
+
+
+		grunt.task.run( "copy" );
+
+		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
+			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
+		} );
+
+		/*
+		grunt.log.writeln("options: " + JSON.stringify( this.options(), null, "\t" ) );
+		grunt.log.writeln("arguments: " + JSON.stringify( arguments, null, "\t" ) );
+
+		var compileTaskName = this.target;
+
+		var srcFile = options;
+
+		var isAssetLibraryFile = srcFile.indexOf( options.assetLibrarySrc ) != -1;
+		var destFile = srcFile.replace( options.assetLibrarySrc, options.assetLibraryDest ).replace( options.appPagesSrc, options.appPagesDest );
+
+		//copy[ "processFileChange" ] = {
+		//	files : [ {
+		//		src : srcFile,
+		//		dest : srcFile.replace( options.assetLibrarySrc, options.assetLibraryDest ).replace( options.appPagesSrc, options.appPagesDest )
+		//	} ]
+		//};
+
+		var compileTask = grunt.config( compileTaskName );
+
+		if( isAssetLibraryFile ) {
+
+			compileTask[ "processFileChange" ] = {
+				files : [ {
+					src : srcFile,
+					dest : destFile.replace( compileAssetsMap[ compileTaskName].src, compileAssetsMap[ compileTaskName].dest )
+				} ]
+			};
+
+		}
+
+		grunt.task.run( compileTask + ":processFileChange" );
+*/
 	} );
 
 	grunt.registerTask( "prepare", "Prepare directories for build", function() {
