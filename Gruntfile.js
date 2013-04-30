@@ -72,4 +72,4 @@ module.exports = function(grunt) {
 
 };
 
-module.exports.assetManager = require( "./lib/assetManager.js" );
+module.exports.assetBundler = require( "./lib/assetBundlerMiddleware.js" );

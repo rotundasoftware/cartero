@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	assetManager = require( "grunt-bundler" ).assetManager,
+	assetBundler = require( "grunt-bundler" ).assetBundler,
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),
@@ -17,7 +17,10 @@ var express = require( "express" ),
 
 var app = express();
 
-var projectRoot = "../";
+var kStaticDir = path.join( __dirname, "Static" );
+var kAppPagesDir = path.join( __dirname, "AppPages" );
+
+var projectRoot = "..";
 
 app.configure( function() {
 	app.set( "port" , process.env.PORT || 3000 );
@@ -29,12 +32,12 @@ app.configure( function() {
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
 	//app.use( myMethod() );
-	app.use( assetManager.bundlerMiddleware( path.join( __dirname, projectRoot ) ) );
+	app.use( assetBundler( path.join( __dirname, projectRoot ), kStaticDir, kAppPagesDir  ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
 	//app.use( express.static( path.join( __dirname, "Static" ) ) );
-	app.use( express.static( path.join( __dirname, projectRoot ) ) );
+	app.use( express.static( kStaticDir ) );
 } );
 
 app.engine( ".swig", cons.swig );
@@ -49,11 +52,11 @@ app.configure( "development" , function() {
 } );
 
 app.get( "/page1/page1.html.swig", function( req, res ) {
-	res.render( "page1/page1.html.swig" );
+	res.render( kAppPagesDir + "/page1/page1.html.swig" );
 } );
 
 app.get("/page1/page1_1/page1_1.html.swig", function( req, res ) {
-	res.render( "/page1/page1_1/page1_1.html.swig" );
+	res.render( kAppPagesDir + "/page1/page1_1/page1_1.html.swig" );
 } );
 
 app.get( "/login*", function( req, res ) {

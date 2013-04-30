@@ -6,7 +6,7 @@
  * Licensed under the MIT license.
  */
 
-var assetManager = require( "./../lib/assetManager.js" ),
+var assetManager = require( "./../lib/assetBundlerUtil.js" ),
 	_ = require( "underscore" ),
 	_s = require( "underscore.string" );
 
