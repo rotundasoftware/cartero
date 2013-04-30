@@ -121,18 +121,24 @@ module.exports = function(grunt) {
 
 				if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
 				
-				userSpecifiedOptions.sassDir = options.assetLibrarySrc;
-				userSpecifiedOptions.cssDir = options.assetLibraryDest;
+				var assetLibraryOptions = _.extend( {}, {
+					sassDir : options.assetLibrarySrc,
+					cssDir : options.assetLibraryDest
+				},
+				userSpecifiedOptions );
 
 				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-					options : userSpecifiedOptions
+					options : assetLibraryOptions
 				};
 
-				userSpecifiedOptions.sassDir = options.appPagesSrc;
-				userSpecifiedOptions.cssDir = options.appPagesDest;
+				var appPagesOptions = _.extend( {}, {
+					sassDir : options.appPagesSrc,
+					cssDir : options.appPagesDest
+				},
+				userSpecifiedOptions );
 
 				task[ assetBundlerTaskPrefix + "_appPages" ] = {
-					options : userSpecifiedOptions
+					options : appPagesOptions
 				};
 
 			}
