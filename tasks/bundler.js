@@ -22,6 +22,18 @@ module.exports = function(grunt) {
 	var kPageMapJSONFile = "pageMap.json";
 	var kAssetBundlerDir = "assetBundler/";
 
+	var kAppPagesDefaults = {
+		srcDir : "WebServer/AppPages/",
+		destDir : "WebServer/Static/AppPages-assets/",
+		filesToIgnore : /_.*/,
+		foldersToIgnore : /__.*/
+	};
+
+	var kAssetLibraryDefaults = {
+		srcDir : "AssetLibrary/",
+		destDir : "WebServer/Static/AssetLibrary-assets/"
+	}
+
 	var compileAssetsMap = {
 		coffee : {
 			src : ".coffee",
@@ -45,7 +57,7 @@ module.exports = function(grunt) {
 	var options = {};
 
 	function resolveAssetFilePath( fileName ) {
-		return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibraryDest ).replace( "{APP_PAGES}/", options.appPagesDest );
+		return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir ).replace( "{APP_PAGES}/", options.appPages.destDir );
 	}
 
   // Please see the Grunt documentation for more information regarding task
@@ -54,6 +66,18 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask('assetbundler', 'Your task description goes here.', function() {
 
 		options = this.options();
+
+		options.assetLibrary = options.assetLibrary || {};
+		options.assetLibrary = _.extend(
+			{},
+			kAssetLibraryDefaults,
+			options.assetLibrary );
+
+		options.appPages = options.appPages || {};
+		options.appPages = _.extend(
+			{},
+			kAppPagesDefaults,
+			options.appPages );
 
 		var mode = options.mode;
 		//console.log( "mode: " + mode );
@@ -68,22 +92,22 @@ module.exports = function(grunt) {
 			files : [
 				{
 					src: kAssetFileExtensions,
-					dest : options.assetLibraryDest,
+					dest : options.assetLibrary.destDir,
 					expand : true,
-					cwd : options.assetLibrarySrc
+					cwd : options.assetLibrary.srcDir
 				},
 				{
 					src: kAssetFileExtensions,
-					dest : options.appPagesDest,
+					dest : options.appPages.destDir,
 					expand : true,
-					cwd : options.appPagesSrc
+					cwd : options.appPages.srcDir
 				}
 			]
 		};
 
 		grunt.config( "copy", copy );
 
-		clean[ assetBundlerTaskPrefix ] = [ options.assetLibraryDest , options.appPagesDest, kAssetBundlerDir ];
+		clean[ assetBundlerTaskPrefix ] = [ options.assetLibrary.destDir , options.appPages.destDir, kAssetBundlerDir ];
 
 		clean[ assetBundlerTaskPrefix + "_js" ] = {
 			src : "<%= filesToCleanJS %>"
@@ -116,8 +140,8 @@ module.exports = function(grunt) {
 				if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
 				
 				var assetLibraryOptions = _.extend( {}, {
-					sassDir : options.assetLibrarySrc,
-					cssDir : options.assetLibraryDest
+					sassDir : options.assetLibrary.srcDir,
+					cssDir : options.assetLibrary.destDir
 				},
 				userSpecifiedOptions );
 
@@ -126,8 +150,8 @@ module.exports = function(grunt) {
 				};
 
 				var appPagesOptions = _.extend( {}, {
-					sassDir : options.appPagesSrc,
-					cssDir : options.appPagesDest
+					sassDir : options.appPages.srcDir,
+					cssDir : options.appPages.destDir
 				},
 				userSpecifiedOptions );
 
@@ -139,17 +163,17 @@ module.exports = function(grunt) {
 			else {
 				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
 						expand: true,
-					cwd: options.assetLibrarySrc,
+					cwd: options.assetLibrary.srcDir,
 					src: [ "**/*" + taskOptions.src ],
-					dest: options.assetLibraryDest,
+					dest: options.assetLibrary.destDir,
 					ext: taskOptions.dest
 				};
 
 				task[ assetBundlerTaskPrefix + "_appPages" ] = {
 					expand: true,
-					cwd: options.appPagesSrc,
+					cwd: options.appPages.srcDir,
 					src: [ "**/*" + taskOptions.src ],
-					dest: options.appPagesDest,
+					dest: options.appPages.destDir,
 					ext: taskOptions.dest
 				};
 
@@ -172,20 +196,20 @@ module.exports = function(grunt) {
 			task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
 				options : taskConfig.options,
 				expand: true,
-				cwd: options.assetLibraryDest,
+				cwd: options.assetLibrary.destDir,
 				src: [ "**/*" + taskConfig.suffixes[0] ],
 				rename: function(dest, src){ return dest + src; },
-				dest: options.assetLibraryDest
+				dest: options.assetLibrary.destDir
 				//ext: taskConfig.suffixes[0]
 			};
 
 			task[ assetBundlerTaskPrefix + "_appPages" ] = {
 				options : taskConfig.options,
 				expand: true,
-				cwd: options.appPagesDest,
+				cwd: options.appPages.destDir,
 				src: [ "**/*" + taskConfig.suffixes[0] ],
 				rename: function(dest, src){ return dest + src; },
-				dest: options.appPagesDest
+				dest: options.appPages.destDir
 				//ext: taskConfig.suffixes[0]
 			};
 
@@ -215,7 +239,7 @@ module.exports = function(grunt) {
 			var taskOptions = compileAssetsMap[ taskName ];
 
 			watch[ assetBundlerTaskPrefix + "_assetLibrary_" + taskName ] = {
-				files : [ options.assetLibrarySrc + "**/*" + taskOptions.src ],
+				files : [ options.assetLibrary.srcDir + "**/*" + taskOptions.src ],
 				tasks : [ "processFileChange" ],
 				options : {
 					nospawn : true
@@ -223,7 +247,7 @@ module.exports = function(grunt) {
 			};
 
 			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
-				files : [ options.appPagesSrc + "**/*" + taskOptions.src ],
+				files : [ options.appPages.srcDir + "**/*" + taskOptions.src ],
 				tasks : [ "processFileChange" ],
 				options : {
 					nospawn : true
@@ -233,11 +257,11 @@ module.exports = function(grunt) {
 		} );
 
 		var assetFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
-			return options.assetLibrarySrc + extension;
+			return options.assetLibrary.srcDir + extension;
 		} );
 
 		assetFilesToWatch = _.union( assetFilesToWatch, _.map( kAssetFileExtensions, function( extension ) {
-			return options.appPagesSrc + extension;
+			return options.appPages.srcDir + extension;
 		} ) );
 
 		watch[ assetBundlerTaskPrefix + "_copy" ] = {
@@ -334,13 +358,13 @@ module.exports = function(grunt) {
 
 		var srcFile = options;
 
-		var isAssetLibraryFile = srcFile.indexOf( options.assetLibrarySrc ) != -1;
-		var destFile = srcFile.replace( options.assetLibrarySrc, options.assetLibraryDest ).replace( options.appPagesSrc, options.appPagesDest );
+		var isAssetLibraryFile = srcFile.indexOf( options.assetLibrary.srcDir ) != -1;
+		var destFile = srcFile.replace( options.assetLibrary.srcDir, options.assetLibrary.destDir ).replace( options.appPages.srcDir, options.appPages.destDir );
 
 		//copy[ "processFileChange" ] = {
 		//	files : [ {
 		//		src : srcFile,
-		//		dest : srcFile.replace( options.assetLibrarySrc, options.assetLibraryDest ).replace( options.appPagesSrc, options.appPagesDest )
+		//		dest : srcFile.replace( options.assetLibrary.srcDir, options.assetLibrary.destDir ).replace( options.appPages.srcDir, options.appPages.destDir )
 		//	} ]
 		//};
 
@@ -364,14 +388,14 @@ module.exports = function(grunt) {
 	grunt.registerTask( "prepare", "Prepare directories for build", function() {
 
 		grunt.log.writeln( JSON.stringify( options, null, "\t") );
-		grunt.file.mkdir( options.assetLibraryDest );
-		grunt.file.mkdir( options.appPagesDest );
+		grunt.file.mkdir( options.assetLibrary.destDir );
+		grunt.file.mkdir( options.appPages.destDir );
 
 		var configOptions = {
-			assetLibrarySrc : options.assetLibrarySrc,
-			assetLibraryDest : options.assetLibraryDest,
-			appPagesSrc : options.appPagesSrc,
-			appPagesDest : options.appPagesDest,
+			assetLibrarySrc : options.assetLibrary.srcDir,
+			assetLibraryDest : options.assetLibrary.destDir,
+			appPagesSrc : options.appPages.srcDir,
+			appPagesDest : options.appPages.destDir,
 			//bundlerRequireDirective : grunt.config.get( "bundlerRequireDirective" ),
 			//bundlerExtendsDirective : grunt.config.get( "bundlerExtendsDirective" ),
 			projectRootDir : __dirname,
@@ -389,7 +413,7 @@ module.exports = function(grunt) {
 
 		//var bundleMap = assetBundlerUtil.buildBundlesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "assetLibrarySrc" ) );
 
-		var bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrarySrc );
+		var bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir );
 
 		try {
 			assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
@@ -402,7 +426,7 @@ module.exports = function(grunt) {
 		//grunt.file.write( kDependencyJSONFile, JSON.stringify( bundleMap , null, "\t" ) );
 
 		//var templateMap = assetBundlerUtil.buildTemplatesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "appPagesSrc" ) );
-		var pageMap = assetBundlerUtil.buildPagesMap( options.appPagesSrc );
+		var pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
 		assetBundlerUtil.resolvePagesMap( pageMap, mode );
 
 		grunt.config.set( "pageMap", pageMap );
@@ -446,9 +470,9 @@ module.exports = function(grunt) {
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
-		grunt.config.set( "concatedFileDestJS", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.js" );
-		grunt.config.set( "concatedFileDestCSS", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.css" );
-		grunt.config.set( "concatedFileDestTMPL", options.assetLibraryDest + bundle.name.replace(/\//g,"_") + "_combined.tmpl" );
+		grunt.config.set( "concatedFileDestJS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.js" );
+		grunt.config.set( "concatedFileDestCSS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.css" );
+		grunt.config.set( "concatedFileDestTMPL", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.tmpl" );
 
 		grunt.config.set( "filesToCleanJS", filesToConcatJS );
 		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
@@ -558,9 +582,9 @@ module.exports = function(grunt) {
 		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
 		grunt.config.set( "filesToCleanTMPL", filesToConcatTMPL );
 
-		grunt.config.set( "concatedFileDestJS", options.appPagesDest + combinedPagePrefix + ".js" );
-		grunt.config.set( "concatedFileDestCSS", options.appPagesDest + combinedPagePrefix + ".css" );
-		grunt.config.set( "concatedFileDestTMPL", options.appPagesDest + combinedPagePrefix + ".tmpl" );
+		grunt.config.set( "concatedFileDestJS", options.appPages.destDir + combinedPagePrefix + ".js" );
+		grunt.config.set( "concatedFileDestCSS", options.appPages.destDir + combinedPagePrefix + ".css" );
+		grunt.config.set( "concatedFileDestTMPL", options.appPages.destDir + combinedPagePrefix + ".tmpl" );
 
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_js" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_css" );

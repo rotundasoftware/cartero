@@ -10,15 +10,16 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "prod",
-					assetLibrarySrc : "AssetLibrary/",
-					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
-					appPagesSrc : "WebServer/AppPages/",
-					appPagesDest : "WebServer/Static/AppPages-assets/",
-					preprocessingOptions : {
-						sass : {
-
-						}
+					mode : "dev",
+					assetLibrary : {
+						srcDir : "AssetLibrary/",
+						destDir : "WebServer/Static/AssetLibrary-assets/"
+					},
+					appPages : {
+						srcDir : "WebServer/AppPages/",
+						destDir : "WebServer/Static/AppPages-assets/",
+						filesToIgnore : /_.*/,
+						directoriesToIgnore : /__.*/
 					},
 					minificationTasks : [
 						{
