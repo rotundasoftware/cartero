@@ -7,10 +7,10 @@
 module.exports = function( grunt ) {
 
 	grunt.initConfig( {
-		assetBundler : {
+		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					assetLibrarySrc : "AssetLibrary/",
 					assetLibraryDest : "WebServer/Static/AssetLibrary-assets/",
 					appPagesSrc : "WebServer/AppPages/",
@@ -52,6 +52,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
-	grunt.loadNpmTasks( "grunt-assetBundler" );
+	grunt.loadNpmTasks( "grunt-asset-bundler" );
 
 };

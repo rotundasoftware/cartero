@@ -1,5 +1,5 @@
 /*
- * grunt-assetBundler
+ * grunt-asset-bundler
  * https://github.com/go-oleg/bundler
  *
  * Copyright (c) 2013 Oleg Seletsky
@@ -51,13 +51,7 @@ module.exports = function(grunt) {
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
 
-	grunt.registerTask( "testBundler", "", function() {
-
-		grunt.log.writeln( JSON.stringify( this ) );
-
-	} );
-
-	grunt.registerMultiTask('assetBundler', 'Your task description goes here.', function() {
+	grunt.registerMultiTask('assetbundler', 'Your task description goes here.', function() {
 
 		options = this.options();
 

@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	assetBundler = require( "grunt-assetBundler/middleware.js" ),
+	assetBundlerMiddleware = require( "grunt-asset-bundler/middleware.js" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),
@@ -32,7 +32,7 @@ app.configure( function() {
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
 	//app.use( myMethod() );
-	app.use( assetBundler( path.join( __dirname, projectRoot ), kStaticDir, kAppPagesDir  ) );
+	app.use( assetBundlerMiddleware( path.join( __dirname, projectRoot ), kStaticDir, kAppPagesDir  ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
