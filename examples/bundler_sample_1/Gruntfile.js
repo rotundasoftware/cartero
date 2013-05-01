@@ -7,7 +7,7 @@
 module.exports = function( grunt ) {
 
 	grunt.initConfig( {
-		bundler : {
+		assetBundler : {
 			dist : {
 				options : {
 					mode : "dev",
@@ -52,6 +52,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
-	grunt.loadNpmTasks( "grunt-bundler" );
+	grunt.loadNpmTasks( "grunt-assetBundler" );
 
 };

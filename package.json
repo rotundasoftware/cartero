@@ -1,8 +1,7 @@
 {
-  "name": "grunt-bundler",
+  "name": "grunt-assetBundler",
   "description": "The best Grunt plugin ever.",
   "version": "0.1.3",
-  "homepage": "https://github.com/go-oleg/bundler",
   "author": {
     "name": "Oleg Seletsky",
     "email": "oleg.b.seletsky@gmail.com"

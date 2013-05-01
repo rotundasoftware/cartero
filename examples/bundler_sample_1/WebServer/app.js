@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	assetBundler = require( "grunt-bundler" ).assetBundler,
+	assetBundler = require( "grunt-assetBundler/middleware.js" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),

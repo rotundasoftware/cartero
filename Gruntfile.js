@@ -1,6 +1,5 @@
 /*
- * grunt-bundler
- * https://github.com/go-oleg/bundler
+ * grunt-assetBundler
  *
  * Copyright (c) 2013 Oleg Seletsky
  * Licensed under the MIT license.
@@ -29,7 +28,7 @@ module.exports = function(grunt) {
     },
 
     // Configuration to be run (and then tested).
-    bundler: {
+    assetBundler: {
       default_options: {
         options: {
         },
@@ -65,11 +64,9 @@ module.exports = function(grunt) {
 
   // Whenever the "test" task is run, first clean the "tmp" dir, then run this
   // plugin's task(s), then test the result.
-  grunt.registerTask('test', ['clean', 'bundler', 'nodeunit']);
+  grunt.registerTask('test', ['clean', 'assetBundler', 'nodeunit']);
 
   // By default, lint and run all tests.
   grunt.registerTask('default', ['jshint', 'test']);
 
 };
-
-module.exports.assetBundler = require( "./lib/assetBundlerMiddleware.js" );

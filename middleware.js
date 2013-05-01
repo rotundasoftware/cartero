@@ -1,4 +1,4 @@
-var assetBundlerUtil = require( "./assetBundlerUtil.js" ),
+var assetBundlerUtil = require( "./lib/util.js" ),
 	_ = require( "underscore" ),
 	_s = require( "underscore.string" ),
 	path = require( "path" ),
