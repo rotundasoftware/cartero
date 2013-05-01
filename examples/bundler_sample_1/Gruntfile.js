@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					assetLibrary : {
 						srcDir : "AssetLibrary/",
 						destDir : "WebServer/Static/AssetLibrary-assets/"
