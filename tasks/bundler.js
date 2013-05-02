@@ -328,11 +328,12 @@ module.exports = function(grunt) {
 			} );
 		}
 
+		grunt.task.run( "resolveAndInjectDependencies" );
 		grunt.task.run( "saveBundleAndPageJSONs" );
 
-		grunt.log.writeln("options: " + JSON.stringify( grunt.config( "watch" ), null, "\t" ) );
+		//grunt.log.writeln("options: " + JSON.stringify( grunt.config( "watch" ), null, "\t" ) );
 
-		grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
+		//grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
 
 		if( mode === "dev" ) {
 			grunt.task.run( "watch" );
@@ -387,7 +388,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "prepare", "Prepare directories for build", function() {
 
-		grunt.log.writeln( JSON.stringify( options, null, "\t") );
+		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
 		grunt.file.mkdir( options.assetLibrary.destDir );
 		grunt.file.mkdir( options.appPages.destDir );
 
@@ -402,6 +403,8 @@ module.exports = function(grunt) {
 			bundleMap : kAssetBundlerDir + kBundleMapJSONFile,
 			pageMap : kAssetBundlerDir + kPageMapJSONFile
 		};
+
+		grunt.config.set( "configOptions", configOptions );
 
 		assetBundlerUtil.saveBundlerConfig( configOptions );
 
@@ -595,6 +598,22 @@ module.exports = function(grunt) {
 		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_tmpl" );
 
 		grunt.task.run( "buildPageBundlesHelper" );
+
+		grunt.config.set( "pageMap", pageMap );
+
+	} );
+
+
+	grunt.registerTask( "resolveAndInjectDependencies", "", function() {
+
+		var pageMap = grunt.config.get( "pageMap" );
+
+		assetBundlerUtil.resolveAndInjectDependencies(
+			grunt.config.get( "bundleMap" ),
+			pageMap,
+			grunt.config.get( "configOptions"),
+			options.rootDir,
+			options.staticDir );
 
 		grunt.config.set( "pageMap", pageMap );
 
