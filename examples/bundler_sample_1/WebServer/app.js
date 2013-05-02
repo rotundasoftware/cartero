@@ -55,6 +55,10 @@ app.get( "/page1/page1.html.swig", function( req, res ) {
 	res.render( kAppPagesDir + "/page1/page1.html.swig" );
 } );
 
+app.get( "/page2/page2.html.swig", function( req, res ) {
+	res.render( kAppPagesDir + "/page2/page2.html.swig" );
+} );
+
 app.get("/page1/page1_1/page1_1.html.swig", function( req, res ) {
 	res.render( kAppPagesDir + "/page1/page1_1/page1_1.html.swig" );
 } );

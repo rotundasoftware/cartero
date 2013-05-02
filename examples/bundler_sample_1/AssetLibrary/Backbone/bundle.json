@@ -1,4 +1,4 @@
 {
-	"dependencies" : [ "Underscore", "JQuery" ],
+	"dependencies" : [ "Underscore/*", "JQuery" ],
 	"keepSeparate" : true
 }

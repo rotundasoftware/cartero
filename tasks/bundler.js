@@ -427,7 +427,7 @@ module.exports = function(grunt) {
 
 		//var templateMap = assetBundlerUtil.buildTemplatesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "appPagesSrc" ) );
 		var pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
-		assetBundlerUtil.resolvePagesMap( pageMap, mode );
+		assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
 
 		grunt.config.set( "pageMap", pageMap );
 		//grunt.file.write( kTemplateMapJSONFile, JSON.stringify( templateMap , null, "\t" ) );
