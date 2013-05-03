@@ -2,9 +2,14 @@ var assetBundlerUtil = require( "./lib/util.js" );
 
 module.exports = function( rootDir, staticDir, appPagesDir ) {
 
-	//var bundleMap = assetBundlerUtil.readBundleMap();
-	var pageMap = assetBundlerUtil.readPageMap();
-	//var bundlerConfig = assetBundlerUtil.readBundlerConfig();
+	var pageMap;
+
+	try {
+		pageMap = assetBundlerUtil.readPageMap();
+	}
+	catch( e ) {
+		throw new Error( "Error while reading pageMap file.  Please run the grunt assetbundler task before running your application." );
+	}
 
 	return function( req, res, next ) {
 
