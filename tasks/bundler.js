@@ -8,7 +8,9 @@
 
 var assetBundlerUtil = require( "./../lib/util.js" ),
 	_ = require( "underscore" ),
-	_s = require( "underscore.string" );
+	_s = require( "underscore.string" ),
+	fs = require( "fs" ),
+	findit = require( "findit" );
 
 'use strict';
 
@@ -331,6 +333,8 @@ module.exports = function(grunt) {
 			} );
 		}
 
+		grunt.task.run( "replaceBundlerDirTokens" );
+
 		grunt.task.run( "resolveAndInjectDependencies" );
 		grunt.task.run( "saveBundleAndPageJSONs" );
 
@@ -626,6 +630,26 @@ module.exports = function(grunt) {
 
 		assetBundlerUtil.saveBundleMap( bundleMap );
 		assetBundlerUtil.savePageMap( pageMap );
+
+	} );
+
+	grunt.registerTask( "replaceBundlerDirTokens", "", function() {
+
+		function replaceStringInFile( fileName, matchString, replaceString ) {
+			var fileContents = fs.readFileSync( fileName ).toString();
+			fileContents = fileContents.replace( matchString, replaceString );
+			fs.writeFileSync( fileName, fileContents );
+		}
+
+		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), assetBundlerUtil.isAssetFile );
+		_.each( assetLibraryFiles, function( fileName ) {
+			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.assetLibrary.destDir, "").replace(/\/[^\/]*$/, "" ) );
+		} );
+
+		var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), assetBundlerUtil.isAssetFile );
+		_.each( appPagesFiles, function( fileName ) {
+			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
+		} );
 
 	} );
 
