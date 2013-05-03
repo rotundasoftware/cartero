@@ -15,9 +15,9 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 
 			var pageMetadata = pageMap[ path.replace( appPagesDir, "" ).substring( 1 ) ];
 
-			res.locals.js_files = pageMetadata.js_files;
-			res.locals.css_files = pageMetadata.css_files;
-			res.locals.tmpl_contents = pageMetadata.tmpl_contents;
+			res.locals.bundler_js = pageMetadata.bundler_js;
+			res.locals.bundler_css = pageMetadata.bundler_css;
+			res.locals.bundler_tmpl = pageMetadata.bundler_tmpl;
 
 			oldRender.apply( res, arguments );
 		};

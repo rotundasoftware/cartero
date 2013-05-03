@@ -4,8 +4,8 @@
 <head>
 
 {% block head %}
-{{ js_files|raw }}
-{{ css_files|raw }}
+{{ bundler_js|raw }}
+{{ bundler_css|raw }}
 {% endblock %}
 
 
@@ -14,7 +14,7 @@
 <body>
 {% block content %}{% endblock %}
 
-{{ tmpl_contents|raw }}
+{{ bundler_tmpl|raw }}
 </body>
 
 
