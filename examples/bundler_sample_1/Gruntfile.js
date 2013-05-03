@@ -23,6 +23,7 @@ module.exports = function( grunt ) {
 					},
 					staticDir : "WebServer/Static/",
 					rootDir : __dirname,
+					serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
 					minificationTasks : [
 						{

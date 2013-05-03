@@ -58,6 +58,8 @@ module.exports = function(grunt) {
 
 	var options = {};
 
+	var mode;
+
 	var pageMap = {};
 	var bundleMap = {};
 
@@ -87,12 +89,13 @@ module.exports = function(grunt) {
 		options = _.extend(
 			{},
 			{
-				useDirectoriesForDependencies : true
+				useDirectoriesForDependencies : true,
+				serverSideTemplateSuffix : ".swig"
 			},
 			options
 		);
 
-		var mode = options.mode;
+		mode = options.mode;
 		//console.log( "mode: " + mode );
 		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
 
@@ -269,6 +272,14 @@ module.exports = function(grunt) {
 
 		} );
 
+		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
+			files : [ options.appPages.srcDir + "**/*" + options.serverSideTemplateSuffix ],
+			tasks : [ "processServerSideTemplateChange" ],
+			options : {
+				nospawn : true
+			}
+		};
+
 		var assetFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
 			return options.assetLibrary.srcDir + extension;
 		} );
@@ -286,37 +297,6 @@ module.exports = function(grunt) {
 			}
 
 		};
-/*
-		var processFileChange = {};
-
-		_.each( _.keys( compileAssetsMap ), function( taskName ) {
-			processFileChange[ taskName ] = {
-				options : {
-
-				}
-			};
-		} );
-
-		grunt.config( "processFileChange", processFileChange );
-		*/
-/*
-		grunt.event.on( "watch", function(action, filepath) {
-			grunt.log.writeln( "filepath: " + filepath);
-			_.each( _.keys( compileAssetsMap ), function( taskName ) {
-
-				var taskConfig = grunt.config( "processFileChange" );
-
-				taskConfig[ taskName ] = {
-					options : {
-						srcFile : filepath
-					}
-				};
-
-				grunt.config( "processFileChange", taskConfig );
-				//grunt.config([ "processFileChange:" + taskName ], filepath);
-			} );
-		});
-*/
 
 		grunt.config( "watch", watch );
 
@@ -358,7 +338,6 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "processFileChange", "", function() {
 
-
 		grunt.task.run( "copy" );
 
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
@@ -366,39 +345,21 @@ module.exports = function(grunt) {
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
 		} );
 
-		/*
-		grunt.log.writeln("options: " + JSON.stringify( this.options(), null, "\t" ) );
-		grunt.log.writeln("arguments: " + JSON.stringify( arguments, null, "\t" ) );
+		grunt.task.run( "resolveAndInjectDependencies" );
+		grunt.task.run( "saveBundleAndPageJSONs" );
 
-		var compileTaskName = this.target;
+	} );
 
-		var srcFile = options;
+	grunt.registerTask( "processServerSideTemplateChange", "", function() {
 
-		var isAssetLibraryFile = srcFile.indexOf( options.assetLibrary.srcDir ) != -1;
-		var destFile = srcFile.replace( options.assetLibrary.srcDir, options.assetLibrary.destDir ).replace( options.appPages.srcDir, options.appPages.destDir );
+		// if a server-side template changed, assume the worst case senario
+		// ( that the bundler_require contents changed )
+		// rebuild the bundleMap and pageMap, re-resolve the dependencies, and save
+		// could be more granular
+		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+		grunt.task.run( "resolveAndInjectDependencies" );
+		grunt.task.run( "saveBundleAndPageJSONs" );
 
-		//copy[ "processFileChange" ] = {
-		//	files : [ {
-		//		src : srcFile,
-		//		dest : srcFile.replace( options.assetLibrary.srcDir, options.assetLibrary.destDir ).replace( options.appPages.srcDir, options.appPages.destDir )
-		//	} ]
-		//};
-
-		var compileTask = grunt.config( compileTaskName );
-
-		if( isAssetLibraryFile ) {
-
-			compileTask[ "processFileChange" ] = {
-				files : [ {
-					src : srcFile,
-					dest : destFile.replace( compileAssetsMap[ compileTaskName].src, compileAssetsMap[ compileTaskName].dest )
-				} ]
-			};
-
-		}
-
-		grunt.task.run( compileTask + ":processFileChange" );
-*/
 	} );
 
 	grunt.registerTask( "prepare", "Prepare directories for build", function() {
