@@ -23,6 +23,7 @@ module.exports = function( grunt ) {
 					},
 					staticDir : "WebServer/Static/",
 					rootDir : __dirname,
+					useDirectoriesForDependencies : true,
 					minificationTasks : [
 						{
 							name : "htmlmin",

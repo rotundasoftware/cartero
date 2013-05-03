@@ -84,6 +84,14 @@ module.exports = function(grunt) {
 			kAppPagesDefaults,
 			options.appPages );
 
+		options = _.extend(
+			{},
+			{
+				useDirectoriesForDependencies : true
+			},
+			options
+		);
+
 		var mode = options.mode;
 		//console.log( "mode: " + mode );
 		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
@@ -423,7 +431,7 @@ module.exports = function(grunt) {
 
 		//var bundleMap = assetBundlerUtil.buildBundlesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "assetLibrarySrc" ) );
 
-		bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir );
+		bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
 
 		try {
 			assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
