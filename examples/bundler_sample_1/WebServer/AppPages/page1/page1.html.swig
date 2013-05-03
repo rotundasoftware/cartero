@@ -1,6 +1,6 @@
 {% extends 'layout.html.swig' %}
 
-<!-- bundler_require [ "JQuery", "JQuery/UI" ] -->
+<!-- bundler_require [ "JQuery", "JQuery/UI", "Backbone/LibWithPriorities" ] -->
 
 {% block content %}
 

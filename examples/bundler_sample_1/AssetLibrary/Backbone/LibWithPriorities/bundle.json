@@ -1,0 +1,3 @@
+{
+	"priorityFiles" : [ "a.js", "_otherFiles/b.js" ]
+}
