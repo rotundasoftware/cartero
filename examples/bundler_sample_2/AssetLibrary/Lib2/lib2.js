@@ -1,3 +1,3 @@
-module.exports.identify = function() {
+exports.identify = function() {
 	return "i am lib2";
 };

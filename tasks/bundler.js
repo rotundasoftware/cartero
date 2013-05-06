@@ -644,14 +644,15 @@ module.exports = function(grunt) {
 	"};\n" +
 
 	"var module = {};" +
-	"module.exports = {};";
+	"var exports = {};";
 	}
 
 	function suffix() {
 	return ";if( ! window.assetBundler ) {\n" +
 		"window.assetBundler = {};\n" +
 		"window.assetBundler.exportMap = {};\n" +
-	"}\n" +
+	"};\n" +
+	"if ( module.exports === undefined ) module.exports = exports;\n" +
 	"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
 	"} () );";
 	}
@@ -660,8 +661,6 @@ module.exports = function(grunt) {
 
 	filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
-	console.log( filePath );
-
 	var fileContents = fs.readFileSync( filePath ).toString();
 
 	fileContents = prefix() + fileContents + suffix();
@@ -669,12 +668,6 @@ module.exports = function(grunt) {
 	fileContents = fileContents.replace( /#bundler_dir/g, filePath.replace(/\/[^\/]*$/, "" ) );
 	fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
 	fileContents = fileContents.replace( /#bundler_assetLibrary/g, path.join( rootDir, assetLibraryDir ) );
-
-	//var res = resolve.sync( "./file1.js", { basedir : baseDir, paths : [] } );
-
-	console.log( fileContents );
-
-	//fs.writeFileSync( path.join( outputDir, getFileName( filePath ) ), fileContents );
 
 	fs.writeFileSync( filePath, fileContents );
 	}
@@ -688,7 +681,6 @@ module.exports = function(grunt) {
 		} );
 
 		_.each( assetLibraryFiles, function( fileName ) {
-			console.log( fileName );
 			processFile( fileName, rootDir, options.assetLibrary.destDir );
 		} );
 
@@ -699,10 +691,6 @@ module.exports = function(grunt) {
 		_.each( appPagesFiles, function( fileName ) {
 			processFile( fileName, rootDir , options.assetLibrary.destDir );
 		} );
-
-
-
-
 
 	} );
 
