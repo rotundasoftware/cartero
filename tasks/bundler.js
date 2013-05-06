@@ -625,8 +625,7 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask( "requirify", "", function() {
 
-		function prefix() {
-			return ";( function() {\n" +
+		var kPrefix = ";( function() {\n" +
 		"var require = function( fileName ) {\n" +
 		"var relativePathRoot = \"#bundler_dir\";\n" +
 		"var assetLibraryRoot = \"#bundler_assetLibrary\";\n" +
@@ -645,17 +644,14 @@ module.exports = function(grunt) {
 
 	"var module = {};" +
 	"var exports = {};";
-	}
 
-	function suffix() {
-	return ";if( ! window.assetBundler ) {\n" +
+	var kSuffix = ";if( ! window.assetBundler ) {\n" +
 		"window.assetBundler = {};\n" +
 		"window.assetBundler.exportMap = {};\n" +
 	"};\n" +
 	"if ( module.exports === undefined ) module.exports = exports;\n" +
 	"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
 	"} () );";
-	}
 
 	function processFile( filePath, rootDir, assetLibraryDir ) {
 
@@ -663,7 +659,7 @@ module.exports = function(grunt) {
 
 	var fileContents = fs.readFileSync( filePath ).toString();
 
-	fileContents = prefix() + fileContents + suffix();
+	fileContents = kPrefix + fileContents + kSuffix;
 
 	fileContents = fileContents.replace( /#bundler_dir/g, filePath.replace(/\/[^\/]*$/, "" ) );
 	fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
