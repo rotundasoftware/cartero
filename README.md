@@ -38,6 +38,3 @@ npm install
 copy the Gruntfile.js from examples/bundler_sample_1 and modify appropriately
 
 TODOs:
-* support "*" wildcard character for bundle dependencies
-* do more processing at build time vs runtime for pageMap.json and bundleMap.json
-* break task options into separate assetLibrary and appPages hashes
