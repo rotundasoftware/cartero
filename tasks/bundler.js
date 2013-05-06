@@ -10,7 +10,8 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	_ = require( "underscore" ),
 	_s = require( "underscore.string" ),
 	fs = require( "fs" ),
-	findit = require( "findit" );
+	findit = require( "findit" ),
+	path = require( "path" );
 
 'use strict';
 
@@ -70,7 +71,7 @@ module.exports = function(grunt) {
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
 
-	grunt.registerMultiTask('assetbundler', 'Your task description goes here.', function() {
+	grunt.registerMultiTask( "assetbundler", "Your task description goes here.", function() {
 
 		options = this.options();
 
@@ -619,6 +620,89 @@ module.exports = function(grunt) {
 		_.each( appPagesFiles, function( fileName ) {
 			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
 		} );
+
+	} );
+
+	grunt.registerMultiTask( "requirify", "", function() {
+
+		function prefix() {
+			return ";( function() {\n" +
+		"var require = function( fileName ) {\n" +
+		"var relativePathRoot = \"#bundler_dir\";\n" +
+		"var assetLibraryRoot = \"#bundler_assetLibrary\";\n" +
+
+		"var absolutePath = \"\";\n" +
+		"if( fileName.indexOf( \"./\" ) === 0 ) {\n" +
+		"	absolutePath = relativePathRoot + fileName.substring( 1 );\n" +
+		"}\n" +
+		"else {\n" +
+		"	absolutePath = assetLibraryRoot + fileName;\n" +
+		"}\n" +
+
+		"return window.assetBundler.exportMap[ absolutePath ];\n" +
+		//return "/Users/olegseletsky/test10/" + fileName;
+	"};\n" +
+
+	"var module = {};" +
+	"module.exports = {};";
+	}
+
+	function suffix() {
+	return ";if( ! window.assetBundler ) {\n" +
+		"window.assetBundler = {};\n" +
+		"window.assetBundler.exportMap = {};\n" +
+	"}\n" +
+	"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
+	"} () );";
+	}
+
+	function processFile( filePath, rootDir, assetLibraryDir ) {
+
+	filePath = fs.realpathSync( path.join( rootDir, filePath ) );
+
+	console.log( filePath );
+
+	var fileContents = fs.readFileSync( filePath ).toString();
+
+	fileContents = prefix() + fileContents + suffix();
+
+	fileContents = fileContents.replace( /#bundler_dir/g, filePath.replace(/\/[^\/]*$/, "" ) );
+	fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
+	fileContents = fileContents.replace( /#bundler_assetLibrary/g, path.join( rootDir, assetLibraryDir ) );
+
+	//var res = resolve.sync( "./file1.js", { basedir : baseDir, paths : [] } );
+
+	console.log( fileContents );
+
+	//fs.writeFileSync( path.join( outputDir, getFileName( filePath ) ), fileContents );
+
+	fs.writeFileSync( filePath, fileContents );
+	}
+
+		var options = this.options();
+
+		var rootDir = options.rootDir;
+
+		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), function( fileName ) {
+			return _s.endsWith( fileName, ".js" );
+		} );
+
+		_.each( assetLibraryFiles, function( fileName ) {
+			console.log( fileName );
+			processFile( fileName, rootDir, options.assetLibrary.destDir );
+		} );
+
+		var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), function( fileName ) {
+			return _s.endsWith( fileName, ".js" );
+		} );
+
+		_.each( appPagesFiles, function( fileName ) {
+			processFile( fileName, rootDir , options.assetLibrary.destDir );
+		} );
+
+
+
+
 
 	} );
 
