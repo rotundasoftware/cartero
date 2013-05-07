@@ -93,7 +93,8 @@ module.exports = function(grunt) {
 			{},
 			{
 				useDirectoriesForDependencies : true,
-				serverSideTemplateSuffix : ".swig"
+				serverSideTemplateSuffix : ".swig",
+				doRequirify : false
 			},
 			options
 		);
@@ -106,6 +107,7 @@ module.exports = function(grunt) {
 		var clean = grunt.config( "clean" ) || {};
 		var watch = grunt.config( "watch" ) || {};
 		var concat = grunt.config( "concat" ) || {};
+		var requirify = grunt.config( "requirify" ) || {};
 
 		copy[ assetBundlerTaskPrefix ] = {
 			files : [
@@ -303,6 +305,22 @@ module.exports = function(grunt) {
 
 		grunt.config( "watch", watch );
 
+		requirify[ assetBundlerTaskPrefix ] = {
+			options : {
+				nodePaths : [ options.assetLibrary.destDir ]
+			},
+			files : [
+				{
+					src : options.assetLibrary.destDir  + "**/*.js"
+				},
+				{
+					src : options.appPages.destDir  + "**/*.js"
+				}
+			]
+		};
+
+		grunt.config( "requirify", requirify );
+
 		grunt.task.run( "clean:ASSET_BUNDLER" );
 		grunt.task.run( "prepare" );
 		grunt.task.run( "copy" );
@@ -311,6 +329,8 @@ module.exports = function(grunt) {
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
 		} );
+
+		if( options.doRequirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
 
@@ -668,7 +688,7 @@ module.exports = function(grunt) {
 
 		var paths = [];
 
-		_.each( options.paths, function( includePath ) {
+		_.each( options.nodePaths, function( includePath ) {
 			paths.push( fs.realpathSync( includePath ) );
 		} );
 
