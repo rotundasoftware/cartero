@@ -667,7 +667,15 @@ module.exports = function(grunt) {
 			//filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
 			var fileContents = fs.readFileSync( filePath ).toString();
-			var requiredFiles = detective( fileContents );
+			var requiredFiles;
+
+			try {
+				requiredFiles = detective( fileContents );
+			}
+			catch( e ) {
+				throw new Error( "Failed to parse file " + filePath + ".  Please make sure it is valid JavaScript." );
+			}
+
 			var resolvedRequires = {};
 
 			_.each( requiredFiles, function( relativeRequire ) {
