@@ -628,70 +628,52 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( "requirify", "", function() {
 
 		var kPrefix = ";( function() {\n" +
-		"var require = function( fileName ) {\n" +
-		"var resolvedRequiresMap = \"#bundler_resolvedRequiresMap\";\n" +
-		"return window.assetBundler.exportMap[ resolvedRequiresMap[ fileName ] ];\n" +
+			"var require = function( fileName ) {\n" +
+				"var resolvedRequiresMap = \"#bundler_resolvedRequiresMap\";\n" +
+				"return window.assetBundler.exportMap[ resolvedRequiresMap[ fileName ] ];\n" +
+			"};\n" +
 
-		//return "/Users/olegseletsky/test10/" + fileName;
-	"};\n" +
+			"var module = {};" +
+			"var exports = {};";
 
-	"var module = {};" +
-	"var exports = {};";
+		var kSuffix = ";if( ! window.assetBundler ) {\n" +
+				"window.assetBundler = {};\n" +
+				"window.assetBundler.exportMap = {};\n" +
+			"};\n" +
+			"if ( module.exports === undefined ) module.exports = exports;\n" +
+			"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
+			"} () );";
 
-	var kSuffix = ";if( ! window.assetBundler ) {\n" +
-		"window.assetBundler = {};\n" +
-		"window.assetBundler.exportMap = {};\n" +
-	"};\n" +
-	"if ( module.exports === undefined ) module.exports = exports;\n" +
-	"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
-	"} () );";
+		function processFile( filePath, paths ) {
 
-	function processFile( filePath, rootDir, assetLibraryDir ) {
+			//filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
-	assetLibraryDir = path.join( rootDir, assetLibraryDir );
+			var fileContents = fs.readFileSync( filePath ).toString();
+			var requiredFiles = detective( fileContents );
+			var resolvedRequires = {};
 
-	filePath = fs.realpathSync( path.join( rootDir, filePath ) );
+			_.each( requiredFiles, function( relativeRequire ) {
+				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) , paths : paths } );
+				resolvedRequires[ relativeRequire ] = resolvedRequire;
 
-	var fileContents = fs.readFileSync( filePath ).toString();
+			} );
 
-	var requiredFiles = detective( fileContents );
-
-	var resolvedRequires = {};
-
-	_.each( requiredFiles, function( relativeRequire ) {
-		var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) , paths : assetLibraryDir } );
-
-		resolvedRequires[ relativeRequire ] = resolvedRequire;
-
-	} );
-
-	fileContents = kPrefix + fileContents + kSuffix;
-
-	fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
-	fileContents = fileContents.replace( /"#bundler_resolvedRequiresMap"/g, JSON.stringify( resolvedRequires ) );
-
-
-	fs.writeFileSync( filePath, fileContents );
-	}
+			fileContents = kPrefix + fileContents + kSuffix;
+			fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
+			fileContents = fileContents.replace( /"#bundler_resolvedRequiresMap"/g, JSON.stringify( resolvedRequires ) );
+			fs.writeFileSync( filePath, fileContents );
+		}
 
 		var options = this.options();
 
-		var rootDir = options.rootDir;
+		var paths = [];
 
-		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), function( fileName ) {
-			return _s.endsWith( fileName, ".js" );
+		_.each( options.paths, function( includePath ) {
+			paths.push( fs.realpathSync( includePath ) );
 		} );
 
-		_.each( assetLibraryFiles, function( fileName ) {
-			processFile( fileName, rootDir, options.assetLibrary.destDir );
-		} );
-
-		var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), function( fileName ) {
-			return _s.endsWith( fileName, ".js" );
-		} );
-
-		_.each( appPagesFiles, function( fileName ) {
-			processFile( fileName, rootDir , options.assetLibrary.destDir );
+		_.each( this.filesSrc, function( fileName ) {
+			processFile( fs.realpathSync( fileName ) , paths );
 		} );
 
 	} );

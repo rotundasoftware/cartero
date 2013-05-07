@@ -48,19 +48,16 @@ module.exports = function( grunt ) {
 		requirify : {
 			dist : {
 				options : {
-					assetLibrary : {
-						srcDir : "AssetLibrary/",
-						destDir : "WebServer/Static/AssetLibrary-assets/"
+					paths : [ "WebServer/Static/AssetLibrary-assets/" ]
+				},
+				files : [
+					{
+						src : "WebServer/Static/AssetLibrary-assets/**/*.js"
 					},
-					appPages : {
-						srcDir : "WebServer/AppPages/",
-						destDir : "WebServer/Static/AppPages-assets/",
-						filesToIgnore : /_.*/,
-						directoriesToIgnore : /__.*/
-					},
-					staticDir : "WebServer/Static/",
-					rootDir : __dirname
-				}
+					{
+						src : "WebServer/Static/AppPages-assets/**/*.js"
+					}
+				]
 			}
 		}
 	} );
