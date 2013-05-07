@@ -11,7 +11,9 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	_s = require( "underscore.string" ),
 	fs = require( "fs" ),
 	findit = require( "findit" ),
-	path = require( "path" );
+	path = require( "path" ),
+	detective = require( "detective" ),
+	resolve = require( "resolve" );
 
 'use strict';
 
@@ -627,18 +629,9 @@ module.exports = function(grunt) {
 
 		var kPrefix = ";( function() {\n" +
 		"var require = function( fileName ) {\n" +
-		"var relativePathRoot = \"#bundler_dir\";\n" +
-		"var assetLibraryRoot = \"#bundler_assetLibrary\";\n" +
+		"var resolvedRequiresMap = \"#bundler_resolvedRequiresMap\";\n" +
+		"return window.assetBundler.exportMap[ resolvedRequiresMap[ fileName ] ];\n" +
 
-		"var absolutePath = \"\";\n" +
-		"if( fileName.indexOf( \"./\" ) === 0 ) {\n" +
-		"	absolutePath = relativePathRoot + fileName.substring( 1 );\n" +
-		"}\n" +
-		"else {\n" +
-		"	absolutePath = assetLibraryRoot + fileName;\n" +
-		"}\n" +
-
-		"return window.assetBundler.exportMap[ absolutePath ];\n" +
 		//return "/Users/olegseletsky/test10/" + fileName;
 	"};\n" +
 
@@ -655,15 +648,28 @@ module.exports = function(grunt) {
 
 	function processFile( filePath, rootDir, assetLibraryDir ) {
 
+	assetLibraryDir = path.join( rootDir, assetLibraryDir );
+
 	filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
 	var fileContents = fs.readFileSync( filePath ).toString();
 
+	var requiredFiles = detective( fileContents );
+
+	var resolvedRequires = {};
+
+	_.each( requiredFiles, function( relativeRequire ) {
+		var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) , paths : assetLibraryDir } );
+
+		resolvedRequires[ relativeRequire ] = resolvedRequire;
+
+	} );
+
 	fileContents = kPrefix + fileContents + kSuffix;
 
-	fileContents = fileContents.replace( /#bundler_dir/g, filePath.replace(/\/[^\/]*$/, "" ) );
 	fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
-	fileContents = fileContents.replace( /#bundler_assetLibrary/g, path.join( rootDir, assetLibraryDir ) );
+	fileContents = fileContents.replace( /"#bundler_resolvedRequiresMap"/g, JSON.stringify( resolvedRequires ) );
+
 
 	fs.writeFileSync( filePath, fileContents );
 	}
