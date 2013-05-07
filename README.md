@@ -38,6 +38,20 @@ Each directory in __assetLibrary__ can contain a `bundle.json` file.  This file 
 * `subdirectories` : (default : `"/_.*/"`) Regular expression (in string format) used to determine which subdirectories are part of the bundle itself and are not their own separate bundles.
 * `filePriority` : The list of files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.
 
+### Server-side template directives
+
+Add the `#bundler_require` directive to your server-side templates to declare which bundles this page depends on.  For example:
+
+```html
+<!-- #bundler_require "Backbone", "YourDialogWidget" -->
+```
+
+Add the `#bundler_extends` directive to declare what server-side template this template extends from.  `#bundler_require` bundles from that template will automatically be added to this one.
+
+```html
+<!-- #bundler_extends "../layout.html.swig" -->
+```
+
 ### Options
 
 #### assetLibrary
