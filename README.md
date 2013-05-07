@@ -23,20 +23,64 @@ grunt.loadNpmTasks('grunt-asset-bundler');
 ## assetbundler task
 _Run this task with the `grunt assetbundler` command._
 
-Task targets, files and options may be specified according to the grunt [Configuring tasks](http://gruntjs.com/configuring-tasks) guide.
+###Terminology
+
+* __assetLibrary__ : The directory where your common and third-party libraries are kept
+* __appPages__ : The directory where server-side templates and local libraries are kept.
+* __srcDir__ : The directory where the grunt task should look for the files.  This is most likely your version controlled files.
+* __destDir__ : The directory where the grunt task should save the output too.  This most likely where your application will serve the files from
+
+### bundle.json
+
+Each directory in __assetLibrary__ can contain a `bundle.json` file.  This file supports the following properties:
+* `dependencies` : The bundles this bundle depends on.
+* `keepSeparate` : (default : `false`) Whether this bundle should be kept as a separate file in `prod` mode.  This is intended to be used for large, commonly used libraries such as JQueryUI.
+* `subdirectories` : (default : `"/_.*/"`) Regular expression (in string format) used to determine which subdirectories are part of the bundle itself and are not their own separate bundles.
+* `filePriority` : The list of files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.
+
 ### Options
 
 #### assetLibrary
 Type: `Object`
+
 Properties
 * srcDir
 * destDir
+* filesToIgnore
+* directoriesToIgnore
 
 #### appPages
 Type: `Object`
+
 Properties
 * srcDir
 * destDir
+* filesToIgnore
+* directoriesToIgnore
+
+### mode
+Type: `String` Default: `dev`
+
+`dev` or `prod`.  `prod` will concat, minify, etc.
+
+### useDirectoriesForDependencies
+Type: `Boolean`
+
+Whether the directory structure in the __assetLibrary__ directory should drive the bundle dependency.  If `true`, a bundle's parent directory will automatically be added as a dependent bundle.
+
+### serverSideTemplateSuffix
+Type: `String` Default: `.swig`
+
+The suffix of the server-side templates being used.
+
+### minificationTasks
+Type: `Array`
+
+List of minification tasks that shoudl be run when `mode == "prod"`.  Each item should contain the following properties:
+* `name` : The name of the grunt task to run.
+* `suffixes` : List of suffixes to apply this grunt task too
+* `options` : Task-specific options to be passed through to the grunt task itself.
+
 
 #INSTRUCTIONS
 
