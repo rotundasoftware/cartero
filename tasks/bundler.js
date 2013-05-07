@@ -94,7 +94,7 @@ module.exports = function(grunt) {
 			{
 				useDirectoriesForDependencies : true,
 				serverSideTemplateSuffix : ".swig",
-				doRequirify : false
+				requirify : false
 			},
 			options
 		);
@@ -306,9 +306,7 @@ module.exports = function(grunt) {
 		grunt.config( "watch", watch );
 
 		requirify[ assetBundlerTaskPrefix ] = {
-			options : {
-				nodePaths : [ options.assetLibrary.destDir ]
-			},
+			options : options.requirify.options,
 			files : [
 				{
 					src : options.assetLibrary.destDir  + "**/*.js"
@@ -330,7 +328,7 @@ module.exports = function(grunt) {
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
 		} );
 
-		if( options.doRequirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
+		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
 
