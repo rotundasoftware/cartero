@@ -21,7 +21,21 @@ module.exports = function(grunt) {
 
 	var assetBundlerTaskPrefix = "ASSET_BUNDLER";
 
-	var kAssetFileExtensions = [ "**/*.js", "**/*.css", "**/*.tmpl" ];
+	var assetFileExtensionsMap = {
+		js : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
+		},
+		css : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
+		},
+		tmpl : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens", "resolveAndInjectDependencies", "saveBundleAndPageJSONs" ]
+		}
+	};
+
+	var kAssetFileExtensions = _.map( _.keys( assetFileExtensionsMap ), function( extension ) {
+		return "**/*." + extension;
+	} );
 
 	var kBundleMapJSONFile = "bundleMap.json";
 	var kPageMapJSONFile = "pageMap.json";
@@ -37,7 +51,7 @@ module.exports = function(grunt) {
 	var kAssetLibraryDefaults = {
 		srcDir : "AssetLibrary/",
 		destDir : "WebServer/Static/AssetLibrary-assets/"
-	}
+	};
 
 	var compileAssetsMap = {
 		coffee : {
@@ -205,6 +219,8 @@ module.exports = function(grunt) {
 
 			}
 
+			task[ assetBundlerTaskPrefix ] = {};
+
 			grunt.config( taskName, task );
 
 		} );
@@ -255,27 +271,226 @@ module.exports = function(grunt) {
 
 		grunt.config( "concat", concat );
 
+//		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+//
+//			var taskOptions = compileAssetsMap[ taskName ];
+//
+//			watch[ assetBundlerTaskPrefix + "_assetLibrary_" + taskName ] = {
+//				files : [ options.assetLibrary.srcDir + "**/*" + taskOptions.src ],
+//				tasks : [ "processFileChange" ],
+//				options : {
+//					nospawn : true
+//				}
+//			};
+//
+//			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
+//				files : [ options.appPages.srcDir + "**/*" + taskOptions.src ],
+//				tasks : [ "processFileChange" ],
+//				options : {
+//					nospawn : true
+//				}
+//			};
+//
+//		} );
+
+
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
 
 			var taskOptions = compileAssetsMap[ taskName ];
 
-			watch[ assetBundlerTaskPrefix + "_assetLibrary_" + taskName ] = {
-				files : [ options.assetLibrary.srcDir + "**/*" + taskOptions.src ],
-				tasks : [ "processFileChange" ],
-				options : {
-					nospawn : true
-				}
-			};
+			var tasksToRun;
 
-			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
-				files : [ options.appPages.srcDir + "**/*" + taskOptions.src ],
-				tasks : [ "processFileChange" ],
+			if( taskName === "compass" ) {
+				tasksToRun = [
+					taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
+					taskName + ":" + assetBundlerTaskPrefix + "_appPages"
+				];
+			}
+			else {
+				tasksToRun = [ "copy:" + assetBundlerTaskPrefix, taskName + ":" + assetBundlerTaskPrefix ];
+			}
+
+			if( options.requirify && taskOptions.dest === ".js" )
+				tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
+
+
+			watch[ assetBundlerTaskPrefix + "_" + taskName ] = {
+				files : [
+					options.assetLibrary.srcDir + "**/*" + taskOptions.src,
+					options.appPages.srcDir + "**/*" + taskOptions.src
+				],
+				tasks : tasksToRun,
 				options : {
 					nospawn : true
 				}
 			};
 
 		} );
+
+
+//			watch[ assetBundlerTaskPrefix + "_assetLibrary" + taskName ] = {
+//				files : [
+//					options.assetLibrary.srcDir + "**/*" + taskOptions.src
+//				],
+//				tasks : [
+//					"copy:" + assetBundlerTaskPrefix,
+//					taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
+//					"requirify:" + assetBundlerTaskPrefix
+//				],
+//				options : {
+//					nospawn : true
+//				}
+//			};
+//
+//			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
+//				files : [
+//					options.appPages.srcDir + "**/*" + taskOptions.src
+//				],
+//				tasks : [
+//					"copy:" + assetBundlerTaskPrefix,
+//					taskName + ":" + assetBundlerTaskPrefix  + "_appPages",
+//					"requirify:" + assetBundlerTaskPrefix
+//				],
+//				options : {
+//					nospawn : true
+//				}
+//			};
+//		} );
+//
+		_.each( assetFileExtensionsMap, function( val, key ) {
+
+			var tasksToRun = _.union([], val.tasks );
+
+			if( options.requirify && key === "js" )
+				tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
+
+			watch[ assetBundlerTaskPrefix + "_" + key ] = {
+				files : [
+					options.assetLibrary.srcDir + "**/*." + key,
+					options.appPages.srcDir + "**/*." + key
+				],
+				tasks : tasksToRun,
+				options : {
+					nospawn : true
+				}
+			};
+		} );
+
+//		watch[ assetBundlerTaskPrefix + "_js" ] = {
+//			files : [
+//				options.assetLibrary.srcDir + "**/*.js",
+//				options.appPages.srcDir + "**/*.js"
+//			],
+//			tasks : [
+//				"copy:" + assetBundlerTaskPrefix,
+//				"requirify:" + assetBundlerTaskPrefix
+//			],
+//			options : {
+//				nospawn : true
+//			}
+//		};
+//
+//		watch[ assetBundlerTaskPrefix + "_css" ] = {
+//			files : [
+//				options.assetLibrary.srcDir + "**/*.js",
+//				options.appPages.srcDir + "**/*.js"
+//			],
+//			tasks : [
+//				"copy:" + assetBundlerTaskPrefix,
+//				"requirify:" + assetBundlerTaskPrefix
+//			],
+//			options : {
+//				nospawn : true
+//			}
+//		};
+
+
+//		_.each( kAssetFileExtensions, function( extension ) {
+//
+//			watch[ assetBundlerTaskPrefix + "_" + extension ] = {
+//				files : [
+//					options.appPages.srcDir + "**/*" + taskOptions.src
+//				],
+//				tasks : [
+//					"copy:" + assetBundlerTaskPrefix,
+//					taskName + ":" + assetBundlerTaskPrefix  + "_assetLibrary",
+//					"requirify:" + assetBundlerTaskPrefix
+//				],
+//				options : {
+//					nospawn : true
+//				}
+//			};
+//			return options.assetLibrary.srcDir + extension;
+//		} );
+
+//		var compiledAssetsAssetLibrary = _.map( compileAssetsMap, function( asset ) {
+//			return options.assetLibrary.srcDir + "**/*" + asset.src;
+//		} );
+//
+//		var compiledAssetsAppPages = _.map( compileAssetsMap, function( asset ) {
+//			return options.appPages.srcDir + "**/*" + asset.src;
+//		} );
+//
+//		var assetLibraryFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
+//			return options.assetLibrary.srcDir + extension;
+//		} );
+//
+//		assetLibraryFilesToWatch = _.union( assetLibraryFilesToWatch, compiledAssetsAssetLibrary );
+//
+//		var appPagesFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
+//			return options.appPages.srcDir + extension;
+//		} );
+//
+//		appPagesFilesToWatch = _.union( appPagesFilesToWatch, compiledAssetsAppPages );
+//
+//		var assetLibraryWatchTasks = [];
+//		var appPagesWatchTasks = [];
+//
+//		assetLibraryWatchTasks.push( "copy:" + assetBundlerTaskPrefix );
+//
+//		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+//			assetLibraryWatchTasks.push( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
+//			appPagesWatchTasks.push( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
+//
+//		} );
+//
+//		if( options.requirify ) {
+//			assetLibraryWatchTasks.push( "requirify:" + assetBundlerTaskPrefix );
+//			appPagesWatchTasks.push( "requirify:" + assetBundlerTaskPrefix );
+//
+//		}
+//
+//		watch[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+//			files : assetLibraryFilesToWatch,
+//			tasks : assetLibraryWatchTasks,
+//			options : {
+//				nospawn : true
+//			}
+//		};
+//
+//		watch[ assetBundlerTaskPrefix + "_appPages" ] = {
+//			files : appPagesFilesToWatch,
+//			tasks : appPagesWatchTasks,
+//			options : {
+//				nospawn : true
+//			}
+//		};
+
+
+/*
+		var appPagesFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
+			return options.appPages.srcDir + extension;
+		} );
+
+
+		watch[ assetBundlerTaskPrefix + "_appPages" ] = {
+			files : appPagesFilesToWatch,
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "requirify:" + assetBundlerTaskPrefix ],
+			options : {
+				nospawn : true
+			}
+		};
+*/
 
 		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
 			files : [ options.appPages.srcDir + "**/*" + options.serverSideTemplateSuffix ],
@@ -284,7 +499,7 @@ module.exports = function(grunt) {
 				nospawn : true
 			}
 		};
-
+/*
 		var assetFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
 			return options.assetLibrary.srcDir + extension;
 		} );
@@ -302,8 +517,94 @@ module.exports = function(grunt) {
 			}
 
 		};
+*/
 
 		grunt.config( "watch", watch );
+
+		grunt.event.on( "watch", function( action, filepath ) {
+			console.log( "PATH: " + filepath );
+
+			var isAssetLibraryFile = _s.startsWith( filepath, options.assetLibrary.srcDir );
+
+			var newDest = "";
+
+			if( isAssetLibraryFile )
+				newDest = filepath.replace( options.assetLibrary.srcDir, options.assetLibrary.destDir );
+			else
+				newDest = filepath.replace( options.appPages.srcDir, options.appPages.destDir );
+
+			newDest = assetBundlerUtil.mapAssetFileName( newDest );
+
+			grunt.config( [ "copy", assetBundlerTaskPrefix, "files" ], [ {
+				src : filepath,
+				dest : newDest
+			} ] );
+
+
+			_.each( _.keys( compileAssetsMap ), function( taskName ) {
+
+				//TODO: handle compass, for now itll just rerun for all files
+				if( taskName === "compass" ) return;
+
+				var taskOptions = compileAssetsMap[ taskName ];
+
+				var tempFile = [];
+				var tempDest = [];
+
+				if( _s.endsWith( filepath, taskOptions.src ) ) {
+					tempFile = filepath;
+					tempDest = newDest;
+				}
+
+				var userSpecifiedOptions;
+
+				if( ! _.isUndefined( options.preprocessingOptions ) ) {
+					userSpecifiedOptions = options.preprocessingOptions[ taskName ];
+				}
+
+				grunt.config( [ taskName, assetBundlerTaskPrefix ], {
+					src : tempFile,
+					dest : tempDest,
+					options : userSpecifiedOptions
+				} );
+
+				//grunt.config( [ taskName, assetBundlerTaskPrefix, "src" ], tempFile );
+				//grunt.config( [ taskName, assetBundlerTaskPrefix, "dest" ], tempDest );
+
+/*
+				if( isAssetLibraryFile ) {
+					grunt.config( [ taskName, assetBundlerTaskPrefix + "_assetLibrary" ], {
+						src : tempFile,
+						dest : tempDest
+					} );
+				}
+				else {
+					grunt.config( [ taskName, assetBundlerTaskPrefix + "_appPages" ], {
+						src : tempFile,
+						dest : tempDest
+					} );
+
+				}
+*/
+
+			} );
+
+			newDest = assetBundlerUtil.mapAssetFileName( newDest );
+
+			console.log("newDest: " + newDest );
+			if( _s.endsWith( newDest, ".js" ) ) {
+				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
+					src : newDest
+				} ] );
+			}
+			else {
+				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
+					src : []
+				} ] );
+
+			}
+
+		} );
 
 		requirify[ assetBundlerTaskPrefix ] = {
 			options : options.requirify.options,
@@ -623,8 +924,8 @@ module.exports = function(grunt) {
 
 	} );
 
+	//TODO: support taking list of files process as input?
 	grunt.registerTask( "replaceBundlerDirTokens", "", function() {
-
 		function replaceStringInFile( fileName, matchString, replaceString ) {
 			var fileContents = fs.readFileSync( fileName ).toString();
 			fileContents = fileContents.replace( matchString, replaceString );

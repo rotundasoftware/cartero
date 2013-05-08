@@ -1,0 +1,1 @@
+buttonClickedFunc = () -> alert "Button asd6 dada!"
