@@ -391,8 +391,8 @@ module.exports = function(grunt) {
 			console.log("newDest: " + newDest );
 			if( _s.endsWith( newDest, ".js" ) && options.requirify ) {
 				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
-					src : newDest,
-					options : options.requirify.options
+					src : filepath,
+					dest : newDest
 				} ] );
 			}
 			else {
@@ -456,7 +456,7 @@ module.exports = function(grunt) {
 		//grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
 
 		if( mode === "dev" ) {
-			//grunt.task.run( "watch" );
+			grunt.task.run( "watch" );
 		}
 
 	} );
