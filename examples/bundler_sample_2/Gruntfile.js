@@ -12,25 +12,30 @@ module.exports = function( grunt ) {
 				options : {
 					mode : "dev",
 					assetLibrary : {
-						srcDir : "AssetLibrary/",
-						destDir : "WebServer/Static/AssetLibrary-assets/"
+						//srcDir : "AssetLibrary/",
+						//destDir : "WebServer/Static/AssetLibrary-assets/"
+						//destDir : "WebServer/Static/node_modules/"
+						srcDir : "App/node_modules/",
+						destDir : "App/WebServer/Static/AssetLibrary-assets/"
 					},
 					appPages : {
-						srcDir : "WebServer/AppPages/",
-						destDir : "WebServer/Static/AppPages-assets/",
+						//srcDir : "WebServer/AppPages/",
+						//destDir : "WebServer/Static/AppPages-assets/",
+						srcDir : "App/WebServer/AppPages/",
+						destDir : "App/WebServer/Static/AppPages-assets/",
 						filesToIgnore : /_.*/,
 						directoriesToIgnore : /__.*/
 					},
-					staticDir : "WebServer/Static/",
+					staticDir : "App/WebServer/Static/",
 					rootDir : __dirname,
 					serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
 					doRequirify : true,
 					requirify : {
 						options : {
-							nodePaths : [
-								"WebServer/Static/AssetLibrary-assets/"
-							]
+							//nodePaths : [
+							//	"WebServer/Static/AssetLibrary-assets/"
+							//]
 						}
 					},
 					minificationTasks : [

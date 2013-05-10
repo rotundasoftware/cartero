@@ -13,7 +13,9 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	findit = require( "findit" ),
 	path = require( "path" ),
 	detective = require( "detective" ),
-	resolve = require( "resolve" );
+	resolve = require( "resolve" ),
+	browserify = require( "browserify" ),
+	async = require( "async" );
 
 'use strict';
 
@@ -271,28 +273,6 @@ module.exports = function(grunt) {
 
 		grunt.config( "concat", concat );
 
-//		_.each( _.keys( compileAssetsMap ), function( taskName ) {
-//
-//			var taskOptions = compileAssetsMap[ taskName ];
-//
-//			watch[ assetBundlerTaskPrefix + "_assetLibrary_" + taskName ] = {
-//				files : [ options.assetLibrary.srcDir + "**/*" + taskOptions.src ],
-//				tasks : [ "processFileChange" ],
-//				options : {
-//					nospawn : true
-//				}
-//			};
-//
-//			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
-//				files : [ options.appPages.srcDir + "**/*" + taskOptions.src ],
-//				tasks : [ "processFileChange" ],
-//				options : {
-//					nospawn : true
-//				}
-//			};
-//
-//		} );
-
 
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
 
@@ -327,36 +307,6 @@ module.exports = function(grunt) {
 
 		} );
 
-
-//			watch[ assetBundlerTaskPrefix + "_assetLibrary" + taskName ] = {
-//				files : [
-//					options.assetLibrary.srcDir + "**/*" + taskOptions.src
-//				],
-//				tasks : [
-//					"copy:" + assetBundlerTaskPrefix,
-//					taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
-//					"requirify:" + assetBundlerTaskPrefix
-//				],
-//				options : {
-//					nospawn : true
-//				}
-//			};
-//
-//			watch[ assetBundlerTaskPrefix + "_appPages_" + taskName ] = {
-//				files : [
-//					options.appPages.srcDir + "**/*" + taskOptions.src
-//				],
-//				tasks : [
-//					"copy:" + assetBundlerTaskPrefix,
-//					taskName + ":" + assetBundlerTaskPrefix  + "_appPages",
-//					"requirify:" + assetBundlerTaskPrefix
-//				],
-//				options : {
-//					nospawn : true
-//				}
-//			};
-//		} );
-//
 		_.each( assetFileExtensionsMap, function( val, key ) {
 
 			var tasksToRun = _.union([], val.tasks );
@@ -376,121 +326,6 @@ module.exports = function(grunt) {
 			};
 		} );
 
-//		watch[ assetBundlerTaskPrefix + "_js" ] = {
-//			files : [
-//				options.assetLibrary.srcDir + "**/*.js",
-//				options.appPages.srcDir + "**/*.js"
-//			],
-//			tasks : [
-//				"copy:" + assetBundlerTaskPrefix,
-//				"requirify:" + assetBundlerTaskPrefix
-//			],
-//			options : {
-//				nospawn : true
-//			}
-//		};
-//
-//		watch[ assetBundlerTaskPrefix + "_css" ] = {
-//			files : [
-//				options.assetLibrary.srcDir + "**/*.js",
-//				options.appPages.srcDir + "**/*.js"
-//			],
-//			tasks : [
-//				"copy:" + assetBundlerTaskPrefix,
-//				"requirify:" + assetBundlerTaskPrefix
-//			],
-//			options : {
-//				nospawn : true
-//			}
-//		};
-
-
-//		_.each( kAssetFileExtensions, function( extension ) {
-//
-//			watch[ assetBundlerTaskPrefix + "_" + extension ] = {
-//				files : [
-//					options.appPages.srcDir + "**/*" + taskOptions.src
-//				],
-//				tasks : [
-//					"copy:" + assetBundlerTaskPrefix,
-//					taskName + ":" + assetBundlerTaskPrefix  + "_assetLibrary",
-//					"requirify:" + assetBundlerTaskPrefix
-//				],
-//				options : {
-//					nospawn : true
-//				}
-//			};
-//			return options.assetLibrary.srcDir + extension;
-//		} );
-
-//		var compiledAssetsAssetLibrary = _.map( compileAssetsMap, function( asset ) {
-//			return options.assetLibrary.srcDir + "**/*" + asset.src;
-//		} );
-//
-//		var compiledAssetsAppPages = _.map( compileAssetsMap, function( asset ) {
-//			return options.appPages.srcDir + "**/*" + asset.src;
-//		} );
-//
-//		var assetLibraryFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
-//			return options.assetLibrary.srcDir + extension;
-//		} );
-//
-//		assetLibraryFilesToWatch = _.union( assetLibraryFilesToWatch, compiledAssetsAssetLibrary );
-//
-//		var appPagesFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
-//			return options.appPages.srcDir + extension;
-//		} );
-//
-//		appPagesFilesToWatch = _.union( appPagesFilesToWatch, compiledAssetsAppPages );
-//
-//		var assetLibraryWatchTasks = [];
-//		var appPagesWatchTasks = [];
-//
-//		assetLibraryWatchTasks.push( "copy:" + assetBundlerTaskPrefix );
-//
-//		_.each( _.keys( compileAssetsMap ), function( taskName ) {
-//			assetLibraryWatchTasks.push( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
-//			appPagesWatchTasks.push( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
-//
-//		} );
-//
-//		if( options.requirify ) {
-//			assetLibraryWatchTasks.push( "requirify:" + assetBundlerTaskPrefix );
-//			appPagesWatchTasks.push( "requirify:" + assetBundlerTaskPrefix );
-//
-//		}
-//
-//		watch[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-//			files : assetLibraryFilesToWatch,
-//			tasks : assetLibraryWatchTasks,
-//			options : {
-//				nospawn : true
-//			}
-//		};
-//
-//		watch[ assetBundlerTaskPrefix + "_appPages" ] = {
-//			files : appPagesFilesToWatch,
-//			tasks : appPagesWatchTasks,
-//			options : {
-//				nospawn : true
-//			}
-//		};
-
-
-/*
-		var appPagesFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
-			return options.appPages.srcDir + extension;
-		} );
-
-
-		watch[ assetBundlerTaskPrefix + "_appPages" ] = {
-			files : appPagesFilesToWatch,
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "requirify:" + assetBundlerTaskPrefix ],
-			options : {
-				nospawn : true
-			}
-		};
-*/
 
 		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
 			files : [ options.appPages.srcDir + "**/*" + options.serverSideTemplateSuffix ],
@@ -499,25 +334,6 @@ module.exports = function(grunt) {
 				nospawn : true
 			}
 		};
-/*
-		var assetFilesToWatch = _.map( kAssetFileExtensions, function( extension ) {
-			return options.assetLibrary.srcDir + extension;
-		} );
-
-		assetFilesToWatch = _.union( assetFilesToWatch, _.map( kAssetFileExtensions, function( extension ) {
-			return options.appPages.srcDir + extension;
-		} ) );
-
-		watch[ assetBundlerTaskPrefix + "_copy" ] = {
-
-			files : assetFilesToWatch,
-			tasks : [ "processFileChange" ],
-			options : {
-				nospawn : true
-			}
-
-		};
-*/
 
 		grunt.config( "watch", watch );
 
@@ -568,33 +384,15 @@ module.exports = function(grunt) {
 					options : userSpecifiedOptions
 				} );
 
-				//grunt.config( [ taskName, assetBundlerTaskPrefix, "src" ], tempFile );
-				//grunt.config( [ taskName, assetBundlerTaskPrefix, "dest" ], tempDest );
-
-/*
-				if( isAssetLibraryFile ) {
-					grunt.config( [ taskName, assetBundlerTaskPrefix + "_assetLibrary" ], {
-						src : tempFile,
-						dest : tempDest
-					} );
-				}
-				else {
-					grunt.config( [ taskName, assetBundlerTaskPrefix + "_appPages" ], {
-						src : tempFile,
-						dest : tempDest
-					} );
-
-				}
-*/
-
 			} );
 
 			newDest = assetBundlerUtil.mapAssetFileName( newDest );
 
 			console.log("newDest: " + newDest );
-			if( _s.endsWith( newDest, ".js" ) ) {
+			if( _s.endsWith( newDest, ".js" ) && options.requirify ) {
 				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
-					src : newDest
+					src : newDest,
+					options : options.requirify.options
 				} ] );
 			}
 			else {
@@ -608,12 +406,17 @@ module.exports = function(grunt) {
 
 		requirify[ assetBundlerTaskPrefix ] = {
 			options : options.requirify.options,
-			files : [
-				{
-					src : options.assetLibrary.destDir  + "**/*.js"
+			files : [ {
+					cwd : options.assetLibrary.srcDir,
+					src : [ "**/*.js" ],
+					dest : options.assetLibrary.destDir,
+					expand : true
 				},
 				{
-					src : options.appPages.destDir  + "**/*.js"
+					cwd : options.appPages.srcDir,
+					src : [ "**/*.js" ],
+					dest : options.appPages.destDir,
+					expand : true
 				}
 			]
 		};
@@ -653,7 +456,7 @@ module.exports = function(grunt) {
 		//grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
 
 		if( mode === "dev" ) {
-			grunt.task.run( "watch" );
+			//grunt.task.run( "watch" );
 		}
 
 	} );
@@ -963,13 +766,28 @@ module.exports = function(grunt) {
 			"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
 			"} () );";
 
-		function processFile( filePath, paths ) {
+		function processFile( filePath, filePathDest, paths, cb ) {
 
 			//filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
+			var b = browserify();
+
+			console.log("adding " + filePath );
+
+			console.log( paths );
+
+
+			b.add( filePath );
+			b.require( filePath );	
+			
 			var fileContents = fs.readFileSync( filePath ).toString();
+
+			//console.log( fileContents );
+
+			//var writeStream = fs.createWriteStream( filePath + "_assetBundlerTmp" );
 			var requiredFiles;
 
+			//console.log( "finding required files..." );
 			try {
 				requiredFiles = detective( fileContents );
 			}
@@ -977,31 +795,51 @@ module.exports = function(grunt) {
 				throw new Error( "Failed to parse file " + filePath + ".  Please make sure it is valid JavaScript." );
 			}
 
-			var resolvedRequires = {};
-
+			console.log( "PATHS" );
+			console.log( paths );
 			_.each( requiredFiles, function( relativeRequire ) {
-				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) , paths : paths } );
-				resolvedRequires[ relativeRequire ] = resolvedRequire;
+				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) /*, paths : paths*/ } );
+				//resolvedRequires[ relativeRequire ] = resolvedRequire;
 
+				console.log("resolvedRequire: " + resolvedRequire );
+				b.external( resolvedRequire );
 			} );
 
-			fileContents = kPrefix + fileContents + kSuffix;
-			fileContents = fileContents.replace( /#bundler_filepath/g, filePath );
-			fileContents = fileContents.replace( /"#bundler_resolvedRequiresMap"/g, JSON.stringify( resolvedRequires ) );
-			fs.writeFileSync( filePath, fileContents );
+			console.log( "about to bundle" );
+			b.bundle( function( err, src ) {
+				console.log( arguments );
+				if( err ) {
+					console.log( err.stack );
+				}
+				console.log("SRC: " + src.toString() );
+				fs.writeFileSync( filePathDest, src.toString() );
+				console.log( "done writing: " + filePath );
+				cb( err );
+			} );
 		}
+
+		var done = this.async();
 
 		var options = this.options();
 
 		var paths = [];
 
+		console.log( this.files.length );
+
 		_.each( options.nodePaths, function( includePath ) {
-			paths.push( fs.realpathSync( includePath ) );
+			paths.push( fs.realpathSync( includePath ) + "/" );
 		} );
 
-		_.each( this.filesSrc, function( fileName ) {
-			processFile( fs.realpathSync( fileName ) , paths );
-		} );
+		async.eachSeries(
+			this.files,
+			function( file, callback ) {
+				processFile( fs.realpathSync( file.src[0] ) , fs.realpathSync( file.dest ), paths, callback );
+			},
+			function( err ) {
+				if( err ) throw new Error( "UH OH" );
+				done();
+			}
+		);
 
 	} );
 
