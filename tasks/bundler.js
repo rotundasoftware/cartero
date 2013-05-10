@@ -432,9 +432,12 @@ module.exports = function(grunt) {
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_appPages" );
 		} );
 
-		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
+
 
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+
+		//TODO: figure out when we want to do requirify
+		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		if( mode === "prod" ) {
 			grunt.task.run( "buildKeepSeparateBundles" );
@@ -450,6 +453,8 @@ module.exports = function(grunt) {
 
 		grunt.task.run( "resolveAndInjectDependencies" );
 		grunt.task.run( "saveBundleAndPageJSONs" );
+
+
 
 		//grunt.log.writeln("options: " + JSON.stringify( grunt.config( "watch" ), null, "\t" ) );
 
@@ -676,7 +681,7 @@ module.exports = function(grunt) {
 
 		pageMetadata.files = [ combinedPagePrefixForPageMap + ".js", combinedPagePrefixForPageMap + ".css", combinedPagePrefixForPageMap + ".tmpl" ];
 
-		pageMetadata.requiredBundles = _.difference( pageMetadata.requiredBundles, bundlesIncorporatedIntoCombined );
+		//pageMetadata.requiredBundles = _.difference( pageMetadata.requiredBundles, bundlesIncorporatedIntoCombined );
 
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
@@ -714,7 +719,8 @@ module.exports = function(grunt) {
 			pageMap,
 			grunt.config.get( "configOptions"),
 			options.rootDir,
-			options.staticDir );
+			options.staticDir,
+			mode );
 
 		//grunt.config.set( "pageMap", pageMap );
 
@@ -766,16 +772,11 @@ module.exports = function(grunt) {
 			"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
 			"} () );";
 
-		function processFile( filePath, filePathDest, paths, cb ) {
+		function processFile( filePath, filePathDest, cb ) {
 
 			//filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
 			var b = browserify();
-
-			console.log("adding " + filePath );
-
-			console.log( paths );
-
 
 			b.add( filePath );
 			b.require( filePath );	
@@ -795,8 +796,6 @@ module.exports = function(grunt) {
 				throw new Error( "Failed to parse file " + filePath + ".  Please make sure it is valid JavaScript." );
 			}
 
-			console.log( "PATHS" );
-			console.log( paths );
 			_.each( requiredFiles, function( relativeRequire ) {
 				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) /*, paths : paths*/ } );
 				//resolvedRequires[ relativeRequire ] = resolvedRequire;
@@ -807,33 +806,45 @@ module.exports = function(grunt) {
 
 			console.log( "about to bundle" );
 			b.bundle( function( err, src ) {
-				console.log( arguments );
 				if( err ) {
 					console.log( err.stack );
 				}
-				console.log("SRC: " + src.toString() );
+				//console.log("SRC: " + src.toString() );
 				fs.writeFileSync( filePathDest, src.toString() );
-				console.log( "done writing: " + filePath );
+				console.log( "done writing: " + filePathDest );
 				cb( err );
 			} );
 		}
 
 		var done = this.async();
 
-		var options = this.options();
+		var validFiles = [];
 
-		var paths = [];
+		//TODO: change to calling requirify with only valid files
+		_.each( _.values( pageMap ), function( page ) {
+			validFiles = _.union( validFiles, _.map( _.filter( page.files, function( file ) { return _s.endsWith( file, ".js") ; } ), function( fileName ) {
+				return fileName.replace( "{APP_PAGES}/",  options.appPages.srcDir );
+			}) );
+		} );
 
-		console.log( this.files.length );
-
-		_.each( options.nodePaths, function( includePath ) {
-			paths.push( fs.realpathSync( includePath ) + "/" );
+		_.each( _.values( bundleMap ), function( bundle ) {
+			validFiles = _.union( validFiles, _.map( _.filter( bundle.files, function( file ) { return _s.endsWith( file, ".js") ; } ), function( fileName ) {
+				return fileName.replace( "{ASSET_LIBRARY}/",  options.assetLibrary.srcDir );
+			}) );
 		} );
 
 		async.eachSeries(
 			this.files,
 			function( file, callback ) {
-				processFile( fs.realpathSync( file.src[0] ) , fs.realpathSync( file.dest ), paths, callback );
+				var realPath = fs.realpathSync( file.src[0] );
+
+				if( _.contains( validFiles, file.src[0] ) ) {
+					processFile( realPath , fs.realpathSync( file.dest ), callback );
+				}
+				else {
+					callback();
+				}
+					
 			},
 			function( err ) {
 				if( err ) throw new Error( "UH OH" );
