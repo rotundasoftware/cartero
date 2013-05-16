@@ -8,7 +8,7 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 		pageMap = assetBundlerUtil.readPageMap();
 	}
 	catch( e ) {
-		throw new Error( "Error while reading pageMap file.  Please run the grunt assetbundler task before running your application." );
+		throw new Error( "Error while reading pageMap file. Please run the grunt assetbundler task before running your application." );
 	}
 
 	return function( req, res, next ) {
