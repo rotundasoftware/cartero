@@ -338,7 +338,6 @@ module.exports = function(grunt) {
 		grunt.config( "watch", watch );
 
 		grunt.event.on( "watch", function( action, filepath ) {
-			console.log( "PATH: " + filepath );
 
 			var isAssetLibraryFile = _s.startsWith( filepath, options.assetLibrary.srcDir );
 
@@ -388,7 +387,6 @@ module.exports = function(grunt) {
 
 			newDest = assetBundlerUtil.mapAssetFileName( newDest );
 
-			console.log("newDest: " + newDest );
 			if( _s.endsWith( newDest, ".js" ) && options.requirify ) {
 				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
 					src : filepath,
@@ -610,8 +608,6 @@ module.exports = function(grunt) {
 	grunt.registerTask( "buildPageBundlesHelper", "", function() {
 
 		var pages = grunt.config.get( "pages" );
-		//var pageMap = grunt.config.get( "pageMap" );
-		//var bundleMap = grunt.config.get( "bundleMap" );
 
 		if( pages.length === 0 ) return;
 
@@ -660,8 +656,6 @@ module.exports = function(grunt) {
 		var filesToConcatJS = [];
 		var filesToConcatTMPL = [];
 
-		//grunt.log.writeln( "concatenating files: " + files.join(", ") );
-
 		_.each( files, function( file ) {
 
 			//var realFileName = file.replace( "{APP_PAGES}/", grunt.config.get( "appPagesDest") ).replace( "{ASSET_LIBRARY}/", grunt.config.get( "assetLibraryDest") );
@@ -687,10 +681,6 @@ module.exports = function(grunt) {
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
 
-		grunt.config.set( "filesToCleanJS", filesToConcatJS );
-		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
-		grunt.config.set( "filesToCleanTMPL", filesToConcatTMPL );
-
 		grunt.config.set( "concatedFileDestJS", options.appPages.destDir + combinedPagePrefix + ".js" );
 		grunt.config.set( "concatedFileDestCSS", options.appPages.destDir + combinedPagePrefix + ".css" );
 		grunt.config.set( "concatedFileDestTMPL", options.appPages.destDir + combinedPagePrefix + ".tmpl" );
@@ -698,10 +688,6 @@ module.exports = function(grunt) {
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_js" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_css" );
 		grunt.task.run( "concat:" + assetBundlerTaskPrefix + "_tmpl" );
-
-		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_js" );
-		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_css" );
-		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_tmpl" );
 
 		grunt.task.run( "buildPageBundlesHelper" );
 
@@ -714,7 +700,7 @@ module.exports = function(grunt) {
 
 		//var pageMap = grunt.config.get( "pageMap" );
 
-		assetBundlerUtil.resolveAndInjectDependencies(
+		var filesReferenced = assetBundlerUtil.resolveAndInjectDependencies(
 			bundleMap,
 			pageMap,
 			grunt.config.get( "configOptions"),
@@ -722,7 +708,22 @@ module.exports = function(grunt) {
 			options.staticDir,
 			mode );
 
-		//grunt.config.set( "pageMap", pageMap );
+		var clean = grunt.config( "clean" );
+
+		clean[ assetBundlerTaskPrefix + "_unusedFiles" ] = {
+			src : [
+				options.assetLibrary.destDir + "**/*",
+				options.appPages.destDir + "**/*"
+			],
+			filter : function( fileName ) {
+				//cleaning assets that are not used by any page
+				return ! _.contains( filesReferenced, fileName ) && assetBundlerUtil.isAssetFile( fileName );
+			}
+		};
+
+		grunt.config( "clean", clean );
+		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_unusedFiles" );
+
 
 	} );
 
@@ -798,20 +799,17 @@ module.exports = function(grunt) {
 
 			_.each( requiredFiles, function( relativeRequire ) {
 				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) /*, paths : paths*/ } );
-				//resolvedRequires[ relativeRequire ] = resolvedRequire;
-
-				console.log("resolvedRequire: " + resolvedRequire );
 				b.external( resolvedRequire );
 			} );
 
-			console.log( "about to bundle" );
-			b.bundle( function( err, src ) {
+			b.bundle( {
+			},
+			function( err, src ) {
 				if( err ) {
 					console.log( err.stack );
 				}
 				//console.log("SRC: " + src.toString() );
 				fs.writeFileSync( filePathDest, src.toString() );
-				console.log( "done writing: " + filePathDest );
 				cb( err );
 			} );
 		}
