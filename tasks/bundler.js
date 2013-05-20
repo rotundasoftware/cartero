@@ -15,7 +15,8 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	detective = require( "detective" ),
 	resolve = require( "resolve" ),
 	browserify = require( "browserify" ),
-	async = require( "async" );
+	async = require( "async" ),
+	through = require( "through" );
 
 'use strict';
 
@@ -402,8 +403,27 @@ module.exports = function(grunt) {
 
 		} );
 
+		var assetLibraryPath = fs.realpathSync( options.assetLibrary.srcDir );
+		var appPagesPath = fs.realpathSync( options.appPages.srcDir );
+
 		requirify[ assetBundlerTaskPrefix ] = {
-			options : options.requirify.options,
+			options : {
+				transformFunction : function (file) {
+					var data = '';
+					return through(write, end);
+
+					function write (buf) { data += buf }
+					function end () {
+						var replaceString = "";
+						if( file.indexOf( assetLibraryPath) == 0 )
+							replaceString = file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+						else
+							replaceString = file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+						this.queue(data.toString().replace( /#bundler_dir/g, replaceString ) );
+						this.queue(null);
+	  				}
+			}
+			},
 			files : [ {
 					cwd : options.assetLibrary.srcDir,
 					src : [ "**/*.js" ],
@@ -434,7 +454,9 @@ module.exports = function(grunt) {
 
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
 
-		//TODO: figure out when we want to do requirify
+		//NOTE: requirify will 'redo' replacing of #bundler_dir tokens in js files if requirify is true
+		grunt.task.run( "replaceBundlerDirTokens" );
+
 		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		if( mode === "prod" ) {
@@ -447,16 +469,8 @@ module.exports = function(grunt) {
 			} );
 		}
 
-		grunt.task.run( "replaceBundlerDirTokens" );
-
 		grunt.task.run( "resolveAndInjectDependencies" );
 		grunt.task.run( "saveBundleAndPageJSONs" );
-
-
-
-		//grunt.log.writeln("options: " + JSON.stringify( grunt.config( "watch" ), null, "\t" ) );
-
-		//grunt.log.writeln("processFileChange: " + JSON.stringify( grunt.config( "processFileChange" ), null, "\t" ) );
 
 		if( mode === "dev" ) {
 			grunt.task.run( "watch" );
@@ -756,22 +770,7 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask( "requirify", "", function() {
 
-		var kPrefix = ";( function() {\n" +
-			"var require = function( fileName ) {\n" +
-				"var resolvedRequiresMap = \"#bundler_resolvedRequiresMap\";\n" +
-				"return window.assetBundler.exportMap[ resolvedRequiresMap[ fileName ] ];\n" +
-			"};\n" +
-
-			"var module = {};" +
-			"var exports = {};";
-
-		var kSuffix = ";if( ! window.assetBundler ) {\n" +
-				"window.assetBundler = {};\n" +
-				"window.assetBundler.exportMap = {};\n" +
-			"};\n" +
-			"if ( module.exports === undefined ) module.exports = exports;\n" +
-			"window.assetBundler.exportMap[ \"#bundler_filepath\" ] = module.exports;\n" +
-			"} () );";
+		var transformFunction = this.options().transformFunction;
 
 		function processFile( filePath, filePathDest, cb ) {
 
@@ -802,9 +801,9 @@ module.exports = function(grunt) {
 				b.external( resolvedRequire );
 			} );
 
-			b.bundle( {
-			},
-			function( err, src ) {
+			b.transform( transformFunction );
+
+			b.bundle( function( err, src ) {
 				if( err ) {
 					console.log( err.stack );
 				}

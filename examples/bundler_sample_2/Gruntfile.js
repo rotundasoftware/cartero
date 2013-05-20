@@ -30,14 +30,7 @@ module.exports = function( grunt ) {
 					rootDir : __dirname,
 					serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
-					doRequirify : true,
-					requirify : {
-						options : {
-							//nodePaths : [
-							//	"WebServer/Static/AssetLibrary-assets/"
-							//]
-						}
-					},
+					requirify : true,
 					minificationTasks : [
 						{
 							name : "htmlmin",
