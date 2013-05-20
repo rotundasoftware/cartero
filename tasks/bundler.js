@@ -87,6 +87,13 @@ module.exports = function(grunt) {
 		return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir ).replace( "{APP_PAGES}/", options.appPages.destDir );
 	}
 
+
+	function rebundle() {
+		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+		grunt.task.run( "resolveAndInjectDependencies" );
+		grunt.task.run( "saveBundleAndPageJSONs" );
+	}
+
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
 
@@ -116,6 +123,8 @@ module.exports = function(grunt) {
 			options
 		);
 
+
+
 		mode = options.mode;
 		//console.log( "mode: " + mode );
 		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
@@ -125,6 +134,8 @@ module.exports = function(grunt) {
 		var watch = grunt.config( "watch" ) || {};
 		var concat = grunt.config( "concat" ) || {};
 		var requirify = grunt.config( "requirify" ) || {};
+
+
 
 		copy[ assetBundlerTaskPrefix ] = {
 			files : [
@@ -336,9 +347,24 @@ module.exports = function(grunt) {
 			}
 		};
 
+		watch[ assetBundlerTaskPrefix + "_bundle_json" ] = {
+			files : [ options.assetLibrary.srcDir + "**/bundle.json" ],
+			tasks : [ "processBundleJSONChange" ],
+			options : {
+				nospawn : true
+			}
+		};
+
 		grunt.config( "watch", watch );
 
+		console.log( JSON.stringify( watch, null, "\t" ) );
+
 		grunt.event.on( "watch", function( action, filepath ) {
+
+			//if the file is new, rebuild all the bundle stuff (if its a .swig or bundle.json file, this is already handled by the watch )
+			if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
+				rebundle();
+			}
 
 			var isAssetLibraryFile = _s.startsWith( filepath, options.assetLibrary.srcDir );
 
@@ -498,9 +524,24 @@ module.exports = function(grunt) {
 		// ( that the bundler_require contents changed )
 		// rebuild the bundleMap and pageMap, re-resolve the dependencies, and save
 		// could be more granular
-		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
-		grunt.task.run( "resolveAndInjectDependencies" );
-		grunt.task.run( "saveBundleAndPageJSONs" );
+		//grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+		//grunt.task.run( "resolveAndInjectDependencies" );
+		//grunt.task.run( "saveBundleAndPageJSONs" );
+		rebundle();
+
+	} );
+
+	grunt.registerTask( "processBundleJSONChange", "", function() {
+
+		// if a server-side template changed, assume the worst case senario
+		// ( that the bundler_require contents changed )
+		// rebuild the bundleMap and pageMap, re-resolve the dependencies, and save
+		// could be more granular
+		//grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+		//grunt.task.run( "resolveAndInjectDependencies" );
+		//grunt.task.run( "saveBundleAndPageJSONs" );
+		rebundle();
+
 
 	} );
 
