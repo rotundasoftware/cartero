@@ -834,7 +834,9 @@ module.exports = function(grunt) {
 				requiredFiles = detective( fileContents );
 			}
 			catch( e ) {
-				throw new Error( "Failed to parse file " + filePath + ".  Please make sure it is valid JavaScript." );
+				grunt.fail.warn( "Failed to parse file " + filePath + ": " + e );
+				cb( e );
+				return;
 			}
 
 			_.each( requiredFiles, function( relativeRequire ) {
@@ -846,10 +848,13 @@ module.exports = function(grunt) {
 
 			b.bundle( function( err, src ) {
 				if( err ) {
-					console.log( err.stack );
+					grunt.fail.warn( "Error while browserifying " + filePath + " : " +  err );
+				}
+				else {
+					fs.writeFileSync( filePathDest, src.toString() );
 				}
 				//console.log("SRC: " + src.toString() );
-				fs.writeFileSync( filePathDest, src.toString() );
+
 				cb( err );
 			} );
 		}
@@ -885,7 +890,7 @@ module.exports = function(grunt) {
 					
 			},
 			function( err ) {
-				if( err ) throw new Error( "UH OH" );
+				//user notified of errors (if any) while each file is bundled
 				done();
 			}
 		);
