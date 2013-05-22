@@ -20,6 +20,7 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 			console.log( pageMapKey );
 			
 			var pageMetadata = pageMap[ pageMapKey ];
+			if( ! pageMetadata ) return next( new Error( "Could not find pageKey " + pageMapKey + " in page key map." ) );
 
 			res.locals.bundler_js = pageMetadata.bundler_js;
 			res.locals.bundler_css = pageMetadata.bundler_css;
