@@ -33,6 +33,15 @@ module.exports = function(grunt) {
 		},
 		tmpl : {
 			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens", "resolveAndInjectDependencies", "saveBundleAndPageJSONs" ]
+		},
+		png : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+		},
+		gif : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+		},
+		jpg : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
 		}
 	};
 
@@ -50,7 +59,8 @@ module.exports = function(grunt) {
 		srcDir : "WebServer/AppPages/",
 		destDir : "WebServer/Static/AppPages-assets/",
 		filesToIgnore : /_.*/,
-		foldersToIgnore : /__.*/
+		foldersToIgnore : /__.*/,
+		pageFileRegExp : /.*.swig$/
 	};
 
 	var kAssetLibraryDefaults = {
@@ -120,7 +130,6 @@ module.exports = function(grunt) {
 			{},
 			{
 				useDirectoriesForDependencies : true,
-				serverSideTemplateSuffix : ".swig",
 				requirify : false
 			},
 			options
@@ -365,7 +374,8 @@ module.exports = function(grunt) {
 		grunt.event.on( "watch", function( action, filepath ) {
 
 			//if the file is new, rebuild all the bundle stuff (if its a .swig or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			//if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			if( ( action === "added" || action === "deleted" ) && ! options.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
 				rebundle();
 			}
 
