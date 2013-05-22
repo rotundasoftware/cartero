@@ -15,10 +15,11 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 
 		var oldRender = res.render;
 
-		res.render = function() {
-			var path = arguments[0];
-
-			var pageMetadata = pageMap[ path.replace( appPagesDir, "" ).substring( 1 ) ];
+		res.render = function( path, options ) {
+			var pageMapKey = options && options.bundler_pageMapKey ? options.bundler_pageMapKey : path.replace( appPagesDir, "" ).substring( 1 );
+			console.log( pageMapKey );
+			
+			var pageMetadata = pageMap[ pageMapKey ];
 
 			res.locals.bundler_js = pageMetadata.bundler_js;
 			res.locals.bundler_css = pageMetadata.bundler_css;
