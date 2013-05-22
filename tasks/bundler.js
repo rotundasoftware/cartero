@@ -44,6 +44,8 @@ module.exports = function(grunt) {
 	var kPageMapJSONFile = "pageMap.json";
 	var kAssetBundlerDir = "assetBundler/";
 
+	var kBrowserifyAutorun = "#bundler_browserify_autorun";
+
 	var kAppPagesDefaults = {
 		srcDir : "WebServer/AppPages/",
 		destDir : "WebServer/Static/AppPages-assets/",
@@ -82,6 +84,7 @@ module.exports = function(grunt) {
 
 	var pageMap = {};
 	var bundleMap = {};
+	var browserifyAutorunFiles = [];
 
 	function resolveAssetFilePath( fileName ) {
 		return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir ).replace( "{APP_PAGES}/", options.appPages.destDir );
@@ -448,6 +451,12 @@ module.exports = function(grunt) {
 						this.queue(data.toString().replace( /#bundler_dir/g, replaceString ) );
 						this.queue(null);
 	  				}
+			},
+			isAutorunFile : function( filePath, fileSrc ) {
+				if( filePath.indexOf( appPagesPath ) === 0 )
+					return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
+				else
+					return _.contains( browserifyAutorunFiles, filePath.replace( assetLibraryPath + path.sep, "" ) );
 			}
 			},
 			files : [ {
@@ -583,6 +592,13 @@ module.exports = function(grunt) {
 		catch( e ) {
 			grunt.fail.fatal(e, 1 );
 		}
+
+
+		browserifyAutorunFiles = [];
+		_.each( _.keys( bundleMap ), function( bundleName ) {
+			var bundle = bundleMap[ bundleName ];
+			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
+		} );
 
 		//grunt.config.set( "bundleMap", bundleMap );
 		//grunt.file.write( kDependencyJSONFile, JSON.stringify( bundleMap , null, "\t" ) );
@@ -812,17 +828,21 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( "requirify", "", function() {
 
 		var transformFunction = this.options().transformFunction;
+		var isAutorunFile = this.options().isAutorunFile;
 
 		function processFile( filePath, filePathDest, cb ) {
 
 			//filePath = fs.realpathSync( path.join( rootDir, filePath ) );
 
 			var b = browserify();
-
-			b.add( filePath );
-			b.require( filePath );	
 			
 			var fileContents = fs.readFileSync( filePath ).toString();
+
+			if( ! _.isUndefined( isAutorunFile ) && isAutorunFile( filePath, fileContents ) ) {
+				b.add( filePath );
+			}
+
+			b.require( filePath );	
 
 			//console.log( fileContents );
 
