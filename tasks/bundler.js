@@ -107,6 +107,26 @@ module.exports = function(grunt) {
 		grunt.task.run( "saveBundleAndPageJSONs" );
 	}
 
+	function replaceRelativeURLsInCSSFile( fileName ) {
+			var fileContents = fs.readFileSync( fileName ).toString();
+
+			fileContents = fileContents.replace( /url\(([^)]+)\)/g, function( match, url ) {
+				// don't need to do anything with absolute urls
+				if( url[0] === "/" ) return match;
+
+				var absolutePath = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
+
+				if( fs.existsSync( absolutePath ) )
+					return "url(" + fs.realpathSync( fileName.replace(/\/[^\/]*$/,"/") + path.sep + url ).replace( fs.realpathSync( options.staticDir ), "" ) + ")";
+				else
+					return match;
+
+			} );
+
+			fs.writeFileSync( fileName, fileContents );
+		
+	};
+
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
 
@@ -660,6 +680,8 @@ module.exports = function(grunt) {
 				filesToConcatTMPL.push( resolveAssetFilePath( file ) );
 		} );
 
+		_.each( filesToConcatCSS, replaceRelativeURLsInCSSFile );
+
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
@@ -755,6 +777,9 @@ module.exports = function(grunt) {
 			else if( _s.endsWith( file, ".tmpl" ) )
 				filesToConcatTMPL.push( realFileName );
 		} );
+
+
+		_.each( filesToConcatCSS, replaceRelativeURLsInCSSFile );
 
 		var combinedPagePrefix = pageDir + pageName + "_combined";
 		var combinedPagePrefixForPageMap = "{APP_PAGES}/" + combinedPagePrefix;
