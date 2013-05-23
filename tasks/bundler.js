@@ -906,7 +906,7 @@ module.exports = function(grunt) {
 			}) );
 		} );
 
-		async.eachSeries(
+		async.each(
 			this.files,
 			function( file, callback ) {
 				var realPath = fs.realpathSync( file.src[0] );
