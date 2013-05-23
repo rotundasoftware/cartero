@@ -592,33 +592,38 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
 
-		//var bundleMap = assetBundlerUtil.buildBundlesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "assetLibrarySrc" ) );
-
-		bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
-
 		try {
+			bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
 			assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
 		}
 		catch( e ) {
-			grunt.fail.fatal(e, 1 );
+			var errMsg = "Error while resolving bundles: " + e;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+			
 		}
 
-
 		browserifyAutorunFiles = [];
+
 		_.each( _.keys( bundleMap ), function( bundleName ) {
 			var bundle = bundleMap[ bundleName ];
 			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
 		} );
 
-		//grunt.config.set( "bundleMap", bundleMap );
-		//grunt.file.write( kDependencyJSONFile, JSON.stringify( bundleMap , null, "\t" ) );
+		try {
+			pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
+			assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
+		}
+		catch( e ) {
+			var errMsg = "Error while resolving pages: " + e;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
 
-		//var templateMap = assetBundlerUtil.buildTemplatesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "appPagesSrc" ) );
-		pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
-		assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
-
-		//grunt.config.set( "pageMap", pageMap );
-		//grunt.file.write( kTemplateMapJSONFile, JSON.stringify( templateMap , null, "\t" ) );
 
 	} );
 
@@ -781,30 +786,40 @@ module.exports = function(grunt) {
 
 		//var pageMap = grunt.config.get( "pageMap" );
 
-		var filesReferenced = assetBundlerUtil.resolveAndInjectDependencies(
-			bundleMap,
-			pageMap,
-			grunt.config.get( "configOptions"),
-			options.rootDir,
-			options.staticDir,
-			mode );
+		var filesReferenced = [];
 
-		var clean = grunt.config( "clean" );
+		try {
+			filesReferenced = assetBundlerUtil.resolveAndInjectDependencies(
+				bundleMap,
+				pageMap,
+				grunt.config.get( "configOptions"),
+				options.rootDir,
+				options.staticDir,
+				mode );
 
-		clean[ assetBundlerTaskPrefix + "_unusedFiles" ] = {
-			src : [
-				options.assetLibrary.destDir + "**/*",
-				options.appPages.destDir + "**/*"
-			],
-			filter : function( fileName ) {
-				//cleaning assets that are not used by any page
-				return ! _.contains( filesReferenced, fileName ) && assetBundlerUtil.isAssetFile( fileName );
-			}
-		};
+			var clean = grunt.config( "clean" );
 
-		grunt.config( "clean", clean );
-		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_unusedFiles" );
+			clean[ assetBundlerTaskPrefix + "_unusedFiles" ] = {
+				src : [
+					options.assetLibrary.destDir + "**/*",
+					options.appPages.destDir + "**/*"
+				],
+				filter : function( fileName ) {
+					//cleaning assets that are not used by any page
+					return ! _.contains( filesReferenced, fileName ) && assetBundlerUtil.isAssetFile( fileName );
+				}
+			};
 
+			grunt.config( "clean", clean );
+			grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_unusedFiles" );
+		}
+		catch( e ) {
+			var errMsg =  "Error while resolving dependencies and injecting source code: " + e;
+			if( mode === "dev")
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
 
 	} );
 
@@ -864,7 +879,11 @@ module.exports = function(grunt) {
 				requiredFiles = detective( fileContents );
 			}
 			catch( e ) {
-				grunt.fail.warn( "Failed to parse file " + filePath + ": " + e );
+				var errMsg =  "Failed to parse file " + filePath + ": " + e ;
+				if( mode === "dev")
+					grunt.fail.warn( errMsg );
+				else
+					grunt.fail.fatal( errMsg );
 				cb( e );
 				return;
 			}
@@ -878,7 +897,11 @@ module.exports = function(grunt) {
 
 			b.bundle( function( err, src ) {
 				if( err ) {
-					grunt.fail.warn( "Error while browserifying " + filePath + " : " +  err );
+					var errMsg =  "Error while browserifying " + filePath + " : " +  err;
+					if( mode === "dev" )
+						grunt.fail.warn( errMsg );
+					else
+						grunt.fail.fatal( errMsg );
 				}
 				else {
 					fs.writeFileSync( filePathDest, src.toString() );
