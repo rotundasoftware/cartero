@@ -375,7 +375,7 @@ module.exports = function(grunt) {
 
 			//if the file is new, rebuild all the bundle stuff (if its a .swig or bundle.json file, this is already handled by the watch )
 			//if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
-			if( ( action === "added" || action === "deleted" ) && ! options.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			if( ( action === "added" || action === "deleted" ) && ! options.appPages.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
 				rebundle();
 			}
 
