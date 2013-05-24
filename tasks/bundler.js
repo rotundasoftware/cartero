@@ -158,8 +158,6 @@ module.exports = function(grunt) {
 
 
 		mode = options.mode;
-		//console.log( "mode: " + mode );
-		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
 
 		var copy = grunt.config( "copy" ) || {};
 		var clean = grunt.config( "clean" ) || {};
@@ -389,8 +387,6 @@ module.exports = function(grunt) {
 
 		grunt.config( "watch", watch );
 
-		console.log( JSON.stringify( watch, null, "\t" ) );
-
 		grunt.event.on( "watch", function( action, filepath ) {
 
 			//if the file is new, rebuild all the bundle stuff (if its a .swig or bundle.json file, this is already handled by the watch )
@@ -465,6 +461,9 @@ module.exports = function(grunt) {
 		var assetLibraryPath = fs.realpathSync( options.assetLibrary.srcDir );
 		var appPagesPath = fs.realpathSync( options.appPages.srcDir );
 
+		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
+		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+
 		requirify[ assetBundlerTaskPrefix ] = {
 			options : {
 				transformFunction : function (file) {
@@ -475,9 +474,9 @@ module.exports = function(grunt) {
 					function end () {
 						var replaceString = "";
 						if( file.indexOf( assetLibraryPath) == 0 )
-							replaceString = file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+							replaceString = relativeAssetLibraryDir + file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
 						else
-							replaceString = file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+							replaceString = relativeAppPagesDir + file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
 						this.queue(data.toString().replace( /#bundler_dir/g, replaceString ) );
 						this.queue(null);
 	  				}
@@ -685,9 +684,9 @@ module.exports = function(grunt) {
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
-		grunt.config.set( "concatedFileDestJS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.js" );
-		grunt.config.set( "concatedFileDestCSS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.css" );
-		grunt.config.set( "concatedFileDestTMPL", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.tmpl" );
+		grunt.config.set( "concatedFileDestJS", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.js" );
+		grunt.config.set( "concatedFileDestCSS", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.css" );
+		grunt.config.set( "concatedFileDestTMPL", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.tmpl" );
 
 		grunt.config.set( "filesToCleanJS", filesToConcatJS );
 		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
@@ -861,16 +860,22 @@ module.exports = function(grunt) {
 			var fileContents = fs.readFileSync( fileName ).toString();
 			fileContents = fileContents.replace( matchString, replaceString );
 			fs.writeFileSync( fileName, fileContents );
+			//if( _s.endsWith( fileName, "ckeditor_basepath.js" ) )
+			//	throw new Error( "WHAT" );
 		}
+
+		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
+		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+
 
 		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), assetBundlerUtil.isAssetFile );
 		_.each( assetLibraryFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.assetLibrary.destDir, "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /#bundler_dir/g, relativeAssetLibraryDir + fileName.replace( options.assetLibrary.destDir, "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 		var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), assetBundlerUtil.isAssetFile );
 		_.each( appPagesFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /#bundler_dir/g, relativeAppPagesDir + fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 	} );
