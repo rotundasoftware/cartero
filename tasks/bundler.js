@@ -33,6 +33,15 @@ module.exports = function(grunt) {
 		},
 		tmpl : {
 			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens", "resolveAndInjectDependencies", "saveBundleAndPageJSONs" ]
+		},
+		png : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+		},
+		gif : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+		},
+		jpg : {
+			tasks : [ "copy:" + assetBundlerTaskPrefix ]
 		}
 	};
 
@@ -50,7 +59,8 @@ module.exports = function(grunt) {
 		srcDir : "WebServer/AppPages/",
 		destDir : "WebServer/Static/AppPages-assets/",
 		filesToIgnore : /_.*/,
-		foldersToIgnore : /__.*/
+		foldersToIgnore : /__.*/,
+		pageFileRegExp : /.*.swig$/
 	};
 
 	var kAssetLibraryDefaults = {
@@ -97,6 +107,26 @@ module.exports = function(grunt) {
 		grunt.task.run( "saveBundleAndPageJSONs" );
 	}
 
+	function replaceRelativeURLsInCSSFile( fileName ) {
+			var fileContents = fs.readFileSync( fileName ).toString();
+
+			fileContents = fileContents.replace( /url\(([^)]+)\)/g, function( match, url ) {
+				// don't need to do anything with absolute urls
+				if( url[0] === "/" ) return match;
+
+				var absolutePath = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
+
+				if( fs.existsSync( absolutePath ) )
+					return "url(" + fs.realpathSync( fileName.replace(/\/[^\/]*$/,"/") + path.sep + url ).replace( fs.realpathSync( options.staticDir ), "" ) + ")";
+				else
+					return match;
+
+			} );
+
+			fs.writeFileSync( fileName, fileContents );
+		
+	};
+
   // Please see the Grunt documentation for more information regarding task
   // creation: http://gruntjs.com/creating-tasks
 
@@ -120,7 +150,6 @@ module.exports = function(grunt) {
 			{},
 			{
 				useDirectoriesForDependencies : true,
-				serverSideTemplateSuffix : ".swig",
 				requirify : false
 			},
 			options
@@ -129,8 +158,6 @@ module.exports = function(grunt) {
 
 
 		mode = options.mode;
-		//console.log( "mode: " + mode );
-		//grunt.log.writeln( JSON.stringify( options, null, "\t") );
 
 		var copy = grunt.config( "copy" ) || {};
 		var clean = grunt.config( "clean" ) || {};
@@ -360,12 +387,11 @@ module.exports = function(grunt) {
 
 		grunt.config( "watch", watch );
 
-		console.log( JSON.stringify( watch, null, "\t" ) );
-
 		grunt.event.on( "watch", function( action, filepath ) {
 
 			//if the file is new, rebuild all the bundle stuff (if its a .swig or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			//if( ( action === "added" || action === "deleted" ) && ! _s.endsWith( filepath, ".swig") && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			if( ( action === "added" || action === "deleted" ) && ! options.appPages.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
 				rebundle();
 			}
 
@@ -435,6 +461,9 @@ module.exports = function(grunt) {
 		var assetLibraryPath = fs.realpathSync( options.assetLibrary.srcDir );
 		var appPagesPath = fs.realpathSync( options.appPages.srcDir );
 
+		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
+		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+
 		requirify[ assetBundlerTaskPrefix ] = {
 			options : {
 				transformFunction : function (file) {
@@ -445,9 +474,9 @@ module.exports = function(grunt) {
 					function end () {
 						var replaceString = "";
 						if( file.indexOf( assetLibraryPath) == 0 )
-							replaceString = file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+							replaceString = relativeAssetLibraryDir + file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
 						else
-							replaceString = file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+							replaceString = relativeAppPagesDir + file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
 						this.queue(data.toString().replace( /#bundler_dir/g, replaceString ) );
 						this.queue(null);
 	  				}
@@ -582,33 +611,38 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
 
-		//var bundleMap = assetBundlerUtil.buildBundlesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "assetLibrarySrc" ) );
-
-		bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
-
 		try {
+			bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
 			assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
 		}
 		catch( e ) {
-			grunt.fail.fatal(e, 1 );
+			var errMsg = "Error while resolving bundles: " + e;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+			
 		}
 
-
 		browserifyAutorunFiles = [];
+
 		_.each( _.keys( bundleMap ), function( bundleName ) {
 			var bundle = bundleMap[ bundleName ];
 			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
 		} );
 
-		//grunt.config.set( "bundleMap", bundleMap );
-		//grunt.file.write( kDependencyJSONFile, JSON.stringify( bundleMap , null, "\t" ) );
+		try {
+			pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
+			assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
+		}
+		catch( e ) {
+			var errMsg = "Error while resolving pages: " + e;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
 
-		//var templateMap = assetBundlerUtil.buildTemplatesMap( grunt.config.get( "tmpDir" ) + grunt.config.get( "appPagesSrc" ) );
-		pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
-		assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
-
-		//grunt.config.set( "pageMap", pageMap );
-		//grunt.file.write( kTemplateMapJSONFile, JSON.stringify( templateMap , null, "\t" ) );
 
 	} );
 
@@ -645,12 +679,14 @@ module.exports = function(grunt) {
 				filesToConcatTMPL.push( resolveAssetFilePath( file ) );
 		} );
 
+		_.each( filesToConcatCSS, replaceRelativeURLsInCSSFile );
+
 		grunt.config.set( "filesToConcatJS", filesToConcatJS );
 		grunt.config.set( "filesToConcatCSS", filesToConcatCSS );
 		grunt.config.set( "filesToConcatTMPL", filesToConcatTMPL );
-		grunt.config.set( "concatedFileDestJS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.js" );
-		grunt.config.set( "concatedFileDestCSS", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.css" );
-		grunt.config.set( "concatedFileDestTMPL", options.assetLibrary.destDir + bundle.name.replace(/\//g,"_") + "_combined.tmpl" );
+		grunt.config.set( "concatedFileDestJS", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.js" );
+		grunt.config.set( "concatedFileDestCSS", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.css" );
+		grunt.config.set( "concatedFileDestTMPL", options.assetLibrary.destDir + bundle.name + path.sep + assetBundlerUtil.getLocalFileName( bundle.name ) + "_combined.tmpl" );
 
 		grunt.config.set( "filesToCleanJS", filesToConcatJS );
 		grunt.config.set( "filesToCleanCSS", filesToConcatCSS );
@@ -741,6 +777,9 @@ module.exports = function(grunt) {
 				filesToConcatTMPL.push( realFileName );
 		} );
 
+
+		_.each( filesToConcatCSS, replaceRelativeURLsInCSSFile );
+
 		var combinedPagePrefix = pageDir + pageName + "_combined";
 		var combinedPagePrefixForPageMap = "{APP_PAGES}/" + combinedPagePrefix;
 
@@ -771,30 +810,40 @@ module.exports = function(grunt) {
 
 		//var pageMap = grunt.config.get( "pageMap" );
 
-		var filesReferenced = assetBundlerUtil.resolveAndInjectDependencies(
-			bundleMap,
-			pageMap,
-			grunt.config.get( "configOptions"),
-			options.rootDir,
-			options.staticDir,
-			mode );
+		var filesReferenced = [];
 
-		var clean = grunt.config( "clean" );
+		try {
+			filesReferenced = assetBundlerUtil.resolveAndInjectDependencies(
+				bundleMap,
+				pageMap,
+				grunt.config.get( "configOptions"),
+				options.rootDir,
+				options.staticDir,
+				mode );
 
-		clean[ assetBundlerTaskPrefix + "_unusedFiles" ] = {
-			src : [
-				options.assetLibrary.destDir + "**/*",
-				options.appPages.destDir + "**/*"
-			],
-			filter : function( fileName ) {
-				//cleaning assets that are not used by any page
-				return ! _.contains( filesReferenced, fileName ) && assetBundlerUtil.isAssetFile( fileName );
-			}
-		};
+			var clean = grunt.config( "clean" );
 
-		grunt.config( "clean", clean );
-		grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_unusedFiles" );
+			clean[ assetBundlerTaskPrefix + "_unusedFiles" ] = {
+				src : [
+					options.assetLibrary.destDir + "**/*",
+					options.appPages.destDir + "**/*"
+				],
+				filter : function( fileName ) {
+					//cleaning assets that are not used by any page
+					return ! _.contains( filesReferenced, fileName ) && assetBundlerUtil.isAssetFile( fileName );
+				}
+			};
 
+			grunt.config( "clean", clean );
+			grunt.task.run( "clean:" + assetBundlerTaskPrefix + "_unusedFiles" );
+		}
+		catch( e ) {
+			var errMsg =  "Error while resolving dependencies and injecting source code: " + e;
+			if( mode === "dev")
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
 
 	} );
 
@@ -811,16 +860,22 @@ module.exports = function(grunt) {
 			var fileContents = fs.readFileSync( fileName ).toString();
 			fileContents = fileContents.replace( matchString, replaceString );
 			fs.writeFileSync( fileName, fileContents );
+			//if( _s.endsWith( fileName, "ckeditor_basepath.js" ) )
+			//	throw new Error( "WHAT" );
 		}
+
+		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
+		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+
 
 		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), assetBundlerUtil.isAssetFile );
 		_.each( assetLibraryFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.assetLibrary.destDir, "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /#bundler_dir/g, relativeAssetLibraryDir + fileName.replace( options.assetLibrary.destDir, "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 		var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), assetBundlerUtil.isAssetFile );
 		_.each( appPagesFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /#bundler_dir/g, relativeAppPagesDir + fileName.replace( options.appPages.destDir, "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 	} );
@@ -854,7 +909,11 @@ module.exports = function(grunt) {
 				requiredFiles = detective( fileContents );
 			}
 			catch( e ) {
-				grunt.fail.warn( "Failed to parse file " + filePath + ": " + e );
+				var errMsg =  "Failed to parse file " + filePath + ": " + e ;
+				if( mode === "dev")
+					grunt.fail.warn( errMsg );
+				else
+					grunt.fail.fatal( errMsg );
 				cb( e );
 				return;
 			}
@@ -868,7 +927,11 @@ module.exports = function(grunt) {
 
 			b.bundle( function( err, src ) {
 				if( err ) {
-					grunt.fail.warn( "Error while browserifying " + filePath + " : " +  err );
+					var errMsg =  "Error while browserifying " + filePath + " : " +  err;
+					if( mode === "dev" )
+						grunt.fail.warn( errMsg );
+					else
+						grunt.fail.fatal( errMsg );
 				}
 				else {
 					fs.writeFileSync( filePathDest, src.toString() );
@@ -896,7 +959,7 @@ module.exports = function(grunt) {
 			}) );
 		} );
 
-		async.eachSeries(
+		async.each(
 			this.files,
 			function( file, callback ) {
 				var realPath = fs.realpathSync( file.src[0] );
