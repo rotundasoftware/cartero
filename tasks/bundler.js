@@ -477,7 +477,8 @@ module.exports = function(grunt) {
 							replaceString = relativeAssetLibraryDir + file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
 						else
 							replaceString = relativeAppPagesDir + file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
-						this.queue(data.toString().replace( /#bundler_dir/g, replaceString ) );
+						//replace string should be of the form AssetLibrary-assets/... or AppPages-assets/...
+						this.queue(data.toString().replace( /#bundler_dir/g, replaceString.substring(1) ) );
 						this.queue(null);
 	  				}
 			},
@@ -864,8 +865,8 @@ module.exports = function(grunt) {
 			//	throw new Error( "WHAT" );
 		}
 
-		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
-		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+		var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "" );
+		var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "" );
 
 
 		var assetLibraryFiles = _.filter( findit.sync( options.assetLibrary.destDir ), assetBundlerUtil.isAssetFile );
