@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
 		},
 		tmpl : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens", "resolveAndInjectDependencies:dev", "saveBundleAndPageJSONs" ]
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
 		},
 		png : {
 			tasks : [ "copy:" + assetBundlerTaskPrefix ]
