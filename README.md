@@ -49,7 +49,7 @@ Add the `#bundler_require` directive to your server-side templates to declare wh
 <!-- #bundler_require "Backbone", "YourDialogWidget" -->
 ```
 
-Add the `#bundler_extends` directive to declare what server-side template this template extends from.  `#bundler_require` bundles from that template will automatically be added to this one.
+Add the `#bundler_extends` directive to declare what server-side template this template extends from.  Path is relative.  `#bundler_require` bundles from that template will automatically be added to this one.
 ```html
 <!-- #bundler_extends "../layout.html.swig" -->
 ```
@@ -60,43 +60,49 @@ Add the `#bundler_extends` directive to declare what server-side template this t
 Type: `Object`
 
 Properties
-* srcDir
-* destDir
-* filesToIgnore
-* directoriesToIgnore
+* `srcDir`
+* `destDir`
+* `filesToIgnore`
+* `directoriesToIgnore`
 
 #### appPages
 Type: `Object`
 
 Properties
-* srcDir
-* destDir
-* filesToIgnore
-* directoriesToIgnore
+* `srcDir`
+* `destDir`
+* `filesToIgnore`
+* `directoriesToIgnore`
+* `pageFileRegExp` : Regular expressions specifying where `assetBundler` should look for Server-side template directives
 
-### mode
+#### mode
 Type: `String` Default: `dev`
 
 `dev` or `prod`.  `prod` will concat, minify, etc.
 
-### useDirectoriesForDependencies
+#### useDirectoriesForDependencies
 Type: `Boolean`
 
 Whether the directory structure in the __assetLibrary__ directory should drive the bundle dependency.  If `true`, a bundle's parent directory will automatically be added as a dependent bundle.
 
-### serverSideTemplateSuffix
-Type: `String` Default: `.swig`
-
-The suffix of the server-side templates being used.
-
-### minificationTasks
+#### minificationTasks
 Type: `Array`
 
 List of minification tasks that shoudl be run when `mode == "prod"`.  Each item should contain the following properties:
 * `name` : The name of the grunt task to run.
 * `suffixes` : List of suffixes to apply this grunt task too
 * `options` : Task-specific options to be passed through to the grunt task itself.
+* 
 
+#### postProcessor
+Type: `Function`
+
+A function that takes the generated `pageMap` as input and allows you to make any changes you like. TODO: document the contents of the `pageMap`.
+
+#### preprocessingOptions
+Type : `Object`
+
+For any of the supported preprocessing options ( coffee, compass, less, stylus ), this allows you to pass in any special options that should be passed through to the corresponding grunt task when it runs.
 
 #INSTRUCTIONS
 
