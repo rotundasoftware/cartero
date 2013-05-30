@@ -36,7 +36,11 @@ Each directory in __assetLibrary__ can contain a `bundle.json` file.  This file 
 * `dependencies` : The bundles this bundle depends on.
 * `keepSeparate` : (default : `false`) Whether this bundle should be kept as a separate file in `prod` mode.  This is intended to be used for large, commonly used libraries such as JQueryUI.
 * `subdirectories` : (default : `"/_.*/"`) Regular expression (in string format) used to determine which subdirectories are part of the bundle itself and are not their own separate bundles.
-* `filePriority` : The list of files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.
+* `prioritizeSubdirectories` : (default : `false`) Whether files in `subdirectories` are sourced before or after the "top level" files.
+* `filePriority` : Files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.  This list takes precedence over `prioritizeSubdirectories`.
+* `browserifyAutorun` : When using Browserify with assetBundler, these files will be automatically run upon being loaded.
+* `dynamicallyLoadedFiles` : Files that may be loaded dynamically (after a page loads).  These files are not bundled into the bundle.
+
 
 ### Server-side template directives
 
