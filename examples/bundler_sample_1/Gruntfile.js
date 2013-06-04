@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					assetLibrary : {
 						srcDir : "AssetLibrary/",
 						destDir : "WebServer/Static/AssetLibrary-assets/"
@@ -22,9 +22,9 @@ module.exports = function( grunt ) {
 						directoriesToIgnore : /__.*/
 					},
 					staticDir : "WebServer/Static/",
-					rootDir : __dirname,
+					//rootDir : __dirname,
 					serverSideTemplateSuffix : ".swig",
-					useDirectoriesForDependencies : true,
+					useDirectoriesForDependencies : true/*,
 					minificationTasks : [
 						{
 							name : "htmlmin",
@@ -40,7 +40,7 @@ module.exports = function( grunt ) {
 								mangle : false
 							}
 						}
-					]
+					]*/
 				}
 			}
 		}

@@ -16,7 +16,8 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	resolve = require( "resolve" ),
 	browserify = require( "browserify" ),
 	async = require( "async" ),
-	through = require( "through" );
+	through = require( "through" ),
+	cartero = require( "./../lib/cartero" );
 
 'use strict';
 
@@ -107,6 +108,9 @@ module.exports = function(grunt) {
 
 	// Store pageMap metadata here while we're working on it.  Written to kBundleMapJSONFile at the end.
 	var pageMap = {};
+
+	var bundles = {};
+	var parcels = {};
 
 	// Files that are browserified and need to be run upon loading.
 	var browserifyAutorunFiles = [];
@@ -550,8 +554,13 @@ module.exports = function(grunt) {
 
 		grunt.task.run( "resolveAndInjectDependencies:dev" );
 
+		
+
 		// In prod mode...
 		if( mode === "prod" ) {
+
+			grunt.task.run( "replaceRelativeURLsInCSSFile" );
+
 			grunt.task.run( "buildKeepSeparateBundles" );
 			grunt.task.run( "buildPageBundles" );
 
@@ -579,9 +588,20 @@ module.exports = function(grunt) {
 
 	} );
 
+	grunt.registerTask( "replaceRelativeURLsInCSSFile", "", function() {
+
+		_.each( parcels, function( parcel ) {
+			_.each( parcel.combinedFiles, function( file ) {
+				_.each( file.sourceFilePaths, function( filePath ) {
+					replaceRelativeURLsInCSSFile( filePath );
+				} );
+			} );
+		} );
+	} );
+
 	grunt.registerTask( "runPostProcessor", "", function() {
-		console.log( JSON.stringify( pageMap, null, "\t" ) );
-		options.postProcessor( pageMap );
+		//console.log( JSON.stringify( pageMap, null, "\t" ) );
+		options.postProcessor( parcels );
 	} );
 
 	grunt.registerTask( "processServerSideTemplateChange", "", function() {
@@ -616,7 +636,7 @@ module.exports = function(grunt) {
 
 		try {
 			bundleMap = assetBundlerUtil.buildBundlesMap( options.assetLibrary.srcDir, options);
-			assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
+			//assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e;
@@ -636,7 +656,7 @@ module.exports = function(grunt) {
 
 		try {
 			pageMap = assetBundlerUtil.buildPagesMap( options.appPages.srcDir, options.appPages );
-			assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
+			//assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e;
@@ -646,11 +666,31 @@ module.exports = function(grunt) {
 				grunt.fail.fatal( errMsg );
 		}
 
+		console.log( JSON.stringify( bundleMap, null, "\t" ) );
+		console.log( JSON.stringify( pageMap, null, "\t" ) );
+
+		try {
+			var result = cartero.doIt( bundleMap, pageMap, options );
+
+			bundles = result.bundles;
+			parcels = result.parcels;
+		}
+		catch( e ) {
+			console.log( e.stack );
+		}
+		
+
+		//throw new Error( "okay im done now!" );
+
 
 	} );
 
 	grunt.registerTask( "buildKeepSeparateBundles", "Builds the keep separate bundle files.", function() {
 
+		_.each( _.values( bundles ), function( bundle ) {
+			bundle.buildCombinedFiles();
+		} );
+/*
 		this.requires( "buildBundleAndPageJSONs:prod" );
 		//var bundleMap = grunt.config.get( "bundleMap" );
 		var keepSeparateBundles = _.filter( _.values( bundleMap ), function( bundle ) {
@@ -658,6 +698,7 @@ module.exports = function(grunt) {
 		} );
 		grunt.config.set( "keepSeparateBundles", keepSeparateBundles );
 		grunt.task.run( "buildKeepSeparateBundlesHelper" );
+*/
 
 	} );
 
@@ -708,11 +749,27 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "buildPageBundles", "Builds the bundles for each page", function() {
 
+
+		_.each( _.values( parcels ), function( parcel ) {
+			console.log( "FILES TO SERVE FOR PARCEL: " + parcel.name );
+
+			_.each( parcel.combinedFiles, function( file ) {
+				console.log( file.path );
+				console.log( file.sourceFilePaths );
+			} );
+		} );
+
+
 		this.requires( "buildBundleAndPageJSONs:prod" );
 
 		//var pageMap = grunt.config.get( "pageMap" );
-		grunt.config.set( "pages", _.keys( pageMap ) );
-		grunt.task.run( "buildPageBundlesHelper" );
+		//grunt.config.set( "pages", _.keys( pageMap ) );
+		//grunt.task.run( "buildPageBundlesHelper" );
+
+		_.each( _.values( parcels ), function( parcel ) {
+			parcel.buildCombinedFiles();
+		} );
+
 	} );
 
 	grunt.registerTask( "buildPageBundlesHelper", "", function() {
@@ -811,7 +868,12 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "resolveAndInjectDependencies", "", function( mode ) {
 
+		_.each( _.values( parcels ), function( parcel ) {
+			parcel.buildResourcesToLoad( options.staticDir, mode );
+		} );
+
 		//var pageMap = grunt.config.get( "pageMap" );
+/*
 		try {
 			assetBundlerUtil.resolveAndInjectDependencies(
 				bundleMap,
@@ -826,6 +888,7 @@ module.exports = function(grunt) {
 			else
 				grunt.fail.fatal( errMsg );
 		}
+*/
 
 	} );
 
@@ -837,13 +900,25 @@ module.exports = function(grunt) {
 		}
 
 		function resolveDynamicallyLoadedFileName( fileName ) {
-			return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir );
+			return options.assetLibrary.destDir + fileName;
 		}
 
 		var clean = grunt.config( "clean" );
 
 		var referencedFiles = [];
 
+		_.each( parcels, function( parcel ) {
+
+			var metadataForMode = parcel[ options.mode ];
+
+			referencedFiles = _.union( referencedFiles,
+				_.map( metadataForMode.js, resolvePageMapFileName ),
+				_.map( metadataForMode.css, resolvePageMapFileName ),
+				_.map( metadataForMode.tmpl, resolvePageMapFileName )
+			);
+
+		} );
+/*
 		_.each( _.values( pageMap ), function( pageMetadata ) {
 
 			var metadataForMode = pageMetadata[ options.mode ];
@@ -855,6 +930,7 @@ module.exports = function(grunt) {
 			);
 
 		} );
+*/
 
 		_.each( _.values( bundleMap ), function( bundleMetadata ) {
 
@@ -883,8 +959,17 @@ module.exports = function(grunt) {
 	// Saves the bundleMap and pageMap contents to files.
 	grunt.registerTask( "saveBundleAndPageJSONs", "Persist the page and bundle JSONs", function() {
 
+		var parcelDataToSave = {};
+		_.each( _.values( parcels ), function( parcel ) {
+			parcelDataToSave[ parcel.name ] = {
+				js : parcel[mode].js || [],
+				css : parcel[mode].css || [],
+				tmpl : parcel[mode].tmpl || []
+			};
+		} );
+
 		assetBundlerUtil.saveBundleMap( bundleMap );
-		assetBundlerUtil.savePageMap( pageMap );
+		assetBundlerUtil.savePageMap( parcelDataToSave );
 
 	} );
 
@@ -970,6 +1055,8 @@ module.exports = function(grunt) {
 
 		var validFiles = [];
 
+/*
+
 		_.each( _.values( pageMap ), function( page ) {
 			validFiles = _.union( validFiles, _.map( _.filter( page.files, function( file ) { return _s.endsWith( file, ".js") ; } ), function( fileName ) {
 				return fileName.replace( "{APP_PAGES}/",  options.appPages.srcDir );
@@ -981,12 +1068,38 @@ module.exports = function(grunt) {
 				return fileName.replace( "{ASSET_LIBRARY}/",  options.assetLibrary.srcDir );
 			}) );
 		} );
+*/
+
+		//console.log( _.pluck( parcels, "combinedFiles" ) );
+
+		_.each( _.values( parcels ), function( bundle ) {
+			var filePaths = [];
+			if( options.mode === "dev" )
+				filePaths = _.pluck( bundle.combinedFiles, "path" );
+			else {
+				_.each( bundle.combinedFiles, function( file ) {
+					filePaths = _.union( filePaths, file.sourceFilePaths );
+				} );
+			}
+			validFiles = _.union( validFiles,
+				_.map(
+					_.filter(
+						filePaths,//_.pluck( bundle.combinedFiles, "path" ),
+						function( filePath ) {
+							return _s.endsWith( filePath, ".js" );
+						} ),
+					function( filePath ) {
+						//Need to convert files with destination directory back to source directory
+						return filePath.replace( options.appPages.destDir, options.appPages.srcDir ).replace( options.assetLibrary.destDir, options.assetLibrary.srcDir );
+					} ) );
+		} );
 
 		async.each(
 			this.files,
 			function( file, callback ) {
 				var realPath = fs.realpathSync( file.src[0] );
 
+				console.log( file.src[0] );
 				if( _.contains( validFiles, file.src[0] ) ) {
 					processFile( realPath , fs.realpathSync( file.dest ), callback );
 				}

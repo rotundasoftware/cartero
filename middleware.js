@@ -29,7 +29,7 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 
 			var _arguments = arguments;
 			
-			var pageMetadata = pageMap[ pageMapKey ][ mode ];
+			var pageMetadata = pageMap[ pageMapKey ];//[ mode ];
 
 			res.locals.bundler_js = _.map( pageMetadata.js, function( fileName ) {
 				return "<script type='text/javascript' src='/" + fileName + "'></script>";

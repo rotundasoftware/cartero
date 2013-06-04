@@ -2,6 +2,8 @@
 
 <!-- #bundler_require "JQuery", "JQuery/UI", "Backbone/LibWithPriorities" -->
 
+<!-- #bundler_extends "../layout.html.swig" -->
+
 {% block content %}
 
 <h3>Testing some javascript library dependency.  The following should show up as rendered JQuery tabs</h3>
