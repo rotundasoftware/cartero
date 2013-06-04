@@ -36,7 +36,11 @@ Each directory in __assetLibrary__ can contain a `bundle.json` file.  This file 
 * `dependencies` : The bundles this bundle depends on.
 * `keepSeparate` : (default : `false`) Whether this bundle should be kept as a separate file in `prod` mode.  This is intended to be used for large, commonly used libraries such as JQueryUI.
 * `subdirectories` : (default : `"/_.*/"`) Regular expression (in string format) used to determine which subdirectories are part of the bundle itself and are not their own separate bundles.
-* `filePriority` : The list of files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.
+* `prioritizeSubdirectories` : (default : `false`) Whether files in `subdirectories` are sourced before or after the "top level" files.
+* `filePriority` : Files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.  This list takes precedence over `prioritizeSubdirectories`.
+* `browserifyAutorun` : When using Browserify with assetBundler, these files will be automatically run upon being loaded.
+* `dynamicallyLoadedFiles` : Files that may be loaded dynamically (after a page loads).  These files are not bundled into the bundle.
+
 
 ### Server-side template directives
 
@@ -45,7 +49,7 @@ Add the `#bundler_require` directive to your server-side templates to declare wh
 <!-- #bundler_require "Backbone", "YourDialogWidget" -->
 ```
 
-Add the `#bundler_extends` directive to declare what server-side template this template extends from.  `#bundler_require` bundles from that template will automatically be added to this one.
+Add the `#bundler_extends` directive to declare what server-side template this template extends from.  Path is relative.  `#bundler_require` bundles from that template will automatically be added to this one.
 ```html
 <!-- #bundler_extends "../layout.html.swig" -->
 ```
@@ -56,43 +60,49 @@ Add the `#bundler_extends` directive to declare what server-side template this t
 Type: `Object`
 
 Properties
-* srcDir
-* destDir
-* filesToIgnore
-* directoriesToIgnore
+* `srcDir`
+* `destDir`
+* `filesToIgnore`
+* `directoriesToIgnore`
 
 #### appPages
 Type: `Object`
 
 Properties
-* srcDir
-* destDir
-* filesToIgnore
-* directoriesToIgnore
+* `srcDir`
+* `destDir`
+* `filesToIgnore`
+* `directoriesToIgnore`
+* `pageFileRegExp` : Regular expressions specifying where `assetBundler` should look for Server-side template directives
 
-### mode
+#### mode
 Type: `String` Default: `dev`
 
 `dev` or `prod`.  `prod` will concat, minify, etc.
 
-### useDirectoriesForDependencies
+#### useDirectoriesForDependencies
 Type: `Boolean`
 
 Whether the directory structure in the __assetLibrary__ directory should drive the bundle dependency.  If `true`, a bundle's parent directory will automatically be added as a dependent bundle.
 
-### serverSideTemplateSuffix
-Type: `String` Default: `.swig`
-
-The suffix of the server-side templates being used.
-
-### minificationTasks
+#### minificationTasks
 Type: `Array`
 
 List of minification tasks that shoudl be run when `mode == "prod"`.  Each item should contain the following properties:
 * `name` : The name of the grunt task to run.
 * `suffixes` : List of suffixes to apply this grunt task too
 * `options` : Task-specific options to be passed through to the grunt task itself.
+* 
 
+#### postProcessor
+Type: `Function`
+
+A function that takes the generated `pageMap` as input and allows you to make any changes you like. TODO: document the contents of the `pageMap`.
+
+#### preprocessingOptions
+Type : `Object`
+
+For any of the supported preprocessing options ( coffee, compass, less, stylus ), this allows you to pass in any special options that should be passed through to the corresponding grunt task when it runs.
 
 #INSTRUCTIONS
 

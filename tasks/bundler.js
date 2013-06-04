@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
 		},
 		tmpl : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens", "resolveAndInjectDependencies:dev", "saveBundleAndPageJSONs" ]
+			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
 		},
 		png : {
 			tasks : [ "copy:" + assetBundlerTaskPrefix ]
@@ -850,11 +850,15 @@ module.exports = function(grunt) {
 			return options.staticDir + fileName;
 		}
 
+		function resolveDynamicallyLoadedFileName( fileName ) {
+			return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir );
+		}
+
 		var clean = grunt.config( "clean" );
 
 		var referencedFiles = [];
 
-		_.each( _.values( pageMap ), function( pageMetadata) {
+		_.each( _.values( pageMap ), function( pageMetadata ) {
 
 			var metadataForMode = pageMetadata[ options.mode ];
 
@@ -862,6 +866,14 @@ module.exports = function(grunt) {
 				_.map( metadataForMode.js, resolvePageMapFileName ),
 				_.map( metadataForMode.css, resolvePageMapFileName ),
 				_.map( metadataForMode.tmpl, resolvePageMapFileName )
+			);
+
+		} );
+
+		_.each( _.values( bundleMap ), function( bundleMetadata ) {
+
+			referencedFiles = _.union( referencedFiles,
+				_.map( bundleMetadata.dynamicallyLoadedFiles, resolveDynamicallyLoadedFileName )
 			);
 
 		} );
