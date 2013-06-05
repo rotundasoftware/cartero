@@ -24,7 +24,7 @@ module.exports = function( grunt ) {
 					staticDir : "WebServer/Static/",
 					//rootDir : __dirname,
 					serverSideTemplateSuffix : ".swig",
-					useDirectoriesForDependencies : true/*,
+					useDirectoriesForDependencies : true,
 					minificationTasks : [
 						{
 							name : "htmlmin",
@@ -40,13 +40,12 @@ module.exports = function( grunt ) {
 								mangle : false
 							}
 						}
-					]*/
+					]
 				}
 			}
 		}
 	} );
 
-	grunt.loadNpmTasks( "grunt-contrib-copy" );
 	grunt.loadNpmTasks( "grunt-contrib-sass");
 	grunt.loadNpmTasks( "grunt-contrib-compass" );
 	grunt.loadNpmTasks( "grunt-contrib-less");

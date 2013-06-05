@@ -29,22 +29,22 @@ module.exports = function(grunt) {
 	// Map of file extension to tasks that need to be run when a modification happens (used by watch task)
 	var assetFileExtensionsMap = {
 		js : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
+			tasks : [ "replaceBundlerDirTokens" ]
 		},
 		css : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
+			tasks : [ "replaceBundlerDirTokens" ]
 		},
 		tmpl : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix, "replaceBundlerDirTokens" ]
+			tasks : [ "replaceBundlerDirTokens" ]
 		},
 		png : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+			tasks : []
 		},
 		gif : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+			tasks : []
 		},
 		jpg : {
-			tasks : [ "copy:" + assetBundlerTaskPrefix ]
+			tasks : []
 		}
 	};
 
@@ -176,29 +176,8 @@ module.exports = function(grunt) {
 
 		mode = options.mode;
 
-		var copy = grunt.config( "copy" ) || {};
 		var watch = grunt.config( "watch" ) || {};
 		var requirify = grunt.config( "requirify" ) || {};
-
-		// Configure copy to copy all asset files that don't require preprocessing
-		copy[ assetBundlerTaskPrefix ] = {
-			files : [
-				{
-					src: kAssetFileExtensions,
-					dest : options.assetLibrary.destDir,
-					expand : true,
-					cwd : options.assetLibrary.srcDir
-				},
-				{
-					src: kAssetFileExtensions,
-					dest : options.appPages.destDir,
-					expand : true,
-					cwd : options.appPages.srcDir
-				}
-			]
-		};
-
-		grunt.config( "copy", copy );
 
 		// Loop through assets that need preprocessing
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
@@ -317,7 +296,7 @@ module.exports = function(grunt) {
 			}
 			else {
 				//TODO: Oleg: don't think we need to copy here...
-				tasksToRun = [ "copy:" + assetBundlerTaskPrefix, taskName + ":" + assetBundlerTaskPrefix ];
+				tasksToRun = [ taskName + ":" + assetBundlerTaskPrefix ];
 			}
 
 			//TODO: Oleg: we don't really support requirifying none js files...
@@ -397,10 +376,7 @@ module.exports = function(grunt) {
 			newDest = assetBundlerUtil.mapAssetFileName( newDest );
 
 			// Note, copy should only be run for files not requiring pre-compilation
-			grunt.config( [ "copy", assetBundlerTaskPrefix, "files" ], [ {
-				src : filepath,
-				dest : newDest
-			} ] );
+			grunt.file.copy( filepath, newDest );
 
 			// TODO: this section can be cleaned up
 			_.each( _.keys( compileAssetsMap ), function( taskName ) {
@@ -500,7 +476,7 @@ module.exports = function(grunt) {
 
 		grunt.task.run( assetBundlerTaskPrefix + "_clean" );
 		grunt.task.run( "prepare" );
-		grunt.task.run( "copy" );
+		grunt.task.run( assetBundlerTaskPrefix + "_copy" );
 
 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
 			grunt.task.run( taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary" );
@@ -516,8 +492,6 @@ module.exports = function(grunt) {
 		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		grunt.task.run( "resolveAndInjectDependencies:dev" );
-
-		
 
 		// In prod mode...
 		if( mode === "prod" ) {
@@ -548,6 +522,32 @@ module.exports = function(grunt) {
 		if( mode === "dev" ) {
 			grunt.task.run( "watch" );
 		}
+
+	} );
+
+	grunt.registerTask( assetBundlerTaskPrefix + "_copy", "", function() {
+
+		var filesToCopy = grunt.file.expandMapping(
+				kAssetFileExtensions,
+				options.assetLibrary.destDir,
+				{
+					cwd : options.assetLibrary.srcDir
+				}
+		);
+
+		filesToCopy = _.union( filesToCopy, grunt.file.expandMapping(
+				kAssetFileExtensions,
+				options.appPages.destDir,
+				{
+					cwd : options.appPages.srcDir
+				}
+			)
+		);
+
+		_.each( filesToCopy, function( fileSrcDest ) {
+			grunt.file.copy( fileSrcDest.src, fileSrcDest.dest );
+		} );
+
 
 	} );
 
@@ -639,19 +639,10 @@ module.exports = function(grunt) {
 		console.log( JSON.stringify( bundleMap, null, "\t" ) );
 		console.log( JSON.stringify( pageMap, null, "\t" ) );
 
-		try {
-			var result = cartero.doIt( bundleMap, pageMap, options );
+		var result = cartero.doIt( bundleMap, pageMap, options );
 
-			bundles = result.bundles;
-			parcels = result.parcels;
-		}
-		catch( e ) {
-			console.log( e.stack );
-		}
-		
-
-		//throw new Error( "okay im done now!" );
-
+		bundles = result.bundles;
+		parcels = result.parcels;
 
 	} );
 
@@ -727,15 +718,6 @@ module.exports = function(grunt) {
 		_.each( filesToClean, function ( file ) {
 			grunt.file.delete( file );
 		} );
-
-	} );
-
-
-	grunt.registerTask( "olegTest1", "", function() {
-
-		var files = grunt.file.expand( {}, [ "WebServer/**/*.js" ] );
-
-		console.log( files );
 
 	} );
 
