@@ -79,20 +79,20 @@ module.exports = function(grunt) {
 	// Map specifying the supported preprocessing tasks, the file extension they process, and the file extension they output.
 	var compileAssetsMap = {
 		coffee : {
-			src : ".coffee",
-			dest : ".js"
+			inExt : ".coffee",
+			outExt : ".js"
 		},
-		compass : {
-			src : ".scss",
-			dest : ".css"
+		sass : {
+			inExt : ".scss",
+			outExt : ".css"
 		},
 		less : {
-			src : ".less",
-			dest : ".css"
+			inExt : ".less",
+			outExt : ".css"
 		},
 		stylus : {
-			src : ".styl",
-			dest : ".css"
+			inExt : ".styl",
+			outExt : ".css"
 		}
 	};
 
@@ -181,109 +181,165 @@ try {
 			options
 		);
 
+		options.preprocessingTasks = _.map( options.preprocessingTasks, function( preprocessingTask ) {
+			var defaults = compileAssetsMap[ preprocessingTask.name ] || {};
+			var result = _.extend( {}, defaults, preprocessingTask );
+			if( _.isUndefined( result.outExt ) )
+				result.outExt = result.inExt;
+			return result;
+		} );
+
 		mode = options.mode;
 
 		var watch = grunt.config( "watch" ) || {};
 		var requirify = grunt.config( "requirify" ) || {};
 
-		// Loop through assets that need preprocessing
-		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
-			// Get the configuration for this task if it exists or create a new one
+			var taskName = preprocessingTask.name;
+
 			var task = grunt.config( taskName ) || {};
 
-			var taskOptions = compileAssetsMap[ taskName ];
+			var files = [];
 
-			var userSpecifiedOptions;
-
-			// Check to see if the user specified their own options for this preprocessing task
-			if( ! _.isUndefined( options.preprocessingOptions ) ) {
-				userSpecifiedOptions = options.preprocessingOptions[ taskName ];
-			}
-
-			// Special case for compass (which doesn't seem to support the usual files options)
-			if( taskName === "compass" ) {
-
-				//TODO: fix for new options
-				// if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
-
-				// var assetLibraryOptions = _.extend( {}, {
-				// 	sassDir : options.assetLibrary.srcDir,
-				// 	cssDir : options.assetLibrary.destDir
-				// },
-				// userSpecifiedOptions );
-
-				// task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-				// 	options : assetLibraryOptions
-				// };
-
-				// var appPagesOptions = _.extend( {}, {
-				// 	sassDir : options.appPages.srcDir,
-				// 	cssDir : options.appPages.destDir
-				// },
-				// userSpecifiedOptions );
-
-				// task[ assetBundlerTaskPrefix + "_appPages" ] = {
-				// 	options : appPagesOptions
-				// };
-
-			}
-			else {
-
-				var files = [];
-
-				_.each( options.bundleAndViewDirs, function( dir ) {
-					files.push( {
-						expand: true,
-						cwd: dir.path,
-						src: [ "**/*" + taskOptions.src ],
-						dest: dir.destDir,
-						ext: taskOptions.dest
+			_.each( options.bundleAndViewDirs, function( dir ) {
+				files.push( {
+					expand: true,
+					cwd: dir.path,
+					src: [ "**/*" + preprocessingTask.inExt ],
+					dest: dir.destDir,
+					ext: preprocessingTask.outExt
 					} );
-				} );
+			} );
 
-				task[ assetBundlerTaskPrefix ] = {
-					files : files
-				};
+			task[ assetBundlerTaskPrefix ] = {
+				files : files
+			};
 
-
-				if( ! _.isUndefined( userSpecifiedOptions ) ) {
-					task[ assetBundlerTaskPrefix ].options = userSpecifiedOptions;
-				}
-
-				// Create and configure targets for the task
-//				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-//						expand: true,
-//					cwd: options.assetLibrary.srcDir,
-//					src: [ "**/*" + taskOptions.src ],
-//					dest: options.assetLibrary.destDir,
-//					ext: taskOptions.dest
-//				};
-//
-//				task[ assetBundlerTaskPrefix + "_appPages" ] = {
-//					expand: true,
-//					cwd: options.appPages.srcDir,
-//					src: [ "**/*" + taskOptions.src ],
-//					dest: options.appPages.destDir,
-//					ext: taskOptions.dest
-//				};
-
-
-
-
-
+			if( ! _.isUndefined( preprocessingTask.options ) ) {
+				task[ assetBundlerTaskPrefix ].options = preprocessingTask.options;
 			}
 
-			//task[ assetBundlerTaskPrefix ] = {};
+			console.log( "configured " + taskName + ":" );
+			console.log( JSON.stringify( task, null, "\t" ) );
 
 			grunt.config( taskName, task );
 
+			//TODO: Oleg: we don't really support requirifying none js files...
+			//if( options.requirify && taskOptions.dest === ".js" )
+			//	tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
+
+			if( taskName !== "compass" )
+				watch[ assetBundlerTaskPrefix + "_" + taskName ] = {
+					files : _.map( options.bundleAndViewDirs, function ( dir ) {
+						return dir.path + "/**/*" + preprocessingTask.inExt;
+					} ),
+					tasks : [ taskName + ":" + assetBundlerTaskPrefix ],
+					options : {
+						nospawn : true
+					}
+				};
 		} );
 
-		// Create targets for each minification task.
-		_.each( options.minificationTasks, function( taskConfig ) {
 
-			var task = grunt.config( taskConfig.name ) || {};
+// 		// Loop through assets that need preprocessing
+// 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+
+// 			// Get the configuration for this task if it exists or create a new one
+// 			var task = grunt.config( taskName ) || {};
+
+// 			var taskOptions = compileAssetsMap[ taskName ];
+
+// 			var userSpecifiedOptions;
+
+// 			// Check to see if the user specified their own options for this preprocessing task
+// 			if( ! _.isUndefined( options.preprocessingOptions ) ) {
+// 				userSpecifiedOptions = options.preprocessingOptions[ taskName ];
+// 			}
+
+// 			// Special case for compass (which doesn't seem to support the usual files options)
+// 			if( taskName === "compass" ) {
+
+// 				//TODO: fix for new options
+// 				// if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
+
+// 				// var assetLibraryOptions = _.extend( {}, {
+// 				// 	sassDir : options.assetLibrary.srcDir,
+// 				// 	cssDir : options.assetLibrary.destDir
+// 				// },
+// 				// userSpecifiedOptions );
+
+// 				// task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+// 				// 	options : assetLibraryOptions
+// 				// };
+
+// 				// var appPagesOptions = _.extend( {}, {
+// 				// 	sassDir : options.appPages.srcDir,
+// 				// 	cssDir : options.appPages.destDir
+// 				// },
+// 				// userSpecifiedOptions );
+
+// 				// task[ assetBundlerTaskPrefix + "_appPages" ] = {
+// 				// 	options : appPagesOptions
+// 				// };
+
+// 			}
+// 			else {
+
+// 				var files = [];
+
+// 				_.each( options.bundleAndViewDirs, function( dir ) {
+// 					files.push( {
+// 						expand: true,
+// 						cwd: dir.path,
+// 						src: [ "**/*" + taskOptions.src ],
+// 						dest: dir.destDir,
+// 						ext: taskOptions.dest
+// 					} );
+// 				} );
+
+// 				task[ assetBundlerTaskPrefix ] = {
+// 					files : files
+// 				};
+
+
+// 				if( ! _.isUndefined( userSpecifiedOptions ) ) {
+// 					task[ assetBundlerTaskPrefix ].options = userSpecifiedOptions;
+// 				}
+
+// 				// Create and configure targets for the task
+// //				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
+// //						expand: true,
+// //					cwd: options.assetLibrary.srcDir,
+// //					src: [ "**/*" + taskOptions.src ],
+// //					dest: options.assetLibrary.destDir,
+// //					ext: taskOptions.dest
+// //				};
+// //
+// //				task[ assetBundlerTaskPrefix + "_appPages" ] = {
+// //					expand: true,
+// //					cwd: options.appPages.srcDir,
+// //					src: [ "**/*" + taskOptions.src ],
+// //					dest: options.appPages.destDir,
+// //					ext: taskOptions.dest
+// //				};
+
+
+
+
+
+// 			}
+
+// 			//task[ assetBundlerTaskPrefix ] = {};
+
+// 			grunt.config( taskName, task );
+
+// 		} );
+
+		// Create targets for each minification task.
+		_.each( options.minificationTasks, function( minificationTask ) {
+
+			var task = grunt.config( minificationTask.name ) || {};
 
 			var files = [];
 
@@ -291,18 +347,18 @@ try {
 				files.push( {
 					expand: true,
 					cwd: dir.destDir,
-					src: [ "**/*" + taskConfig.suffixes[0] ],
+					src: [ "**/*" + minificationTask.inExt ],
 					dest: dir.destDir,
-					ext: taskConfig.suffixes[0]
+					ext: minificationTask.outExt
 				} );
 			} );
 
 			task[ assetBundlerTaskPrefix ] = {
 				files : files,
-				options : taskConfig.options
+				options : minificationTask.options || {}
 			};
 
-			grunt.config( taskConfig.name, task );
+			grunt.config( minificationTask.name, task );
 
 			//TODO: add support for multiple suffixes
 			// task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
@@ -327,41 +383,41 @@ try {
 
 		} );
 
-		// Loop through the assets that require preprocessing and create/configure the target
-		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+		// // Loop through the assets that require preprocessing and create/configure the target
+		// _.each( _.keys( compileAssetsMap ), function( taskName ) {
 
-			var taskOptions = compileAssetsMap[ taskName ];
+		// 	var taskOptions = compileAssetsMap[ taskName ];
 
-			var tasksToRun;
+		// 	var tasksToRun;
 
-			if( taskName === "compass" ) {
-				//TODO: fix to support new options
-				// tasksToRun = [
-				// 	taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
-				// 	taskName + ":" + assetBundlerTaskPrefix + "_appPages"
-				// ];
-			}
-			else {
-				//TODO: Oleg: don't think we need to copy here...
-				tasksToRun = [ taskName + ":" + assetBundlerTaskPrefix ];
-			}
+		// 	if( taskName === "compass" ) {
+		// 		//TODO: fix to support new options
+		// 		// tasksToRun = [
+		// 		// 	taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
+		// 		// 	taskName + ":" + assetBundlerTaskPrefix + "_appPages"
+		// 		// ];
+		// 	}
+		// 	else {
+		// 		//TODO: Oleg: don't think we need to copy here...
+		// 		tasksToRun = [ taskName + ":" + assetBundlerTaskPrefix ];
+		// 	}
 
-			//TODO: Oleg: we don't really support requirifying none js files...
-			if( options.requirify && taskOptions.dest === ".js" )
-				tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
+		// 	//TODO: Oleg: we don't really support requirifying none js files...
+		// 	if( options.requirify && taskOptions.dest === ".js" )
+		// 		tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
 
-			if( taskName !== "compass" )
-				watch[ assetBundlerTaskPrefix + "_" + taskName ] = {
-					files : _.map( options.bundleAndViewDirs, function ( dir ) {
-						return dir.path + "**/*" + taskOptions.src;
-					} ),
-					tasks : tasksToRun,
-					options : {
-						nospawn : true
-					}
-				};
+		// 	if( taskName !== "compass" )
+		// 		watch[ assetBundlerTaskPrefix + "_" + taskName ] = {
+		// 			files : _.map( options.bundleAndViewDirs, function ( dir ) {
+		// 				return dir.path + "**/*" + taskOptions.src;
+		// 			} ),
+		// 			tasks : tasksToRun,
+		// 			options : {
+		// 				nospawn : true
+		// 			}
+		// 		};
 
-		} );
+		// } );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
 		_.each( assetFileExtensionsMap, function( val, key ) {
@@ -373,7 +429,7 @@ try {
 
 			watch[ assetBundlerTaskPrefix + "_" + key ] = {
 				files : _.map( options.bundleAndViewDirs, function ( dir ) {
-					return dir.path + "**/*" + key;
+					return dir.path + "/**/*" + key;
 				} ),
 				tasks : tasksToRun,
 				options : {
@@ -385,7 +441,7 @@ try {
 		// TODO: this should somehow be using options.appPages.pageFileRegExp
 		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
 			files : _.map( options.viewDirs, function ( dir ) {
-					return dir.path + "**/*" + options.serverSideTemplateSuffix;
+					return dir.path + "/**/*" + options.serverSideTemplateSuffix;
 				} ),
 			tasks : [ "processServerSideTemplateChange" ],
 			options : {
@@ -396,7 +452,7 @@ try {
 		// Watch changes to bundle.json files
 		watch[ assetBundlerTaskPrefix + "_bundle_json" ] = {
 			files : _.map( options.viewDirs, function ( dir ) {
-					return dir.path + "**/*" + "**/bundle.json";
+					return dir.path + "/**/*" + "**/bundle.json";
 				} ),
 			tasks : [ "processBundleJSONChange" ],
 			options : {
@@ -407,6 +463,8 @@ try {
 		grunt.config( "watch", watch );
 
 		grunt.event.on( "watch", function( action, filepath ) {
+try {
+
 
 			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
 			if( ( action === "added" || action === "deleted" ) && ! options.appPages.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
@@ -428,56 +486,66 @@ try {
 
 			newDest = assetBundlerUtil.mapAssetFileName( newDest );
 
-			console.log( dirOptions );
-			console.log( "copying " + filepath + " to " + newDest );
-
 			// Note, copy should only be run for files not requiring pre-compilation
 			grunt.file.copy( filepath, newDest );
 
 			// TODO: this section can be cleaned up
-			_.each( _.keys( compileAssetsMap ), function( taskName ) {
+			//_.each( _.keys( compileAssetsMap ), function( taskName ) {
+			_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
 				//TODO: handle compass, for now itll just rerun for all files
-				if( taskName === "compass" ) return;
+				//if( taskName === "compass" ) return;
 
-				var taskOptions = compileAssetsMap[ taskName ];
+				//var taskOptions = compileAssetsMap[ taskName ];
 
 				var tempFile = [];
 				var tempDest = [];
 
+				var taskName = preprocessingTask.name;
+
+
 				// If the changed file's extension matches the task, set the file.
-				if( _s.endsWith( filepath, taskOptions.src ) ) {
+				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
 					tempFile = filepath;
 					tempDest = newDest;
 				}
 
-				var userSpecifiedOptions;
+				//var userSpecifiedOptions;
 
-				if( ! _.isUndefined( options.preprocessingOptions ) ) {
-					userSpecifiedOptions = options.preprocessingOptions[ taskName ];
-				}
+				//if( ! _.isUndefined( options.preprocessingOptions ) ) {
+				//	userSpecifiedOptions = options.preprocessingOptions[ taskName ];
+				//}
 
 				// Set the src and dest.
 				grunt.config( [ taskName, assetBundlerTaskPrefix ], {
 					src : tempFile,
 					dest : tempDest,
-					options : userSpecifiedOptions
+					options : preprocessingTask.options || {}
 				} );
+
+				console.log( JSON.stringify( grunt.config( taskName ), null, "\t" ) );
 
 			} );
 
-			if( _s.endsWith( newDest, ".js" ) && options.requirify ) {
-				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
-					src : filepath,
-					dest : newDest
-				} ] );
+			if( options.requirify ) {
+				if( _s.endsWith( filepath, ".js" ) ) {
+					grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
+						src : filepath,
+						dest : newDest
+					} ] );
+				}
+				else {
+					grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
+						src : []
+					} ] );
+				}
 			}
-			else {
-				grunt.config( [ "requirify", assetBundlerTaskPrefix, "files" ], [ {
-					src : []
-				} ] );
 
-			}
+		}
+		catch( e ) {
+			console.log( e.stack );
+			throw e;
+		}
 
 		} );
 
@@ -535,10 +603,10 @@ try {
 		grunt.task.run( "prepare" );
 		grunt.task.run( assetBundlerTaskPrefix + "_copy" );
 
-		_.each( _.keys( compileAssetsMap ), function( taskName ) {
+		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 			//TODO: support compass
-			if( taskName !== "compass" )
-				grunt.task.run( taskName + ":" + assetBundlerTaskPrefix );
+			//if( taskName !== "compass" )
+				grunt.task.run( preprocessingTask.name + ":" + assetBundlerTaskPrefix );
 		} );
 
 		// Builds the bundleMap and pageMap to be used by later tasks

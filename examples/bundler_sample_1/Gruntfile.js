@@ -10,7 +10,8 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "prod",
+					mode : "dev",
+					projectDir : __dirname,
 					bundleDirs : [
 						{
 							path : "AssetLibrary",
@@ -22,6 +23,20 @@ module.exports = function( grunt ) {
 							path : "WebServer/AppPages",
 							filesToIgnore : /_.*/,
 							directoriesToIgnore : /__.*/
+						}
+					],
+					preprocessingTasks : [
+						{
+							name : "coffee"
+						},
+						{
+							name : "sass"
+						},
+						{
+							name : "stylus"
+						},
+						{
+							name : "less"
 						}
 					],
 					/*
@@ -41,14 +56,14 @@ module.exports = function( grunt ) {
 					minificationTasks : [
 						{
 							name : "htmlmin",
-							suffixes : [ ".tmpl" ],
+							inExt : ".tmpl",
 							options : {
 								removeComments : true
 							}
 						},
 						{
 							name : "uglify",
-							suffixes : [ ".js" ],
+							inExt : ".js",
 							options : {
 								mangle : false
 							}
@@ -61,6 +76,7 @@ module.exports = function( grunt ) {
 
 	grunt.loadNpmTasks( "grunt-contrib-sass");
 	grunt.loadNpmTasks( "grunt-contrib-compass" );
+	grunt.loadNpmTasks( "grunt-contrib-sass" );
 	grunt.loadNpmTasks( "grunt-contrib-less");
 	grunt.loadNpmTasks( "grunt-contrib-coffee");
 	grunt.loadNpmTasks( "grunt-contrib-stylus");
