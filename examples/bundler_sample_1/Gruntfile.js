@@ -11,19 +11,32 @@ module.exports = function( grunt ) {
 			dist : {
 				options : {
 					mode : "prod",
+					bundleDirs : [
+						{
+							path : "AssetLibrary",
+							namespace : "Main"
+						}
+					],
+					viewDirs : [
+						{
+							path : "WebServer/AppPages",
+							filesToIgnore : /_.*/,
+							directoriesToIgnore : /__.*/
+						}
+					],
+					/*
 					assetLibrary : {
-						srcDir : "AssetLibrary/",
+						srcDir : "AssetLibrary",
 						destDir : "WebServer/Static/AssetLibrary-assets/"
 					},
 					appPages : {
-						srcDir : "WebServer/AppPages/",
+						srcDir : "WebServer/AppPages",
 						destDir : "WebServer/Static/AppPages-assets/",
-						filesToIgnore : /_.*/,
-						directoriesToIgnore : /__.*/
 					},
-					staticDir : "WebServer/Static/",
+					*/
+					staticDir : "WebServer/Static",
 					//rootDir : __dirname,
-					serverSideTemplateSuffix : ".swig",
+					//serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
 					minificationTasks : [
 						{

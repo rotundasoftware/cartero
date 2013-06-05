@@ -1,6 +1,6 @@
 {% extends 'layout.html.swig' %}
 
-<!-- #bundler_require "JQuery", "JQuery/UI", "Backbone/LibWithPriorities" -->
+<!-- #bundler_require "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities" -->
 
 <!-- #bundler_extends "../layout.html.swig" -->
 

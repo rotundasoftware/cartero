@@ -1,6 +1,6 @@
 {% extends 'layout.html.swig' %}
 
-<!-- #bundler_require "JQuery", "Underscore/*" -->
+<!-- #bundler_require "Main/JQuery", "Main/Underscore/*" -->
 
 {% block content %}
 
