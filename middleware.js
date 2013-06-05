@@ -29,7 +29,7 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 
 			var _arguments = arguments;
 			
-			var pageMetadata = pageMap[ pageMapKey ][ mode ];
+			var pageMetadata = pageMap[ pageMapKey ];//[ mode ];
 			if( ! pageMetadata ) return next( new Error( "Could not find pageKey " + pageMapKey + " in page key map." ) );
 
 			res.locals.bundler_js = _.map( pageMetadata.js, function( fileName ) {

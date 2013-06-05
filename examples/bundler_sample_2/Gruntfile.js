@@ -8,47 +8,52 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig( {
 		assetbundler : {
-			dist : {
-				options : {
-					mode : "dev",
-					assetLibrary : {
-						//srcDir : "AssetLibrary/",
-						//destDir : "WebServer/Static/AssetLibrary-assets/"
-						//destDir : "WebServer/Static/node_modules/"
-						srcDir : "App/node_modules/",
-						destDir : "App/WebServer/Static/AssetLibrary-assets/"
-					},
-					appPages : {
-						//srcDir : "WebServer/AppPages/",
-						//destDir : "WebServer/Static/AppPages-assets/",
-						srcDir : "App/WebServer/AppPages/",
-						destDir : "App/WebServer/Static/AppPages-assets/",
-						filesToIgnore : /_.*/,
-						directoriesToIgnore : /__.*/
-					},
-					staticDir : "App/WebServer/Static/",
-					rootDir : __dirname,
-					serverSideTemplateSuffix : ".swig",
-					useDirectoriesForDependencies : true,
-					requirify : true,
-					minificationTasks : [
-						{
-							name : "htmlmin",
-							suffixes : [ ".tmpl" ],
-							options : {
-								removeComments : true
-							}
-						},
-						{
-							name : "uglify",
-							suffixes : [ ".js" ],
-							options : {
-								mangle : false
-							}
+			options : {
+				mode : "prod",
+				assetLibrary : {
+					//srcDir : "AssetLibrary/",
+					//destDir : "WebServer/Static/AssetLibrary-assets/"
+					//destDir : "WebServer/Static/node_modules/"
+					srcDir : "App/node_modules/",
+					destDir : "App/WebServer/Static/AssetLibrary-assets/"
+				},
+				appPages : {
+					//srcDir : "WebServer/AppPages/",
+					//destDir : "WebServer/Static/AppPages-assets/",
+					srcDir : "App/WebServer/AppPages/",
+					destDir : "App/WebServer/Static/AppPages-assets/",
+					filesToIgnore : /_.*/,
+					directoriesToIgnore : /__.*/
+				},
+				staticDir : "App/WebServer/Static/",
+				rootDir : __dirname,
+				serverSideTemplateSuffix : ".swig",
+				useDirectoriesForDependencies : true,
+				requirify : true/*,
+				minificationTasks : [
+					{
+						name : "htmlmin",
+						suffixes : [ ".tmpl" ],
+						options : {
+							removeComments : true
 						}
-					]
-				}
-			}
+					},
+					{
+						name : "uglify",
+						suffixes : [ ".js" ],
+						options : {
+							mangle : false
+						}
+					}
+				]*/
+			}//,
+		//dist : {
+		//	mode : "prod"
+		//}
+			//dist : {
+//
+//			}
+
 		},
 
 		requirify : {

@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					assetLibrary : {
 						srcDir : "AssetLibrary/",
 						destDir : "WebServer/Static/AssetLibrary-assets/"
@@ -22,7 +22,7 @@ module.exports = function( grunt ) {
 						directoriesToIgnore : /__.*/
 					},
 					staticDir : "WebServer/Static/",
-					rootDir : __dirname,
+					//rootDir : __dirname,
 					serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
 					minificationTasks : [
@@ -46,14 +46,11 @@ module.exports = function( grunt ) {
 		}
 	} );
 
-	grunt.loadNpmTasks( "grunt-contrib-copy" );
-	grunt.loadNpmTasks( "grunt-contrib-clean" );
 	grunt.loadNpmTasks( "grunt-contrib-sass");
 	grunt.loadNpmTasks( "grunt-contrib-compass" );
 	grunt.loadNpmTasks( "grunt-contrib-less");
 	grunt.loadNpmTasks( "grunt-contrib-coffee");
 	grunt.loadNpmTasks( "grunt-contrib-stylus");
-	grunt.loadNpmTasks( "grunt-contrib-concat" );
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
