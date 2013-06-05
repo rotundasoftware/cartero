@@ -140,7 +140,7 @@ module.exports = function( grunt ) {
         cartero : {
             options : {
                 projectDir : __dirname,
-                assetLibary : {
+                assetLibrary : {
                     path : "assetLibrary/"
                 },
                 views : {
@@ -167,7 +167,7 @@ module.exports = function( grunt ) {
 };
 ```
 
-The four required options for the Cartero Grunt Task are `projectDir`, `assetLibary`, `views`, and `publicDir`. The `projectDir` option specifices the root folder for your project. *All paths used by Cartero, including all other paths in the gruntfile, are considered to be relative to this directory.* The `assetLibary` option specifies where your asset library is located, and the `views` option specifies where your page views are located, that is, the directory that contains your page templates. The `publicDir` option tells Cartero where your application's "public" folder is located, or the "static" folder in Node.js / Express apps. Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `bundle-assets` and `view-assets`. Those directories will contain assets specific to bundles and page views, respectively.
+The four required options for the Cartero Grunt Task are `projectDir`, `assetLibrary`, `views`, and `publicDir`. The `projectDir` option specifices the root folder for your project. *All paths used by Cartero, including all other paths in the gruntfile, are considered to be relative to this directory.* The `assetLibrary` option specifies where your asset library is located, and the `views` option specifies where your page views are located, that is, the directory that contains your page templates. The `publicDir` option tells Cartero where your application's "public" folder is located, or the "static" folder in Node.js / Express apps. Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `bundle-assets` and `view-assets`. Those directories will contain assets specific to bundles and page views, respectively.
 
 The Cartero Grunt Task also takes options that allow you to call any preprocessing and minification tasks you need to be performed on your assets (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
 
