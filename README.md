@@ -1,146 +1,159 @@
-# grunt-asset-bundler
+![Mascott](http://www.diariocultura.mx/wp-content/uploads/2012/11/cartero.jpg)
 
-> Bundles your assets, and so much more
+# Cartero
 
-## Getting Started
-This plugin requires Grunt `~0.4.0`
+Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
+## Benefits
 
-```shell
-npm install grunt-asset-bundler --save-dev
+* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, and templates (e.g. keep person.coffee, person.scss, person.tmpl together in one directory).
+* Specify the exact bundles that are required for each page in the page's template.
+* Easily manage bundle dependencies.
+* All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
+    * In development mode, served assets are preprocessed, but not minified or concatenated.
+    * In production mode, served assets are preprocessed, minified and concatenated.
+* All assets that live in the same directory as the page's template are automatically included when that page is rendered.
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, Marionette Modules, etc.).
+* Easily run custom preprocessing or minification tasks.
+* Easily include Bower components as bundles.
+
+## Overview
+
+You keep all your assets in your application's **_asset bundle directory_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of that directory defines a **_bundle_** that may contain javascript files, stylesheets, and templates. (Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles.) By default, each bundle depends on the bundles defined by its parent directories. For example, in the following directory structure:
+
+```
+/assetBundles
+    /jQuery
+        jquery.js
+        /backbone
+            backbone.js
+    /dialogs
+        dialogManager.coffee
+        /editPersonDialog
+            editPersonDialog.coffee
+            editPersonDialog.scss
+            editPersonDialog.tmpl
 ```
 
-Once the plugin has been installed, it may be enabled inside your Gruntfile with this line of JavaScript:
+The bundle named `jQuery/backbone` depends on the `jQuery` bundle, and the bundle named `dialogs/editPersonDialog` depends on the `dialogs` bundle. When you require a bundle, dependencies are automatically resolved.
 
-```js
-grunt.loadNpmTasks('grunt-asset-bundler');
+Additionally, assets that live in the same directory as a page template will automatically be included when that template is rendered. For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
+
+```
+/views
+    /login
+        login.jade
+        login.scss
+        login.coffee
+    /admin
+        /peopleList
+            peopleList.jade
+            peopleList.scss
+            peopleList.js
 ```
 
-*This plugin was designed to work with Grunt 0.4.x. If you're still using grunt v0.3.x it's strongly recommended that [you upgrade](http://gruntjs.com/upgrading-from-0.3-to-0.4), but in case you can't please use [v0.3.2](https://github.com/gruntjs/grunt-contrib-less/tree/grunt-0.3-stable).*
+When the `login.jade` template is rendered, the `login.coffee` and `login.scss` assets will automatically be injected into the HTML of the page, as will the `peopleList.*` assets when the `peopleList.jade` template is rendered.
 
+## How it works
 
-## assetbundler task
-_Run this task with the `grunt assetbundler` command._
+The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks, combining some brains with Grunt's brawn. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You can specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero Grunt Task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero Grunt Task generates a `parcel.json` file that maps each of your page view templates to a list of all the assets that it uses. (A collection of assets that is served when a page is rendered is called a **_parcel_**.)
 
-###Terminology
+There is also a small but important piece of logic for serving up assets and injecting them into rendered HTML, called a **_Cartero Hook_**. This hook needs to reside in your web application framework, since it is used at the time your templates are rendered. Currently there is a Cartero Hook available only for Node.js / Express, but there is minimal logic involved and it is easy to implement in any environment. Each time you render a template, the Cartero Hook is used to looks up the template in the `parcel.json` file generated by the Cartero Grunt Task, and place HTML into three variables that are exposed to the template:
 
-* __assetLibrary__ : The directory where your common and third-party libraries are kept
-* __appPages__ : The directory where server-side templates and local libraries are kept.
-* __srcDir__ : The directory where the grunt task should look for the files.  This is most likely your version controlled files.
-* __destDir__ : The directory where the grunt task should save the output too.  This most likely where your application will serve the files from
+`cartero_js` - the raw HTML of the `<script>` elements that load all the required javascript files.
 
-### bundle.json
+`cartero_css` - the raw HTML of the `<link>` elements that load all the required CSS files.
 
-Each directory in __assetLibrary__ can contain a `bundle.json` file.  This file supports the following properties:
-* `dependencies` : The bundles this bundle depends on.
-* `keepSeparate` : (default : `false`) Whether this bundle should be kept as a separate file in `prod` mode.  This is intended to be used for large, commonly used libraries such as JQueryUI.
-* `subdirectories` : (default : `"/_.*/"`) Regular expression (in string format) used to determine which subdirectories are part of the bundle itself and are not their own separate bundles.
-* `prioritizeSubdirectories` : (default : `false`) Whether files in `subdirectories` are sourced before or after the "top level" files.
-* `filePriority` : Files within the bundle that should be sourced first because other files depend on them.  The order of the files in the list is honored.  This list takes precedence over `prioritizeSubdirectories`.
-* `browserifyAutorun` : When using Browserify with assetBundler, these files will be automatically run upon being loaded.
-* `dynamicallyLoadedFiles` : Files that may be loaded dynamically (after a page loads).  These files are not bundled into the bundle.
+`cartero_tmpl` - the raw, concatenated contents of all the required client side template files.
 
+You may then output the contents of those variables in the appropriate places in your template just like any other variable exposed to the template engine. For example, if you are using Jade templates, your page structure might look something like this:
 
-### Server-side template directives
-
-Add the `#bundler_require` directive to your server-side templates to declare which bundles this page depends on.  For example:
-```html
-<!-- #bundler_require "Backbone", "YourDialogWidget" -->
+```jade
+// page layout
+doctype 5
+html(lang="en")
+    head
+        title myPage
+        | !{cartero_js}
+        | !{cartero_css} 
+    body
+        | !{cartero_tmpl} 
+        h1 Hello World
 ```
 
-Add the `#bundler_extends` directive to declare what server-side template this template extends from.  Path is relative.  `#bundler_require` bundles from that template will automatically be added to this one.
-```html
-<!-- #bundler_extends "../layout.html.swig" -->
+## Getting started
+
+```
+npm install cartero
 ```
 
-### Options
+Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, check out the [Getting Started](http://gruntjs.com/getting-started) guide.) Here is the minimal gruntfile configuration that is required to run the Cartero Grunt Task:
 
-#### assetLibrary
-Type: `Object`
-
-Properties
-* `srcDir`
-* `destDir`
-* `filesToIgnore`
-* `directoriesToIgnore`
-
-#### appPages
-Type: `Object`
-
-Properties
-* `srcDir`
-* `destDir`
-* `filesToIgnore`
-* `directoriesToIgnore`
-* `pageFileRegExp` : Regular expressions specifying where `assetBundler` should look for Server-side template directives
-
-#### mode
-Type: `String` Default: `dev`
-
-`dev` or `prod`.  `prod` will concat, minify, etc.
-
-#### useDirectoriesForDependencies
-Type: `Boolean`
-
-Whether the directory structure in the __assetLibrary__ directory should drive the bundle dependency.  If `true`, a bundle's parent directory will automatically be added as a dependent bundle.
-
-#### minificationTasks
-Type: `Array`
-
-List of minification tasks that shoudl be run when `mode == "prod"`.  Each item should contain the following properties:
-* `name` : The name of the grunt task to run.
-* `suffixes` : List of suffixes to apply this grunt task too
-* `options` : Task-specific options to be passed through to the grunt task itself.
-* 
-
-#### postProcessor
-Type: `Function`
-
-A function that takes the generated `pageMap` as input and allows you to make any changes you like. TODO: document the contents of the `pageMap`.
-
-#### preprocessingOptions
-Type : `Object`
-
-For any of the supported preprocessing options ( coffee, compass, less, stylus ), this allows you to pass in any special options that should be passed through to the corresponding grunt task when it runs.
-
-#INSTRUCTIONS
-
-clone this repository
-```shell
-git clone https://github.com/rotundasoftware/assetBundler.git
 ```
-cd to your application directory and install
-```shell
-npm install path/to/assetBundler/
-```
-update your package.json to include the following dependencies (list to be trimmed down)
+// example gruntfile
 
-    "express": "3.1.0",
-    "grunt": "~0.4.1",
-    "underscore": "~1.4.4",
-    "underscore.string": "~2.3.1",
-    "findit": "~0.1.2",
-    "swig": "~0.13.5",
-    "consolidate": "~0.9.0",
-    "path": "~0.4.9",
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.4.1",
-    "grunt-contrib-sass": "~0.3.0",
-    "grunt-contrib-less": "~0.5.1",
-    "grunt-contrib-coffee": "~0.7.0",
-    "grunt-contrib-stylus": "~0.5.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-watch": "~0.3.1",
-    "grunt-bundler": "~0.1.0",
-    "grunt-contrib-uglify": "~0.2.0",
-    "grunt-contrib-htmlmin": "~0.1.3",
-    "grunt-contrib-compass": "~0.2.0"
-    
-```shell
-npm install
+module.exports = function( grunt ) {
+    grunt.initConfig( {
+        cartero : {
+            mode : "dev"
+            bundleDir : {
+                path : "bundles/"
+            },
+            viewDir : {
+                path : "views/"
+            }
+            destDir : "static"
+        }
+    } );
+
+    grunt.loadNpmTasks( "grunt-cartero" );
+};
 ```
 
-copy the Gruntfile.js from examples/bundler_sample_1 and modify appropriately
+The three required options for the Cartero Grunt Task are `bundleDir`, `viewDir`, and `destDir`. The `bundleDir` option specifies where your asset bundles are located, and the `views` option specifies where you page views are located, that is, the directory that contains your page templates. The `destDir` option tells Cartero where to dump all of your processed and compiled assets. You generally want to dump your assets in your application's "public" folder, or the "static" folder in Node.js / Express apps. Cartero will automatically create two directories within `destDir` into which assets will be dumped - `bundle-assets` and `view-assets`. Those directories will contain assets specific to bundles and page views, respectively.
 
-TODOs:
+The Cartero Grunt Task also takes options that allow you to call any preprocessing and minification tasks you need to be performed on your assets (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the task.
+
+Once you have configured the Cartero Grunt Task, you need to put a Cartero Hook in place in your web framework. As of this writing there is only a Cartero Hook available for Node.js / Express, which is implemented in the form of Express middleware. You just need to install the middleware, passing it a single argument, which is the directory into which all the assets were dumped, that is, the `destDir` option from the gruntfile configuration.
+
+```javascript
+// app.js
+
+var app = express();
+var carteroMiddleware = require( "cartero/middleware" ),
+// ...
+
+app.configure( function() {
+    app.set( "port" , process.env.PORT || 3000 );
+    app.set( "views" , path.join( __dirname, "views" ) );
+    app.use( express.static( path.join( __dirname, "static" ) ) );
+
+    // ...
+    app.use( carteroMiddleware( path.join( __dirname, "static" ) ) );
+} );
+```
+
+Now you are ready to go. To let Cartero know which asset bundles are required by which pages, you use **_Cartero Directives_**. The Cartero Grunt Task scans your page template files for these directives, which have the form `##cartero_xyz`. The "requires" directive is used to declare dependencies:
+
+```jade
+// peopleList.jade
+
+// ##cartero_requires "jQuery", "dialogs/editPersonDialog"
+
+doctype 5
+html(lang="en")
+    head
+        title login
+        | !{cartero_js}
+        | !{cartero_css} 
+    body
+        | !{cartero_tmpl} 
+        h1 People List
+        // ...
+```
+
+Now when you run the following command from the directory of your gruntfile:
+
+    grunt cartero
+
+The Cartero Grunt Task will fire up, preprocess all of your assets, and generate the `parcels.json` file used by the Cartero Hook. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and recompile them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to your templates, and will contain all the raw HTML necessary to load the assets for the current page.
