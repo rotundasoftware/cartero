@@ -146,7 +146,7 @@ module.exports = function(grunt) {
 
 	}
 
-	grunt.registerMultiTask( "assetbundler", "Your task description goes here.", function() {
+	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		// Grab the options and apply defaults
 		options = this.options();

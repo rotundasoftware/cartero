@@ -9,25 +9,18 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		assetbundler : {
 			options : {
-				mode : "prod",
-				assetLibrary : {
-					//srcDir : "AssetLibrary/",
-					//destDir : "WebServer/Static/AssetLibrary-assets/"
-					//destDir : "WebServer/Static/node_modules/"
-					srcDir : "App/node_modules/",
-					destDir : "App/WebServer/Static/AssetLibrary-assets/"
+				mode : "dev",
+				library : {
+					path : "App/node_modules"
 				},
-				appPages : {
-					//srcDir : "WebServer/AppPages/",
-					//destDir : "WebServer/Static/AppPages-assets/",
-					srcDir : "App/WebServer/AppPages/",
-					destDir : "App/WebServer/Static/AppPages-assets/",
-					filesToIgnore : /_.*/,
-					directoriesToIgnore : /__.*/
+				views : {
+					path : "App/WebServer/AppPages",
+					filesToIgnore : /^_.*/,
+					directoriesToIgnore : /^__.*/
 				},
-				staticDir : "App/WebServer/Static/",
-				rootDir : __dirname,
-				serverSideTemplateSuffix : ".swig",
+				publicDir : "App/WebServer/Static/",
+				projectDir : __dirname,
+				//serverSideTemplateSuffix : ".swig",
 				useDirectoriesForDependencies : true,
 				requirify : true/*,
 				minificationTasks : [
