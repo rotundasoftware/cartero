@@ -1,8 +1,7 @@
+# Cartero
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
-# Cartero
-
 Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
 ## Benefits
@@ -172,7 +171,7 @@ The `projectDir` option specifices the root folder for your project. *All other 
 
 The Cartero Grunt Task also takes options that allow you to call your favorite preprocessing and minification tasks (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
 
-Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it your project directory (i.e. the `projectDir` option from the gruntfile configuration).
+Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it the path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
 ```javascript
 // app.js
@@ -209,7 +208,7 @@ html(lang="en")
 		// ...
 ```
 
-Now run the following command from the directory of your gruntfile:
+When you run the following command from the directory of your gruntfile:
 
 	grunt cartero
 
@@ -332,7 +331,7 @@ options : {
 
 ### Properties of bundle.json 
 
-Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, like its dependencies, and the order in which files in the bundle should be served. (Note: An actual bundle.json file can not contain JavaScript comments, as does the example.)
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, like its dependencies, and the order in which files in the bundle should be served. (Note: An actual bundle.json file, since it is simple json, can not contain JavaScript comments, as does the example.)
 
 ```javascript
 {
