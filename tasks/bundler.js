@@ -184,7 +184,6 @@ try {
 		options = _.extend(
 			{},
 			{
-
 				requirify : false,
 				templateExt : [ ".tmpl" ]
 			},
@@ -197,6 +196,12 @@ try {
 			if( _.isUndefined( result.outExt ) )
 				result.outExt = result.inExt;
 			return result;
+		} );
+
+		options.assetExtensionMap = {};
+
+		_.each( options.preprocessingTasks, function( preprocessingTask ) {
+			options.assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
 		mode = options.mode;
@@ -494,7 +499,7 @@ try {
 			//else
 			//	newDest = filepath.replace( options.appPages.srcDir, options.appPages.destDir );
 
-			newDest = assetBundlerUtil.mapAssetFileName( newDest );
+			newDest = assetBundlerUtil.mapAssetFileName( newDest, options.assetExtensionMap );
 
 			// Note, copy should only be run for files not requiring pre-compilation
 			grunt.file.copy( filepath, newDest );
@@ -748,7 +753,7 @@ catch ( e ) {
 	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
 
 		try {
-			bundleMap = assetBundlerUtil.buildBundlesMap( options.bundleDirs, options);
+			bundleMap = assetBundlerUtil.buildBundlesMap( options.bundleDirs, options );
 
 			console.log( "BUNDLES: " );
 			console.log( JSON.stringify( bundleMap, null, "\t" ) );
@@ -771,7 +776,7 @@ catch ( e ) {
 		} );
 
 		try {
-			pageMap = assetBundlerUtil.buildPagesMap( options.viewDirs );
+			pageMap = assetBundlerUtil.buildPagesMap( options.viewDirs, options );
 			console.log( "PAGES: " );
 			console.log( JSON.stringify( bundleMap, null, "\t" ) );
 			//assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
