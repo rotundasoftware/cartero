@@ -7,7 +7,7 @@
 module.exports = function( grunt ) {
 
 	grunt.initConfig( {
-		assetbundler : {
+		cartero : {
 			options : {
 				mode : "dev",
 				library : {
@@ -77,6 +77,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
-	grunt.loadNpmTasks( "grunt-asset-bundler" );
+	grunt.loadNpmTasks( "grunt-cartero" );
 
 };

@@ -63,7 +63,7 @@ module.exports = function(grunt) {
 	var kViewDirDefaults = {
 		filesToIgnore : /^_.*/,
 		foldersToIgnore : /^__.*/,
-		pageFileRegExp : /.*.swig$/,
+		viewFileExt : [ ".jade" ],
 		directoriesToFlatten : /^_.*/
 	};
 
@@ -113,10 +113,6 @@ module.exports = function(grunt) {
 	// Files that are browserified and need to be run upon loading.
 	var browserifyAutorunFiles = [];
 
-	function resolveAssetFilePath( fileName ) {
-		return fileName.replace( "{ASSET_LIBRARY}/", options.assetLibrary.destDir ).replace( "{APP_PAGES}/", options.appPages.destDir );
-	}
-
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
@@ -146,6 +142,14 @@ module.exports = function(grunt) {
 
 	}
 
+	function isViewFile( fileName ) {
+		var viewFile = _.find( options.views, function( dirOptions ) {
+			return _s.startsWith( fileName, dirOptions.path ) && _.contains( dirOptions.viewFileExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
+		} );
+
+		return ! _.isUndefined( viewFile );
+	}
+
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		// Grab the options and apply defaults
@@ -169,6 +173,7 @@ module.exports = function(grunt) {
 		options.views = _.map( options.views, function( viewDir ) {
 			var viewDirWithDefaults = _.extend( {}, kViewDirDefaults, viewDir );
 			viewDirWithDefaults.destDir = path.join( options.publicDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
+			if( _.isString( viewDirWithDefaults.viewFileExt ) ) viewDirWithDefaults.viewFileExt = [ viewDirWithDefaults.viewFileExt ];
 			return viewDirWithDefaults;
 		} );
 
@@ -298,12 +303,18 @@ module.exports = function(grunt) {
 			};
 		} );
 
+		var viewFilePatterns = [];
+
+		_.each( options.views, function( dirOptions ) {
+			_.each( dirOptions.viewFileExt, function( ext ) {
+				viewFilePatterns.push( dirOptions.path + "/**/*" + ext );
+			} );
+		} );
+
 		// TODO: this should somehow be using options.appPages.pageFileRegExp
-		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
-			files : _.map( options.views, function ( dir ) {
-					return dir.path + "/**/*" + options.serverSideTemplateSuffix;
-				} ),
-			tasks : [ "processServerSideTemplateChange" ],
+		watch[ assetBundlerTaskPrefix + "_view-file" ] = {
+			files : viewFilePatterns,
+			tasks : [ "processViewFileChange" ],
 			options : {
 				nospawn : true
 			}
@@ -325,7 +336,7 @@ module.exports = function(grunt) {
 		grunt.event.on( "watch", function( action, filepath ) {
 
 			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! options.appPages.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
+			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
 				rebundle();
 			}
 
@@ -549,7 +560,7 @@ module.exports = function(grunt) {
 		options.postProcessor( parcels );
 	} );
 
-	grunt.registerTask( "processServerSideTemplateChange", "", function() {
+	grunt.registerTask( "processViewFileChange", "", function() {
 		rebundle();
 	} );
 
