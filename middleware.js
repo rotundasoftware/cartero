@@ -24,7 +24,9 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 		var oldRender = res.render;
 
 		res.render = function( requestPath, options ) {
-			var pageMapKey = options && options.bundler_pageMapKey ? options.bundler_pageMapKey : requestPath.replace( appPagesDir, "" ).substring( 1 );
+			console.log( requestPath );
+			console.log( staticDir );
+			var pageMapKey = options && options.bundler_pageMapKey ? options.bundler_pageMapKey : requestPath.replace( rootDir, "" ).substring( 1 );
 			console.log( pageMapKey );
 
 			var _arguments = arguments;
@@ -33,17 +35,17 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 			if( ! pageMetadata ) return next( new Error( "Could not find pageKey " + pageMapKey + " in page key map." ) );
 
 			res.locals.bundler_js = _.map( pageMetadata.js, function( fileName ) {
-				return "<script type='text/javascript' src='/" + fileName + "'></script>";
+				return "<script type='text/javascript' src='" + fileName.replace( staticDir, "" ) + "'></script>";
 			} ).join( "" );
 
 			res.locals.bundler_css = _.map( pageMetadata.css, function( fileName ) {
-				return "<link rel='stylesheet' href='/" + fileName + "'></link>";
+				return "<link rel='stylesheet' href='" + fileName.replace( staticDir, "" ) + "'></link>";
 			} ).join( "" );
 
 			var tmplContents = "";
 
 			async.each( pageMetadata.tmpl, function( fileName, cb ) {
-				fs.readFile( staticDir + path.sep + fileName,  function( err, data ) {
+				fs.readFile( fileName,  function( err, data ) {
 
 					if( err ) {
 						cb( err );

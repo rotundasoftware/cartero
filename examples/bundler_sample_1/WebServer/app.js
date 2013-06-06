@@ -32,7 +32,7 @@ app.configure( function() {
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
 	//app.use( myMethod() );
-	app.use( assetBundlerMiddleware( path.join( __dirname, projectRoot ), kStaticDir, kAppPagesDir ) );
+	app.use( assetBundlerMiddleware( path.join( __dirname, projectRoot ), "WebServer/Static", kAppPagesDir ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
