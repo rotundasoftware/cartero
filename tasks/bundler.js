@@ -57,7 +57,7 @@ module.exports = function(grunt) {
 	var kViewAssetsDirPrefix = "view-assets-";
 
 	// assetBundler directive: When browserify is enabled, this directive is used in js files in appPages that should be automatically run upon loading.
-	var kBrowserifyAutorun = "#bundler_browserify_autorun";
+	var kBrowserifyAutorun = "##cartero_browserify_autorun";
 
 	// Default values for the appPages task option.
 	var kViewDirDefaults = {
@@ -747,7 +747,7 @@ module.exports = function(grunt) {
 
 		var assetFiles = _.filter( findit.sync( options.publicDir ), isValidBundlerDirFile );
 		_.each( assetFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /##cartero_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 	} );

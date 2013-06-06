@@ -1,8 +1,8 @@
 {% extends 'layout.html.swig' %}
 
-<!-- #bundler_require "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities" -->
+<!-- ##cartero_requires "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities" -->
 
-<!-- #bundler_extends "../layout.html.swig" -->
+<!-- ##cartero_extends "../layout.html.swig" -->
 
 {% block content %}
 
