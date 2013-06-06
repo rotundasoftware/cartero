@@ -61,17 +61,19 @@ module.exports = function(grunt) {
 
 	// Default values for the appPages task option.
 	var kViewDirDefaults = {
-		filesToIgnore : /_.*/,
-		foldersToIgnore : /__.*/,
+		filesToIgnore : /^_.*/,
+		foldersToIgnore : /^__.*/,
 		pageFileRegExp : /.*.swig$/,
-		directoriesToFlatten : /_.*/
+		directoriesToFlatten : /^_.*/
 	};
 
 	// Default values for the assetLibrary task option.
 	var kBundleDirDefaults = {
 		childrenDependOnParents : true,
-		directoriesToFlatten : /_.*/
+		directoriesToFlatten : /^_.*/
 	};
+
+	var kValidImageExt = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
 
 	// Map specifying the supported preprocessing tasks, the file extension they process, and the file extension they output.
 	var compileAssetsMap = {
@@ -198,6 +200,9 @@ try {
 			options.assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
+		options.cleanableAssetExt = _.union( options.templateExt, [ ".js", ".css" ] );
+		options.validOriginalAssetExt = _.union( _.keys( options.assetExtensionMap ), [ ".js", ".css" ], options.templateExt );
+
 		mode = options.mode;
 
 		var watch = grunt.config( "watch" ) || {};
@@ -229,8 +234,8 @@ try {
 				task[ assetBundlerTaskPrefix ].options = preprocessingTask.options;
 			}
 
-			console.log( "configured " + taskName + ":" );
-			console.log( JSON.stringify( task, null, "\t" ) );
+			//console.log( "configured " + taskName + ":" );
+			//console.log( JSON.stringify( task, null, "\t" ) );
 
 			grunt.config( taskName, task );
 
@@ -476,7 +481,7 @@ try {
 					options : preprocessingTask.options || {}
 				} );
 
-				console.log( JSON.stringify( grunt.config( taskName ), null, "\t" ) );
+				//console.log( JSON.stringify( grunt.config( taskName ), null, "\t" ) );
 
 			} );
 
@@ -580,11 +585,6 @@ try {
 			grunt.task.run( "buildKeepSeparateBundles" );
 			grunt.task.run( "buildPageBundles" );
 
-			//TODO: only run the asset bundler targets
-			_.each( options.minificationTasks, function( taskConfig ) {
-				grunt.task.run( taskConfig.name );
-			} );
-
 			grunt.task.run( "resolveAndInjectDependencies:prod");
 
 			if( options.postProcessor )
@@ -593,6 +593,13 @@ try {
 
 		// Removes any files not referenced in the pageMap
 		grunt.task.run( "doCleanup" );
+
+		if( mode === "prod" ) {
+			//TODO: only run the asset bundler targets
+			_.each( options.minificationTasks, function( taskConfig ) {
+				grunt.task.run( taskConfig.name );
+			} );
+		}
 
 		// Saves the bundleMap and pageMap to files.
 		grunt.task.run( "saveBundleAndPageJSONs" );
@@ -616,9 +623,11 @@ catch ( e ) {
 
 		_.each( options.bundleAndViewDirs, function ( dirOptions ) {
 
-			console.log( dirOptions.destDir + " " + dirOptions.path );
+			//console.log( dirOptions.destDir + " " + dirOptions.path );
 			filesToCopy = _.union( filesToCopy, grunt.file.expandMapping(
-				kAssetFileExtensions,
+				_.map( _.union( options.templateExt, kValidImageExt, [ ".js", ".css" ] ), function( extension ) {
+					return "**/*" + extension;
+				} ),
 				dirOptions.destDir,
 				{
 					cwd : dirOptions.path
@@ -626,8 +635,8 @@ catch ( e ) {
 			) );
 		} );
 
-		console.log( "FILES BEING COPIED:" );
-		console.log( filesToCopy );
+		//console.log( "FILES BEING COPIED:" );
+		//console.log( filesToCopy );
 
 		_.each( filesToCopy, function( fileSrcDest ) {
 			grunt.file.copy( fileSrcDest.src, fileSrcDest.dest );
@@ -648,7 +657,6 @@ catch ( e ) {
 	} );
 
 	grunt.registerTask( "runPostProcessor", "", function() {
-		//console.log( JSON.stringify( pageMap, null, "\t" ) );
 		options.postProcessor( parcels );
 	} );
 
@@ -682,8 +690,8 @@ catch ( e ) {
 		try {
 			bundleMap = assetBundlerUtil.buildBundlesMap( options.bundleDirs, options );
 
-			console.log( "BUNDLES: " );
-			console.log( JSON.stringify( bundleMap, null, "\t" ) );
+			//console.log( "BUNDLES: " );
+			//console.log( JSON.stringify( bundleMap, null, "\t" ) );
 			//assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
 		}
 		catch( e ) {
@@ -704,8 +712,8 @@ catch ( e ) {
 
 		try {
 			pageMap = assetBundlerUtil.buildPagesMap( options.viewDirs, options );
-			console.log( "PAGES: " );
-			console.log( JSON.stringify( bundleMap, null, "\t" ) );
+			//console.log( "PAGES: " );
+			//console.log( JSON.stringify( pageMap, null, "\t" ) );
 			//assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
 		}
 		catch( e ) {
@@ -716,8 +724,8 @@ catch ( e ) {
 				grunt.fail.fatal( errMsg );
 		}
 
-		console.log( JSON.stringify( bundleMap, null, "\t" ) );
-		console.log( JSON.stringify( pageMap, null, "\t" ) );
+		//console.log( JSON.stringify( bundleMap, null, "\t" ) );
+		//console.log( JSON.stringify( pageMap, null, "\t" ) );
 
 try {
 			var result = cartero.doIt( bundleMap, pageMap, options );
@@ -796,12 +804,14 @@ catch( e ) {
 		var filesToClean = grunt.file.expand( {
 				filter : function( fileName ) {
 					//cleaning assets that are not used by any page
-					return ! _.contains( referencedFiles, fileName ) && assetBundlerUtil.isAssetFile( fileName );
+					return ! _.contains( referencedFiles, fileName ) && _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
 				}
 			},
 			//[ options.assetLibrary.destDir + "**/*", options.appPages.destDir + "**/*" ]
-			[ options.publicDir + "**/*" ]
+			[ options.publicDir + "/**/*" ]
 		);
+
+		console.log( filesToClean );
 
 		_.each( filesToClean, function ( file ) {
 			grunt.file.delete( file );
@@ -841,11 +851,15 @@ catch( e ) {
 			fs.writeFileSync( fileName, fileContents );
 		}
 
+		function isValidBundlerDirFile( fileName ) {
+			return _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
+		}
+
 		//var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.publicDir, "" );
 		//var relativeAppPagesDir = options.appPages.destDir.replace( options.publicDir, "" );
 
 
-		var assetFiles = _.filter( findit.sync( options.publicDir ), assetBundlerUtil.isAssetFile );
+		var assetFiles = _.filter( findit.sync( options.publicDir ), isValidBundlerDirFile );
 		_.each( assetFiles, function( fileName ) {
 			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
 		} );

@@ -28,7 +28,7 @@ module.exports = function( rootDir ) {
 		res.render = function( requestPath, options ) {
 			var pageMapKey = options && options.bundler_pageMapKey ? options.bundler_pageMapKey : requestPath.replace( rootDir, "" ).substring( 1 );
 			var _arguments = arguments;
-			
+
 			var pageMetadata = pageMap[ pageMapKey ];//[ mode ];
 			if( ! pageMetadata ) return next( new Error( "Could not find pageKey " + pageMapKey + " in page key map." ) );
 
