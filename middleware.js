@@ -4,19 +4,21 @@ var assetBundlerUtil = require( "./lib/util.js" ),
 	path = require( "path" ),
 	async = require( "async" );
 
-module.exports = function( rootDir, staticDir, appPagesDir ) {
+module.exports = function( rootDir ) {
 
 	var pageMap;
 	var configMap;
-	var mode;
+	var staticDir;
+	var carteroJSON;
 
 	try {
-		pageMap = assetBundlerUtil.readPageMap();
-		configMap = assetBundlerUtil.readBundlerConfig();
-		mode = configMap.mode;
+		carteroJSON = assetBundlerUtil.readCarteroJSON( rootDir );
+		pageMap = carteroJSON.parcels;
+		staticDir = carteroJSON.publicDir;
+
 	}
 	catch( e ) {
-		throw new Error( "Error while reading pageMap file. Please run the grunt assetbundler task before running your application." );
+		throw new Error( "Error while reading parcels.json file. Please run the grunt assetbundler task before running your application." + e.stack );
 	}
 
 	return function( req, res, next ) {
@@ -24,11 +26,7 @@ module.exports = function( rootDir, staticDir, appPagesDir ) {
 		var oldRender = res.render;
 
 		res.render = function( requestPath, options ) {
-			console.log( requestPath );
-			console.log( staticDir );
 			var pageMapKey = options && options.bundler_pageMapKey ? options.bundler_pageMapKey : requestPath.replace( rootDir, "" ).substring( 1 );
-			console.log( pageMapKey );
-
 			var _arguments = arguments;
 			
 			var pageMetadata = pageMap[ pageMapKey ];//[ mode ];

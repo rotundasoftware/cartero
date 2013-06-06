@@ -53,12 +53,6 @@ module.exports = function(grunt) {
 		return "**/*." + extension;
 	} );
 
-	// File where bundle metadata is stored.
-	var kBundleMapJSONFile = "bundleMap.json";
-
-	// File where page metadata is stored.
-	var kPageMapJSONFile = "pageMap.json";
-
 	var kBundleAssetsDirPrefix = "bundle-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
 
@@ -375,64 +369,8 @@ try {
 
 			grunt.config( minificationTask.name, task );
 
-			//TODO: add support for multiple suffixes
-			// task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-			// 	options : taskConfig.options,
-			// 	expand: true,
-			// 	cwd: options.assetLibrary.destDir,
-			// 	src: [ "**/*" + taskConfig.suffixes[0] ],
-			// 	rename: function(dest, src){ return dest + src; },
-			// 	dest: options.assetLibrary.destDir
-			// 	//ext: taskConfig.suffixes[0]
-			// };
-
-			// task[ assetBundlerTaskPrefix + "_appPages" ] = {
-			// 	options : taskConfig.options,
-			// 	expand: true,
-			// 	cwd: options.appPages.destDir,
-			// 	src: [ "**/*" + taskConfig.suffixes[0] ],
-			// 	rename: function(dest, src){ return dest + src; },
-			// 	dest: options.appPages.destDir
-			// 	//ext: taskConfig.suffixes[0]
-			// };
-
 		} );
 
-		// // Loop through the assets that require preprocessing and create/configure the target
-		// _.each( _.keys( compileAssetsMap ), function( taskName ) {
-
-		// 	var taskOptions = compileAssetsMap[ taskName ];
-
-		// 	var tasksToRun;
-
-		// 	if( taskName === "compass" ) {
-		// 		//TODO: fix to support new options
-		// 		// tasksToRun = [
-		// 		// 	taskName + ":" + assetBundlerTaskPrefix + "_assetLibrary",
-		// 		// 	taskName + ":" + assetBundlerTaskPrefix + "_appPages"
-		// 		// ];
-		// 	}
-		// 	else {
-		// 		//TODO: Oleg: don't think we need to copy here...
-		// 		tasksToRun = [ taskName + ":" + assetBundlerTaskPrefix ];
-		// 	}
-
-		// 	//TODO: Oleg: we don't really support requirifying none js files...
-		// 	if( options.requirify && taskOptions.dest === ".js" )
-		// 		tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
-
-		// 	if( taskName !== "compass" )
-		// 		watch[ assetBundlerTaskPrefix + "_" + taskName ] = {
-		// 			files : _.map( options.bundleAndViewDirs, function ( dir ) {
-		// 				return dir.path + "**/*" + taskOptions.src;
-		// 			} ),
-		// 			tasks : tasksToRun,
-		// 			options : {
-		// 				nospawn : true
-		// 			}
-		// 		};
-
-		// } );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
 		_.each( assetFileExtensionsMap, function( val, key ) {
@@ -729,18 +667,6 @@ catch ( e ) {
 			grunt.file.mkdir( dirOptions.destDir );
 		} );
 
-		var configOptions = {
-			mode : options.mode//,
-			//assetLibrarySrc : options.assetLibrary.srcDir,
-			//assetLibraryDest : options.assetLibrary.destDir,
-			//appPagesSrc : options.appPages.srcDir,
-			//appPagesDest : options.appPages.destDir
-		};
-
-		grunt.config.set( "configOptions", configOptions );
-
-		assetBundlerUtil.saveBundlerConfig( configOptions );
-
 	} );
 
 	grunt.registerTask( assetBundlerTaskPrefix + "_clean", "Clean output directories", function() {
@@ -748,6 +674,7 @@ catch ( e ) {
 		_.each( options.bundleAndViewDirs, function ( dirOptions ) {
 			grunt.file.delete( dirOptions.destDir );
 		} );
+
 	} );
 
 	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
@@ -894,8 +821,16 @@ catch( e ) {
 			};
 		} );
 
-		assetBundlerUtil.saveBundleMap( bundleMap );
-		assetBundlerUtil.savePageMap( parcelDataToSave );
+		var carteroJSON = {};
+
+		carteroJSON.publicDir = options.publicDir;
+		carteroJSON.parcels = parcelDataToSave;
+		carteroJSON.mode = options.mode;
+
+		assetBundlerUtil.saveCarteroJSON( carteroJSON, options.projectDir );
+
+		//assetBundlerUtil.saveBundleMap( bundleMap );
+		//assetBundlerUtil.savePageMap( parcelDataToSave );
 
 	} );
 

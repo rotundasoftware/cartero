@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "prod",
+					mode : "dev",
 					projectDir : __dirname,
 					bundleDirs : [
 						{
