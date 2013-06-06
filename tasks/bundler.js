@@ -148,20 +148,17 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask( "assetbundler", "Your task description goes here.", function() {
 
-try {
-
-
 		// Grab the options and apply defaults
 		options = this.options();
 
-		if( ! _.isArray( options.bundleDirs ) )
-			options.bundleDirs = [ options.bundleDirs ];
+		if( ! _.isArray( options.library ) )
+			options.library = [ options.library ];
 
-		if( ! _.isArray( options.viewDirs ) )
-			options.viewDirs = [ options.viewDirs ];
+		if( ! _.isArray( options.views ) )
+			options.views = [ options.views ];
 
 		// apply the defaults to all bundleDirs and add the destination directory
-		options.bundleDirs = _.map( options.bundleDirs, function( bundleDir ) {
+		options.library = _.map( options.library, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kBundleDirDefaults, bundleDir );
 			bundleDirWithDefaults.destDir = path.join( options.publicDir, kBundleAssetsDirPrefix + bundleDirWithDefaults.namespace );
 			return bundleDirWithDefaults;
@@ -169,13 +166,13 @@ try {
 
 		// apply the defaults to all viewDirs and add destination directory
 		var viewAssetsDirCounter = 0;
-		options.viewDirs = _.map( options.viewDirs, function( viewDir ) {
+		options.views = _.map( options.views, function( viewDir ) {
 			var viewDirWithDefaults = _.extend( {}, kViewDirDefaults, viewDir );
 			viewDirWithDefaults.destDir = path.join( options.publicDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
 			return viewDirWithDefaults;
 		} );
 
-		options.bundleAndViewDirs = _.union( options.bundleDirs, options.viewDirs );
+		options.bundleAndViewDirs = _.union( options.library, options.views );
 
 		options = _.extend(
 			{},
@@ -255,101 +252,6 @@ try {
 				};
 		} );
 
-
-// 		// Loop through assets that need preprocessing
-// 		_.each( _.keys( compileAssetsMap ), function( taskName ) {
-
-// 			// Get the configuration for this task if it exists or create a new one
-// 			var task = grunt.config( taskName ) || {};
-
-// 			var taskOptions = compileAssetsMap[ taskName ];
-
-// 			var userSpecifiedOptions;
-
-// 			// Check to see if the user specified their own options for this preprocessing task
-// 			if( ! _.isUndefined( options.preprocessingOptions ) ) {
-// 				userSpecifiedOptions = options.preprocessingOptions[ taskName ];
-// 			}
-
-// 			// Special case for compass (which doesn't seem to support the usual files options)
-// 			if( taskName === "compass" ) {
-
-// 				//TODO: fix for new options
-// 				// if( _.isUndefined( userSpecifiedOptions ) ) userSpecifiedOptions = {};
-
-// 				// var assetLibraryOptions = _.extend( {}, {
-// 				// 	sassDir : options.assetLibrary.srcDir,
-// 				// 	cssDir : options.assetLibrary.destDir
-// 				// },
-// 				// userSpecifiedOptions );
-
-// 				// task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-// 				// 	options : assetLibraryOptions
-// 				// };
-
-// 				// var appPagesOptions = _.extend( {}, {
-// 				// 	sassDir : options.appPages.srcDir,
-// 				// 	cssDir : options.appPages.destDir
-// 				// },
-// 				// userSpecifiedOptions );
-
-// 				// task[ assetBundlerTaskPrefix + "_appPages" ] = {
-// 				// 	options : appPagesOptions
-// 				// };
-
-// 			}
-// 			else {
-
-// 				var files = [];
-
-// 				_.each( options.bundleAndViewDirs, function( dir ) {
-// 					files.push( {
-// 						expand: true,
-// 						cwd: dir.path,
-// 						src: [ "**/*" + taskOptions.src ],
-// 						dest: dir.destDir,
-// 						ext: taskOptions.dest
-// 					} );
-// 				} );
-
-// 				task[ assetBundlerTaskPrefix ] = {
-// 					files : files
-// 				};
-
-
-// 				if( ! _.isUndefined( userSpecifiedOptions ) ) {
-// 					task[ assetBundlerTaskPrefix ].options = userSpecifiedOptions;
-// 				}
-
-// 				// Create and configure targets for the task
-// //				task[ assetBundlerTaskPrefix + "_assetLibrary" ] = {
-// //						expand: true,
-// //					cwd: options.assetLibrary.srcDir,
-// //					src: [ "**/*" + taskOptions.src ],
-// //					dest: options.assetLibrary.destDir,
-// //					ext: taskOptions.dest
-// //				};
-// //
-// //				task[ assetBundlerTaskPrefix + "_appPages" ] = {
-// //					expand: true,
-// //					cwd: options.appPages.srcDir,
-// //					src: [ "**/*" + taskOptions.src ],
-// //					dest: options.appPages.destDir,
-// //					ext: taskOptions.dest
-// //				};
-
-
-
-
-
-// 			}
-
-// 			//task[ assetBundlerTaskPrefix ] = {};
-
-// 			grunt.config( taskName, task );
-
-// 		} );
-
 		// Create targets for each minification task.
 		_.each( options.minificationTasks, function( minificationTask ) {
 
@@ -398,7 +300,7 @@ try {
 
 		// TODO: this should somehow be using options.appPages.pageFileRegExp
 		watch[ assetBundlerTaskPrefix + "_server-side-template" ] = {
-			files : _.map( options.viewDirs, function ( dir ) {
+			files : _.map( options.views, function ( dir ) {
 					return dir.path + "/**/*" + options.serverSideTemplateSuffix;
 				} ),
 			tasks : [ "processServerSideTemplateChange" ],
@@ -409,7 +311,7 @@ try {
 
 		// Watch changes to bundle.json files
 		watch[ assetBundlerTaskPrefix + "_bundle_json" ] = {
-			files : _.map( options.viewDirs, function ( dir ) {
+			files : _.map( options.views, function ( dir ) {
 					return dir.path + "/**/*" + "**/bundle.json";
 				} ),
 			tasks : [ "processBundleJSONChange" ],
@@ -421,8 +323,6 @@ try {
 		grunt.config( "watch", watch );
 
 		grunt.event.on( "watch", function( action, filepath ) {
-try {
-
 
 			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
 			if( ( action === "added" || action === "deleted" ) && ! options.appPages.pageFileRegExp.test( filepath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
@@ -498,12 +398,6 @@ try {
 					} ] );
 				}
 			}
-
-		}
-		catch( e ) {
-			console.log( e.stack );
-			throw e;
-		}
 
 		} );
 
@@ -604,11 +498,6 @@ try {
 		// Saves the bundleMap and pageMap to files.
 		grunt.task.run( "saveBundleAndPageJSONs" );
 
-}
-catch ( e ) {
-	console.log( e.stack );
-}
-
 		// In dev mode...
 		if( mode === "dev" ) {
 			//TODO: re-enable
@@ -688,7 +577,7 @@ catch ( e ) {
 	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
 
 		try {
-			bundleMap = assetBundlerUtil.buildBundlesMap( options.bundleDirs, options );
+			bundleMap = assetBundlerUtil.buildBundlesMap( options.library, options );
 
 			//console.log( "BUNDLES: " );
 			//console.log( JSON.stringify( bundleMap, null, "\t" ) );
@@ -711,7 +600,7 @@ catch ( e ) {
 		} );
 
 		try {
-			pageMap = assetBundlerUtil.buildPagesMap( options.viewDirs, options );
+			pageMap = assetBundlerUtil.buildPagesMap( options.views, options );
 			//console.log( "PAGES: " );
 			//console.log( JSON.stringify( pageMap, null, "\t" ) );
 			//assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
@@ -727,17 +616,10 @@ catch ( e ) {
 		//console.log( JSON.stringify( bundleMap, null, "\t" ) );
 		//console.log( JSON.stringify( pageMap, null, "\t" ) );
 
-try {
-			var result = cartero.doIt( bundleMap, pageMap, options );
+		var result = cartero.doIt( bundleMap, pageMap, options );
 
 		bundles = result.bundles;
 		parcels = result.parcels;
-}
-catch( e ) { 
-	console.log( e.stack );
-	throw e;
-}
-
 
 	} );
 
@@ -839,9 +721,6 @@ catch( e ) {
 
 		assetBundlerUtil.saveCarteroJSON( carteroJSON, options.projectDir );
 
-		//assetBundlerUtil.saveBundleMap( bundleMap );
-		//assetBundlerUtil.savePageMap( parcelDataToSave );
-
 	} );
 
 	grunt.registerTask( "replaceBundlerDirTokens", "", function() {
@@ -855,19 +734,10 @@ catch( e ) {
 			return _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
 		}
 
-		//var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.publicDir, "" );
-		//var relativeAppPagesDir = options.appPages.destDir.replace( options.publicDir, "" );
-
-
 		var assetFiles = _.filter( findit.sync( options.publicDir ), isValidBundlerDirFile );
 		_.each( assetFiles, function( fileName ) {
 			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
 		} );
-
-		//var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), assetBundlerUtil.isAssetFile );
-		//_.each( appPagesFiles, function( fileName ) {
-		//	replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir, "").replace(/\/[^\/]*$/, "" ) );
-		//} );
 
 	} );
 

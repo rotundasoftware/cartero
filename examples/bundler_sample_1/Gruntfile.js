@@ -10,15 +10,15 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					projectDir : __dirname,
-					bundleDirs : [
+					library : [
 						{
 							path : "AssetLibrary",
 							namespace : "Main"
 						}
 					],
-					viewDirs : [
+					views : [
 						{
 							path : "WebServer/AppPages",
 							filesToIgnore : /_.*/,
