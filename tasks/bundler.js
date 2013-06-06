@@ -75,7 +75,8 @@ module.exports = function(grunt) {
 
 	// Default values for the assetLibrary task option.
 	var kBundleDirDefaults = {
-		childrenDependOnParents : true
+		childrenDependOnParents : true,
+		directoriesToFlatten : /_.*/
 	};
 
 	// Map specifying the supported preprocessing tasks, the file extension they process, and the file extension they output.
