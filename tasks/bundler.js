@@ -69,11 +69,13 @@ module.exports = function(grunt) {
 	var kViewDirDefaults = {
 		filesToIgnore : /_.*/,
 		foldersToIgnore : /__.*/,
-		pageFileRegExp : /.*.swig$/
+		pageFileRegExp : /.*.swig$/,
+		directoriesToFlatten : /_.*/
 	};
 
 	// Default values for the assetLibrary task option.
 	var kBundleDirDefaults = {
+		childrenDependOnParents : true
 	};
 
 	// Map specifying the supported preprocessing tasks, the file extension they process, and the file extension they output.
@@ -137,7 +139,7 @@ module.exports = function(grunt) {
 				var absolutePath = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
 
 				if( fs.existsSync( absolutePath ) )
-					return "url(" + fs.realpathSync( fileName.replace(/\/[^\/]*$/,"/") + path.sep + url ).replace( fs.realpathSync( options.staticDir ), "" ) + ")";
+					return "url(" + fs.realpathSync( fileName.replace(/\/[^\/]*$/,"/") + path.sep + url ).replace( fs.realpathSync( options.publicDir ), "" ) + ")";
 				else
 					return match;
 
@@ -155,10 +157,16 @@ try {
 		// Grab the options and apply defaults
 		options = this.options();
 
+		if( ! _.isArray( options.bundleDirs ) )
+			options.bundleDirs = [ options.bundleDirs ];
+
+		if( ! _.isArray( options.viewDirs ) )
+			options.viewDirs = [ options.viewDirs ];
+
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.bundleDirs = _.map( options.bundleDirs, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kBundleDirDefaults, bundleDir );
-			bundleDirWithDefaults.destDir = path.join( options.staticDir, kBundleAssetsDirPrefix + bundleDirWithDefaults.namespace );
+			bundleDirWithDefaults.destDir = path.join( options.publicDir, kBundleAssetsDirPrefix + bundleDirWithDefaults.namespace );
 			return bundleDirWithDefaults;
 		} );
 
@@ -166,7 +174,7 @@ try {
 		var viewAssetsDirCounter = 0;
 		options.viewDirs = _.map( options.viewDirs, function( viewDir ) {
 			var viewDirWithDefaults = _.extend( {}, kViewDirDefaults, viewDir );
-			viewDirWithDefaults.destDir = path.join( options.staticDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
+			viewDirWithDefaults.destDir = path.join( options.publicDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
 			return viewDirWithDefaults;
 		} );
 
@@ -175,8 +183,9 @@ try {
 		options = _.extend(
 			{},
 			{
-				useDirectoriesForDependencies : true,
-				requirify : false
+
+				requirify : false,
+				templateExt : [ ".tmpl" ]
 			},
 			options
 		);
@@ -553,8 +562,8 @@ try {
 		// var assetLibraryPath = fs.realpathSync( options.assetLibrary.srcDir );
 		// var appPagesPath = fs.realpathSync( options.appPages.srcDir );
 
-		// var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "/" );
-		// var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "/" );
+		// var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.publicDir, "/" );
+		// var relativeAppPagesDir = options.appPages.destDir.replace( options.publicDir, "/" );
 
 		// requirify[ assetBundlerTaskPrefix ] = {
 		// 	options : {
@@ -813,7 +822,7 @@ catch( e ) {
 	grunt.registerTask( "resolveAndInjectDependencies", "", function( mode ) {
 
 		_.each( _.values( parcels ), function( parcel ) {
-			parcel.buildResourcesToLoad( options.staticDir, mode );
+			parcel.buildResourcesToLoad( mode );
 		} );
 
 	} );
@@ -822,7 +831,7 @@ catch( e ) {
 	grunt.registerTask( "doCleanup", "", function() {
 
 		function resolvePageMapFileName( fileName ) {
-			return options.staticDir + fileName;
+			return options.publicDir + fileName;
 		}
 
 		function resolveDynamicallyLoadedFileName( fileName ) {
@@ -858,7 +867,7 @@ catch( e ) {
 				}
 			},
 			//[ options.assetLibrary.destDir + "**/*", options.appPages.destDir + "**/*" ]
-			[ options.staticDir + "**/*" ]
+			[ options.publicDir + "**/*" ]
 		);
 
 		_.each( filesToClean, function ( file ) {
@@ -891,18 +900,18 @@ catch( e ) {
 			fs.writeFileSync( fileName, fileContents );
 		}
 
-		//var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.staticDir, "" );
-		//var relativeAppPagesDir = options.appPages.destDir.replace( options.staticDir, "" );
+		//var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.publicDir, "" );
+		//var relativeAppPagesDir = options.appPages.destDir.replace( options.publicDir, "" );
 
 
-		var assetFiles = _.filter( findit.sync( options.staticDir ), assetBundlerUtil.isAssetFile );
+		var assetFiles = _.filter( findit.sync( options.publicDir ), assetBundlerUtil.isAssetFile );
 		_.each( assetFiles, function( fileName ) {
-			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.staticDir + "/", "").replace(/\/[^\/]*$/, "" ) );
+			replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
 		} );
 
 		//var appPagesFiles = _.filter( findit.sync( options.appPages.destDir ), assetBundlerUtil.isAssetFile );
 		//_.each( appPagesFiles, function( fileName ) {
-		//	replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.staticDir, "").replace(/\/[^\/]*$/, "" ) );
+		//	replaceStringInFile( fileName, /#bundler_dir/g, fileName.replace( options.publicDir, "").replace(/\/[^\/]*$/, "" ) );
 		//} );
 
 	} );

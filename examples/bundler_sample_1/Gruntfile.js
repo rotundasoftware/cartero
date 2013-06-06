@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		assetbundler : {
 			dist : {
 				options : {
-					mode : "dev",
+					mode : "prod",
 					projectDir : __dirname,
 					bundleDirs : [
 						{
@@ -39,20 +39,11 @@ module.exports = function( grunt ) {
 							name : "less"
 						}
 					],
-					/*
-					assetLibrary : {
-						srcDir : "AssetLibrary",
-						destDir : "WebServer/Static/AssetLibrary-assets/"
-					},
-					appPages : {
-						srcDir : "WebServer/AppPages",
-						destDir : "WebServer/Static/AppPages-assets/",
-					},
-					*/
-					staticDir : "WebServer/Static",
+					publicDir : "WebServer/Static",
 					//rootDir : __dirname,
 					//serverSideTemplateSuffix : ".swig",
 					useDirectoriesForDependencies : true,
+					templateExt : [ ".tmpl" ],
 					minificationTasks : [
 						{
 							name : "htmlmin",
