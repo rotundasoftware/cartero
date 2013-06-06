@@ -8,7 +8,7 @@ Cartero is an intelligent asset manager for web applications, especially suited 
 
 ## Benefits
 
-* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, and templates (e.g. keep person.coffee, person.scss, person.tmpl together in one directory).
+* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, and templates (e.g. keep person.coffee, person.scss, person.tmpl together in *one directory*).
 * Specify the exact bundles that are required for each page in the page's template.
 * Easily manage bundle dependencies.
 * All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
@@ -23,7 +23,7 @@ Cartero is an intelligent asset manager for web applications, especially suited 
 
 ### The asset library
 
-You keep all your assets, regardless of type, in your application's **_asset library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your asset library defines a **_bundle_** that may contain javascript files, stylesheets, and templates. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following directory structure. (The contents of `bundle.json` are inlined.)
+You keep all your assets, regardless of type, in your application's **_asset library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your asset library defines a **_bundle_** that may contain javascript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following directory structure. (The contents of `bundle.json` are inlined.)
 
 ```
 assetLibrary/
@@ -46,9 +46,9 @@ assetLibrary/
 		editPersonDialog.tmpl
 ```
 
-The `EditPersonDialog` bundle directly depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When you require a bundle, dependencies are automatically resolved.
+The `EditPersonDialog` bundle directly depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved.
 
-It is also possible to implicitly declare dependencies by nesting bundles - by default, child bundles automatically depend on their parent bundles. For example, we can put the `EditPersonDialog` bundle inside the `Dialogs` bundle, like so:
+It is also possible to implicitly declare dependencies by nesting bundles because, by default, child bundles automatically depend on their parent bundles. For example, we can put the `EditPersonDialog` bundle inside the `Dialogs` bundle, like so:
 
 ```
 assetLibrary/
@@ -70,7 +70,7 @@ assetLibrary/
 			editPersonDialog.tmpl
 ```
 
-Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bundle (and indirectly depends on the other three bundles), just by virtue of the directory structure.
+Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bundle (and indirectly depends on the other three bundles), by virtue of the directory structure.
 
 ### Page specific assets
 
@@ -171,9 +171,9 @@ The five required options for the Cartero Grunt Task are `projectDir`, `library`
 
 The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your asset library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `library-assets` and `view-assets`. Those directories will contain assets specific to bundles and page views, respectively.
 
-The Cartero Grunt Task also takes options that allow you to call any preprocessing and minification tasks you need to be performed on your assets (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
+The Cartero Grunt Task also takes options that allow you to call your favorite preprocessing and minification tasks (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
 
-Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it a single argument, which is your project directory, that is, the `projectDir` option from the gruntfile configuration.
+Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it a single argument, your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
 ```javascript
 // app.js
@@ -251,8 +251,8 @@ options : {
 		// when otherwise they would be considered their own bundles.
 		directoriesToFlatten : /_.*/,
 
-		// (default: true) When true, parent bundles are automatically considered
-		// a dependency of their children. For example, a the `Dialogs/EditPersonDialog`
+		// (default: true) When true, parent bundles are automatically added as a
+		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
 		// bundle would automatically depend on the `Dialogs` bundle, with no need
 		// to explicitly declare the dependency.
 		childrenDependOnParents : true,
@@ -296,46 +296,9 @@ options : {
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
 	// such as compiling scss or coffee. You may include an entry for any task in this array,
 	// as long as the task is available and registered using `grunt.loadNpmTasks` (just as if
-	// you were to run the task yourself from your gruntfile). You can also supply options
-	// that will be forwarded along to the task. Cartero has a registry of common tasks for 
-	// which it stores input and output file extensions: coffee, sass,  stylus, less.
-	// If you use another task, you must also specify an "inExt" and "outExt" property in the
-	// entry for the task, as described below in the comments on `minificationTasks`.
-	preprocessingTasks : [ {
-		name : "coffee",
-		options : {
-			sourceMap : true
-		}
-	}, {
-		name : "sass"
-	} ],
-
-	// (default: undefined) An array of "minification tasks" to be performed on your assets
-	// *in prod mode only*, such as minifying css or javascript. This option works just like the 
-	// preprocessingTasks option, except that Cartero has no registry for minification tasks,
-	// so you must also specify an "inExt" property for each task, which determines the file
-	// type of files on which the task will be applied. You may also optionally specify an "outExt"
-	// property, which will replace the inExt file extension, once the files have been processed.
-	minificationTasks : [ {
-		name : "htmlmin",
-		inExt : ".tmpl",
-		options : {
-			removeComments : true
-		}
-	}, {
-		name : "uglify",
-		inExt : ".js",
-		options : {
-			mangle : false
-		}
-	} ],
-
-	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
-	// such as compiling scss or coffee. You may include an entry for any task in this array,
-	// as long as the task is available and registered using `grunt.loadNpmTasks` (just as if
-	// you were to run the task yourself from your gruntfile). You task will be run on all files
-	// with the "inExt" file extension. The file extensions will be be changed to "outExt", if
-	// provided. You can also provide options that will be forwarded along to the task.
+	// you were to run the task yourself from your gruntfile). The task will be run on all files
+	// with the `inExt` file extension, and will output files with the `outExt` extension, if
+	// provided. You can also provide an `options` property that will be forwarded to the task.
 	preprocessingTasks : [ {
 		name : "coffee",
 		inExt : ".coffee",
@@ -365,5 +328,22 @@ options : {
 			mangle : false
 		}
 	} ]
+}
+```
+
+### Properties of bundle.json 
+
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, like its dependencies, and the order in which files in the bundle should be served. (Note: An actual bundle.json file can not contain JavaScript comments, as does the example.)
+
+```javascript
+{
+	// An array of bundles that this bundle depends on.
+	"dependencies" : [ "JQuery" ],
+
+	// An array of file names within the bundle. Files in this array will be served before
+	// any other files in the bundle, in the order they appear in the array.
+	"filePriority" : [ "backbone.js" ]
+
+
 }
 ```
