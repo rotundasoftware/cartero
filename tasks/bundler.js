@@ -150,6 +150,16 @@ module.exports = function(grunt) {
 		return ! _.isUndefined( viewFile );
 	}
 
+	function isViewsFile( fileName ) {
+
+		var result = _.find( options.views, function( dirOptions ) {
+			return _s.startsWith( fileName, dirOptions.path );
+		} );
+
+		return ! _.isUndefined( result );
+
+	}
+
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		// Grab the options and apply defaults
@@ -164,7 +174,11 @@ module.exports = function(grunt) {
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.library = _.map( options.library, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kBundleDirDefaults, bundleDir );
-			bundleDirWithDefaults.destDir = path.join( options.publicDir, kBundleAssetsDirPrefix + bundleDirWithDefaults.namespace );
+
+			if( ! _.isUndefined( bundleDirWithDefaults.namespace ) )
+				bundleDirWithDefaults.destDir = path.join( options.publicDir, kBundleAssetsDirPrefix + bundleDirWithDefaults.namespace );
+			else
+				bundleDirWithDefaults.destDir = options.publicDir;
 			return bundleDirWithDefaults;
 		} );
 
@@ -419,48 +433,46 @@ module.exports = function(grunt) {
 		// var relativeAssetLibraryDir = options.assetLibrary.destDir.replace( options.publicDir, "/" );
 		// var relativeAppPagesDir = options.appPages.destDir.replace( options.publicDir, "/" );
 
-		// requirify[ assetBundlerTaskPrefix ] = {
-		// 	options : {
-		// 		// Used to replace #bundler_dir tokens in files during browserification
-		// 		transformFunction : function ( file ) {
-		// 			var data = '';
-		// 			return through(write, end);
 
-		// 			function write (buf) { data += buf }
-		// 			function end () {
-		// 				var replaceString = "";
-		// 				if( file.indexOf( assetLibraryPath) == 0 )
-		// 					replaceString = relativeAssetLibraryDir + file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
-		// 				else
-		// 					replaceString = relativeAppPagesDir + file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
-		// 				//replace string should be of the form AssetLibrary-assets/... or AppPages-assets/...
-		// 				this.queue(data.toString().replace( /#bundler_dir/g, replaceString.substring(1) ) );
-		// 				this.queue(null);
-	 //  				}
-		// 		},
-		// 		isAutorunFile : function( filePath, fileSrc ) {
-		// 			if( filePath.indexOf( appPagesPath ) === 0 )
-		// 				return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
-		// 			else
-		// 				return _.contains( browserifyAutorunFiles, filePath.replace( assetLibraryPath + path.sep, "" ) );
-		// 		}
-		// 	},
-		// 	files : [ {
-		// 			cwd : options.assetLibrary.srcDir,
-		// 			src : [ "**/*.js" ],
-		// 			dest : options.assetLibrary.destDir,
-		// 			expand : true
-		// 		},
-		// 		{
-		// 			cwd : options.appPages.srcDir,
-		// 			src : [ "**/*.js" ],
-		// 			dest : options.appPages.destDir,
-		// 			expand : true
-		// 		}
-		// 	]
-		// };
+		var requirifyFiles = _.map( options.bundleAndViewDirs, function( dirOptions ) {
+			return {
+				cwd : dirOptions.path,
+				src : [ "**/*.js" ],
+				dest : dirOptions.destDir,
+				expand : true
+			};
+		} );
 
-		// grunt.config( "requirify", requirify );
+		requirify[ assetBundlerTaskPrefix ] = {
+			options : {
+				// Used to replace #bundler_dir tokens in files during browserification
+				/*transformFunction : function ( file ) {
+					var data = '';
+					return through(write, end);
+
+					function write (buf) { data += buf }
+					function end () {
+						var replaceString = "";
+						if( file.indexOf( assetLibraryPath) == 0 )
+							replaceString = relativeAssetLibraryDir + file.replace( assetLibraryPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+						else
+							replaceString = relativeAppPagesDir + file.replace( appPagesPath + path.sep, "").replace(/\/[^\/]*$/, "" );
+						//replace string should be of the form AssetLibrary-assets/... or AppPages-assets/...
+						this.queue(data.toString().replace( /#bundler_dir/g, replaceString.substring(1) ) );
+						this.queue(null);
+	  				}
+				},*/
+				isAutorunFile : function( filePath, fileSrc ) {
+					if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
+						return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
+					else
+						return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
+				}
+			},
+			files : requirifyFiles
+		};
+
+		grunt.config( "requirify", requirify );
 
 		grunt.task.run( assetBundlerTaskPrefix + "_clean" );
 		grunt.task.run( "prepare" );
@@ -475,10 +487,10 @@ module.exports = function(grunt) {
 		// Builds the bundleMap and pageMap to be used by later tasks
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
 
+		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
+
 		//NOTE: requirify will 'redo' replacing of #bundler_dir tokens in js files if requirify is true
 		grunt.task.run( "replaceBundlerDirTokens" );
-
-		if( options.requirify ) grunt.task.run( "requirify:" + assetBundlerTaskPrefix );
 
 		grunt.task.run( "resolveAndInjectDependencies:dev" );
 
@@ -590,9 +602,8 @@ module.exports = function(grunt) {
 		try {
 			bundleMap = assetBundlerUtil.buildBundlesMap( options.library, options );
 
-			//console.log( "BUNDLES: " );
-			//console.log( JSON.stringify( bundleMap, null, "\t" ) );
-			//assetBundlerUtil.resolveBundlesMap( bundleMap, mode );
+			console.log( "BUNDLES: " );
+			console.log( JSON.stringify( bundleMap, null, "\t" ) );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e;
@@ -760,14 +771,14 @@ module.exports = function(grunt) {
 		function processFile( filePath, filePathDest, cb ) {
 
 			var b = browserify();
-			
+
 			var fileContents = fs.readFileSync( filePath ).toString();
 
 			if( ! _.isUndefined( isAutorunFile ) && isAutorunFile( filePath, fileContents ) ) {
 				b.add( filePath );
 			}
 
-			b.require( filePath );	
+			b.require( filePath );
 
 			var requiredFiles;
 
@@ -789,7 +800,8 @@ module.exports = function(grunt) {
 				b.external( resolvedRequire );
 			} );
 
-			b.transform( transformFunction );
+			if( ! _.isUndefined( transformFunction ) )
+				b.transform( transformFunction );
 
 			b.bundle( function( err, src ) {
 				if( err ) {
@@ -827,7 +839,7 @@ module.exports = function(grunt) {
 */
 
 		//console.log( _.pluck( parcels, "combinedFiles" ) );
-
+/*
 		_.each( _.values( parcels ), function( bundle ) {
 			var filePaths = [];
 			if( options.mode === "dev" )
@@ -849,6 +861,7 @@ module.exports = function(grunt) {
 						return filePath.replace( options.appPages.destDir, options.appPages.srcDir ).replace( options.assetLibrary.destDir, options.assetLibrary.srcDir );
 					} ) );
 		} );
+*/
 
 		async.each(
 			this.files,
@@ -856,12 +869,12 @@ module.exports = function(grunt) {
 				var realPath = fs.realpathSync( file.src[0] );
 
 				console.log( file.src[0] );
-				if( _.contains( validFiles, file.src[0] ) ) {
+				//if( _.contains( validFiles, file.src[0] ) ) {
 					processFile( realPath , fs.realpathSync( file.dest ), callback );
-				}
-				else {
-					callback();
-				}
+				//}
+				//else {
+				//	callback();
+				//}
 					
 			},
 			function( err ) {

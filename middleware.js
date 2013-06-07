@@ -15,7 +15,6 @@ module.exports = function( rootDir ) {
 		carteroJSON = assetBundlerUtil.readCarteroJSON( rootDir );
 		pageMap = carteroJSON.parcels;
 		staticDir = carteroJSON.publicDir;
-
 	}
 	catch( e ) {
 		throw new Error( "Error while reading parcels.json file. Please run the grunt assetbundler task before running your application." + e.stack );
@@ -43,7 +42,7 @@ module.exports = function( rootDir ) {
 			var tmplContents = "";
 
 			async.each( pageMetadata.tmpl, function( fileName, cb ) {
-				fs.readFile( fileName,  function( err, data ) {
+				fs.readFile( path.join( rootDir, fileName ),  function( err, data ) {
 
 					if( err ) {
 						cb( err );

@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	assetBundlerMiddleware = require( "grunt-asset-bundler/middleware.js" ),
+	carteroMiddleware = require( "grunt-cartero/middleware.js" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),
@@ -20,7 +20,7 @@ var app = express();
 var kStaticDir = path.join( __dirname, "Static" );
 var kAppPagesDir = path.join( __dirname, "AppPages" );
 
-var projectRoot = "..";
+var projectRoot = "../..";
 
 app.configure( function() {
 	app.set( "port" , process.env.PORT || 3000 );
@@ -32,7 +32,7 @@ app.configure( function() {
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
 	//app.use( myMethod() );
-	app.use( assetBundlerMiddleware( path.join( __dirname, projectRoot ), kStaticDir, kAppPagesDir  ) );
+	app.use( carteroMiddleware( path.join( __dirname, projectRoot ) ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );

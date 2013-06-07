@@ -8,38 +8,40 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig( {
 		cartero : {
-			options : {
-				mode : "dev",
-				library : {
-					path : "App/node_modules"
-				},
-				views : {
-					path : "App/WebServer/AppPages",
-					filesToIgnore : /^_.*/,
-					directoriesToIgnore : /^__.*/
-				},
-				publicDir : "App/WebServer/Static/",
-				projectDir : __dirname,
-				//serverSideTemplateSuffix : ".swig",
-				useDirectoriesForDependencies : true,
-				requirify : true/*,
-				minificationTasks : [
-					{
-						name : "htmlmin",
-						suffixes : [ ".tmpl" ],
-						options : {
-							removeComments : true
-						}
+			dist : {
+				options : {
+					mode : "dev",
+					library : {
+						path : "App/node_modules"
 					},
-					{
-						name : "uglify",
-						suffixes : [ ".js" ],
-						options : {
-							mangle : false
+					views : {
+						path : "App/WebServer/AppPages",
+						filesToIgnore : /^_.*/,
+						directoriesToIgnore : /^__.*/,
+						viewFileExt : ".swig"
+					},
+					publicDir : "App/WebServer/Static",
+					projectDir : __dirname,
+					//serverSideTemplateSuffix : ".swig",
+					//useDirectoriesForDependencies : true,
+					requirify : true/*,
+					minificationTasks : [
+						{
+							name : "htmlmin",
+							suffixes : [ ".tmpl" ],
+							options : {
+								removeComments : true
+							}
+						},
+						{
+							name : "uglify",
+							suffixes : [ ".js" ],
+							options : {
+								mangle : false
+							}
 						}
-					}
-				]*/
-			}//,
+					]*/
+				}//,
 		//dist : {
 		//	mode : "prod"
 		//}
@@ -47,7 +49,9 @@ module.exports = function( grunt ) {
 //
 //			}
 
+			}	
 		},
+
 
 		requirify : {
 			dist : {
