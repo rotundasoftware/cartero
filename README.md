@@ -19,9 +19,9 @@ Cartero is an intelligent asset manager for web applications, especially suited 
 
 ## Overview
 
-### The asset library
+### The Asset Library
 
-You keep all your assets, regardless of type, in your application's **_asset library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your asset library defines a **_bundle_** that may contain javascript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
+You keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_bundle_** that may contain javascript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
 
 ```
 assetLibrary/
@@ -44,7 +44,7 @@ assetLibrary/
 		editPersonDialog.tmpl
 ```
 
-The `EditPersonDialog` bundle directly depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved.
+Because of the `bundle.json` files (contents inlined), the `EditPersonDialog` bundle depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved.
 
 It is also possible to implicitly declare dependencies by nesting bundles because, by default, child bundles automatically depend on their parent bundles. For example, we can put the `EditPersonDialog` bundle inside the `Dialogs` bundle, like so:
 
@@ -68,7 +68,7 @@ assetLibrary/
 			editPersonDialog.tmpl
 ```
 
-Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bundle (and indirectly depends on the other three bundles), by virtue of the directory structure.
+Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bundle (and indirectly depends on the other three bundles) by virtue of the directory structure.
 
 ### Page specific assets
 
@@ -80,11 +80,10 @@ views/
 		login.jade
 		login.coffee
 		login.scss
-	admin/
-		peopleList/
-			peopleList.jade
-			peopleList.coffee
-			peopleList.scss
+	peopleList/
+		peopleList.jade
+		peopleList.coffee
+		peopleList.scss
 ```
 
 When the `login.jade` template is rendered, the `login.coffee` and `login.scss` assets will automatically be injected into the HTML of the page, as will the `peopleList.*` assets when the `peopleList.jade` template is rendered.
@@ -167,7 +166,7 @@ module.exports = function( grunt ) {
 
 The five required options for the Cartero Grunt Task are `projectDir`, `library`, `views`, `publicDir`, and `mode`.
 
-The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your asset library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `library-assets` and `view-assets`, containing assets specific to bundles and page views, respectively.
+The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `library-assets` and `view-assets` (containing assets specific to bundles and page views, respectively).
 
 The Cartero Grunt Task also takes options that allow you to call your favorite preprocessing and minification tasks (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
 
@@ -222,32 +221,32 @@ The Cartero Grunt Task will fire up, preprocess all of your assets, and put the 
 options : {
 	// (required) The root directory for the project. ALL OTHER PATHS IN THE REMAINDER
 	// OF THESE OPTIONS SHOULD BE RELATIVE TO THIS DIRECTORY.
-	projectDir : __dirname,
+	"projectDir" : __dirname,
 
-	// (required) An object that specifies your asset library directory and related options. 
+	// (required) An object that specifies your Asset Library directory and related options. 
 	// This object *must* contain a "path" entry, pointing to the directory where your
 	// asset bundles are located. All other properties are optional. You may also supply
 	// an array of objects, instead of just one object, if you have multiple directories
 	// that contain bundles. For example, if you are using Bower, you will likely want
 	// to include both the "components" directory and an application specific directory
-	// in your asset library, so the library option would be an array of two objects.
-	library : {
+	// in your Asset Library, so the library option would be an array of two objects.
+	"library" : {
 		// (required) The path to the directory containing asset bundles.
 		path : "assetLibrary",
 
-		// (default: xyz) Files with names matching this regular expression
+		// (default: /^_.*/) Files with names matching this regular expression
 		// will be completely ignored.
-		filesToIgnore : /_.*/,
+		filesToIgnore : /^_.*/,
 
 		// (default: xyz) Directories with names matching this regular expression
 		// will be completely ignored.
-		directoriesToIgnore : /__.*/,
+		directoriesToIgnore : /^__.*/,
 
-		// (default: /_.*/) Files contained in directories with names matching this regular
+		// (default: /^_.*/) Files contained in directories with names matching this regular
 		// expression will be treated as part of the parent directory. This feature 
 		// enables you to use directories within a bundle for organizational purposes,
 		// when otherwise they would be considered their own bundles.
-		directoriesToFlatten : /_.*/,
+		directoriesToFlatten : /^_.*/,
 
 		// (default: true) When true, parent bundles are automatically added as a
 		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
@@ -255,9 +254,9 @@ options : {
 		// to explicitly declare the dependency.
 		childrenDependOnParents : true,
 
-		// (default: undefined) If your asset library has multiple directories, you
+		// (default: undefined) If your Asset Library has multiple directories, you
 		// may supply this property to give this directory a unique "namespace". For
-		// example, if your asset library is composed of Bower's "components" directory 
+		// example, if your Asset Library is composed of Bower's "components" directory 
 		// and your own "assetLibrary" directory, you might give the "components" directory
 		// the "bower" namespace. Bundles in that directory would then be referenced by 
 		// pre-pending `bower/` to their name (e.g. `components/jQuery` -> `bower/jQuery`).
@@ -269,27 +268,38 @@ options : {
 	// server side views (i.e. page templates) are located. All other properties are
 	// optional. As with the `library` option, you may supply an array of objects,
 	// instead of just one object, if you have multiple directories that contain views.
-	views : {
+	"views" : {
 		// (required) The path to the directory containing your server side view templates.
 		// Generally this directory is called "views" in the Node.js / Express world.
 		path : "views",
 
+		// (default : ".jade") You should change this property to match the extension of
+		// your server side template files, which of course depends on your template engine
+		// (e.g. nunjucks, erb, etc.). Files that match this extension are scanned for the
+		// ##cartero_requires directive, and if found, the grunt task will compute a "parcel"
+		// of assets to serve when the template is rendered. The parcel is composed of all
+		// the assets in the required bundles, as well as assets that live in the same folder
+		// as the view file. The parcel's contents are stored in the `cartero.json` file 
+		// and later used by the Hook when it serves assets for the view. You may also
+		// specify an array of file extensions.
+		viewFileExt : ".html",
+
 		// The following three properties behave exactly as their counterparts in 
 		// the `library` option (discussed above).
-		filesToIgnore : /_.*/,
-		directoriesToIgnore : /__.*/,
-		directoriesToFlatten : /_.*/
+		filesToIgnore : /^_.*/,
+		directoriesToIgnore : /^__.*/,
+		directoriesToFlatten : /^_.*/,
 	}
 
 	// (required) The "public" directory of your application, that is, the directory that
 	// is served by your web server. In Node.js / Express applications this is generally the
 	// "static" directory. Like all paths in these options, it should be relative to `projectDir`.
-	publicDir : "static",
+	"publicDir" : "static",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
 	// b) assets are not concatenated, and c) after finishing, the Cartero Grunt Task will
 	// automatically watch all of your assets for changes and reprocess them as needed.
-	mode : "dev",
+	"mode" : "dev",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
 	// such as compiling scss or coffee. You may include an entry for any task in this array,
@@ -297,7 +307,7 @@ options : {
 	// you were to run the task yourself from your gruntfile). The task will be run on all files
 	// with the `inExt` file extension, and will output files with the `outExt` extension, if
 	// provided. You can also provide an `options` property that will be forwarded to the task.
-	preprocessingTasks : [ {
+	"preprocessingTasks" : [ {
 		name : "coffee",
 		inExt : ".coffee",
 		outExt : ".js",
@@ -313,7 +323,7 @@ options : {
 	// (default: undefined) An array of "minification tasks" to be performed on your assets
 	// *in prod mode only*, such as minifying css or javascript. This option is structured
 	// just like the `preprocessingTasks` option.
-	minificationTasks : [ {
+	"minificationTasks" : [ {
 		name : "htmlmin",
 		inExt : ".tmpl",
 		options : {
@@ -335,13 +345,65 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 ```javascript
 {
-	// An array of bundles that this bundle depends on.
+	// (default: undefined) An array of bundles that this bundle depends on.
 	"dependencies" : [ "JQuery" ],
 
-	// An array of file names within the bundle. Files in this array will be served before
-	// any other files in the bundle, in the order they appear in the array.
-	"filePriority" : [ "backbone.js" ]
+	// (default: undefined) An array of file names within the bundle. Files in this
+	// array will be served before any other files in the bundle, in the order they
+	// appear in the array.
+	"filePriority" : [ "backbone.js" ],
 
+	// (default: /^_.*/) A regular expression that override the corresponding property 
+	// in the `library` option of the Cartero GruntTask for this bundle only.
+	"directoriesToFlatten" : /^_.*/,
+	
+	// (default: false) If true, assets in flattened subdirectories are served before
+	// assets in the root directory of the bundle. Otherwise, they are served after.
+	"prioritizeSubdirectories" : false,
 
+	// (default: false) If true, assets in flattened subdirectories are served before
+	// assets in the root directory of the bundle. Otherwise, they are served after.
+	"keepSeparate" : true,
+
+	// (default: undefined) An array of files that should be included when the bundle is
+	// sourced (i.e. copied to the public folder), but that should not be concatenated with
+	// any other assets or served by the Hook. This feature allows you to accommodate
+	// ".css" or ".js" files that are "dynamically loaded" after the initial page load.
+	"dynamicallyLoadedFiles" : [ "ie-8.css" ]
 }
 ```
+
+### Directives
+
+#### ##cartero_require *bundleName_1, [ bundleName_2, ... ]*
+
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which it resides. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
+
+	##cartero_require "bower/jQuery", "app/Dialogs/EditPersonDialog"
+
+#### ##cartero_extends *parentView*
+
+This Directive is used in server side templates to indicate that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_require` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
+
+	##cartero_extends "layouts/site_layout.twig"
+
+
+#### ##cartero_dir
+
+When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder.
+
+```javascript
+var myDirName = "##cartero_dir";
+```
+
+It can be used in any type of asset processed by Cartero, including client side template files.
+
+```
+<script type="text/template" id="##cartero_dir">
+	...
+</script>
+```
+
+### cartero.json
+
+
