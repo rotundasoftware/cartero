@@ -22,9 +22,10 @@ module.exports = function( grunt ) {
 					},
 					publicDir : "App/WebServer/Static",
 					projectDir : __dirname,
+					templateExt : ".tmpl",
 					//serverSideTemplateSuffix : ".swig",
 					//useDirectoriesForDependencies : true,
-					requirify : true/*,
+					browserify : true/*,
 					minificationTasks : [
 						{
 							name : "htmlmin",
