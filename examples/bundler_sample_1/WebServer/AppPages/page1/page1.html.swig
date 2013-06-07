@@ -1,8 +1,8 @@
 {% extends 'layout.html.swig' %}
 
-<!-- #bundler_require "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities" -->
+<!-- ##cartero_requires "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities", "Main/LibWithImages" -->
 
-<!-- #bundler_extends "../layout.html.swig" -->
+<!-- ##cartero_extends "../layout.html.swig" -->
 
 {% block content %}
 
@@ -40,6 +40,8 @@
 
 <h3>Testing coffee compilation.  Clicking on the button below should popup a ""Button clicked!" message.</h3>
 <div id="coffeeDemo"><input type="button" id="coffeeDemoButton" value="Click me!"></input></div>
+
+<div class="cartero-man"></div>
 
 {% endblock %}
 

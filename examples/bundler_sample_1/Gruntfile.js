@@ -22,7 +22,8 @@ module.exports = function( grunt ) {
 						{
 							path : "WebServer/AppPages",
 							filesToIgnore : /_.*/,
-							directoriesToIgnore : /__.*/
+							directoriesToIgnore : /__.*/,
+							viewFileExt : ".swig"
 						}
 					],
 					preprocessingTasks : [

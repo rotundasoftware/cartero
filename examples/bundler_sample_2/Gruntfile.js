@@ -7,39 +7,42 @@
 module.exports = function( grunt ) {
 
 	grunt.initConfig( {
-		assetbundler : {
-			options : {
-				mode : "dev",
-				library : {
-					path : "App/node_modules"
-				},
-				views : {
-					path : "App/WebServer/AppPages",
-					filesToIgnore : /^_.*/,
-					directoriesToIgnore : /^__.*/
-				},
-				publicDir : "App/WebServer/Static/",
-				projectDir : __dirname,
-				//serverSideTemplateSuffix : ".swig",
-				useDirectoriesForDependencies : true,
-				requirify : true/*,
-				minificationTasks : [
-					{
-						name : "htmlmin",
-						suffixes : [ ".tmpl" ],
-						options : {
-							removeComments : true
-						}
+		cartero : {
+			dist : {
+				options : {
+					mode : "dev",
+					library : {
+						path : "App/node_modules"
 					},
-					{
-						name : "uglify",
-						suffixes : [ ".js" ],
-						options : {
-							mangle : false
+					views : {
+						path : "App/WebServer/AppPages",
+						filesToIgnore : /^_.*/,
+						directoriesToIgnore : /^__.*/,
+						viewFileExt : ".swig"
+					},
+					publicDir : "App/WebServer/Static",
+					projectDir : __dirname,
+					templateExt : ".tmpl",
+					//serverSideTemplateSuffix : ".swig",
+					//useDirectoriesForDependencies : true,
+					browserify : true/*,
+					minificationTasks : [
+						{
+							name : "htmlmin",
+							suffixes : [ ".tmpl" ],
+							options : {
+								removeComments : true
+							}
+						},
+						{
+							name : "uglify",
+							suffixes : [ ".js" ],
+							options : {
+								mangle : false
+							}
 						}
-					}
-				]*/
-			}//,
+					]*/
+				}//,
 		//dist : {
 		//	mode : "prod"
 		//}
@@ -47,7 +50,9 @@ module.exports = function( grunt ) {
 //
 //			}
 
+			}	
 		},
+
 
 		requirify : {
 			dist : {
@@ -77,6 +82,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
-	grunt.loadNpmTasks( "grunt-asset-bundler" );
+	grunt.loadNpmTasks( "grunt-cartero" );
 
 };
