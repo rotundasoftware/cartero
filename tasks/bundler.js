@@ -103,24 +103,29 @@ module.exports = function(grunt) {
 
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
 	// TODO: make this stuff async.
-	function replaceRelativeURLsInCSSFile( fileName ) {
-			var fileContents = fs.readFileSync( fileName ).toString();
+	function replaceRelativeURLsInCSSFile( fileName, callback ) {
+		fs.readFile( fileName, function( err, data ) {
 
-			fileContents = fileContents.replace( /url\(([^)]+)\)/g, function( match, url ) {
+			var fileContents = data.toString().replace( /url\(([^)]+)\)/g, function( match, url ) {
 				// don't need to do anything with absolute urls
 				if( url[0] === "/" ) return match;
 
 				var absolutePath = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
 
-				if( fs.existsSync( absolutePath ) )
-					return "url(" + fs.realpathSync( fileName.replace(/\/[^\/]*$/,"/") + path.sep + url ).replace( fs.realpathSync( options.publicDir ), "" ) + ")";
-				else
+				if( fs.existsSync( absolutePath ) ) {
+					var replacement = "url(" + fs.realpathSync( absolutePath ).replace( fs.realpathSync( options.publicDir ), "" ) + ")";
+					return replacement;
+				}
+				else {
 					return match;
+				}
 
 			} );
 
-			fs.writeFileSync( fileName, fileContents );
-
+			fs.writeFile( fileName, fileContents, function( err ) {
+				callback( err );
+			} );
+		} );
 	}
 
 	// returns true if the given fileName represents a server-side view
@@ -477,13 +482,43 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( "replaceRelativeURLsInCSSFile", "", function() {
 
+try {
+
+		var cssFiles = [];
+
 		_.each( parcels, function( parcel ) {
 			_.each( parcel.combinedFiles, function( file ) {
 				_.each( file.sourceFilePaths, function( filePath ) {
-					replaceRelativeURLsInCSSFile( filePath );
+					if( _s.endsWith( filePath, ".css" ) )
+						cssFiles.push( filePath );
 				} );
 			} );
 		} );
+
+		var done = this.async();
+
+		console.log( "who" );
+
+		async.each(
+			cssFiles,
+			function( file, callback ) {
+				console.log( "hi" );
+				replaceRelativeURLsInCSSFile( file, callback );
+			},
+			function( err ) {
+				if( err ) {
+					console.log( "Error while replacing relative URLs in CSS file with absolute ones: " + e );
+					throw err;
+				}
+
+				done();
+			}
+		);
+}
+catch( e ) {
+	console.log( e );
+}
+
 	} );
 
 	grunt.registerTask( "runPostProcessor", "", function() {
