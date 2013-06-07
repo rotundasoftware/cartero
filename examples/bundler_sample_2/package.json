@@ -28,7 +28,7 @@
     "grunt-contrib-compass": "~0.2.0",
     "detective": "~2.1.1",
     "resolve": "~0.3.1",
-    "browserify": "~2.13.2",
+    "browserify": "~2.13.3",
     "async": "~0.2.8",
     "through": "~2.3.4"
   },

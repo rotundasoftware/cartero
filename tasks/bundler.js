@@ -301,10 +301,12 @@ module.exports = function(grunt) {
 		// Loop through the assets that don't require preprocessing and create/configure the target
 		_.each( assetFileExtensionsMap, function( val, key ) {
 
-			var tasksToRun = _.union([], val.tasks );
+			var tasksToRun =  [];
 
 			if( options.requirify && key === "js" )
 				tasksToRun.push( "requirify:" + assetBundlerTaskPrefix );
+
+			tasksToRun = _.union( tasksToRun, val.tasks );
 
 			watch[ assetBundlerTaskPrefix + "_" + key ] = {
 				files : _.map( options.bundleAndViewDirs, function ( dir ) {
@@ -803,7 +805,13 @@ module.exports = function(grunt) {
 			if( ! _.isUndefined( transformFunction ) )
 				b.transform( transformFunction );
 
-			b.bundle( function( err, src ) {
+			//console.log( requiredFiles );
+
+			b.bundle( { filter : function( fileName ) {
+					return _.contains( requiredFiles, fileName );
+				}
+			},
+			function( err, src ) {
 				if( err ) {
 					var errMsg =  "Error while browserifying " + filePath + " : " +  err;
 					if( mode === "dev" )
