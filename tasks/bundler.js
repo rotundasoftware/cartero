@@ -48,9 +48,9 @@ module.exports = function(grunt) {
 
 	// Global default values
 	var kOptionsDefaults = {
-		browserify : true,
+		browserify : false,
 		templateExt : [ ".jade" ]
-	}
+	};
 
 	var kValidImageExt = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
 
@@ -97,8 +97,8 @@ module.exports = function(grunt) {
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
 		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
-		grunt.task.run( "resolveAndInjectDependencies:dev" );
-		grunt.task.run( "saveBundleAndPageJSONs" );
+		grunt.task.run( "buildJsCssTmplLists" );
+		grunt.task.run( "saveCarteroJSON" );
 	}
 
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
@@ -148,7 +148,7 @@ module.exports = function(grunt) {
 	}
 
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
-try {
+
 		// Grab the options and apply defaults
 		options = this.options();
 
@@ -401,10 +401,7 @@ try {
 		};
 
 		grunt.config( "carterobrowserify", carteroBrowserify );
-}
-catch( e ) {
-	console.log( e.stack );
-}
+
 		grunt.task.run( kCarteroTaskPrefix + "_clean" );
 		grunt.task.run( "prepare" );
 		grunt.task.run( kCarteroTaskPrefix + "_copy" );
@@ -420,34 +417,27 @@ catch( e ) {
 
 		grunt.task.run( "replaceCarteroDirTokens" );
 
-		grunt.task.run( "resolveAndInjectDependencies:dev" );
-
 		// In prod mode...
 		if( mode === "prod" ) {
-
 			grunt.task.run( "replaceRelativeURLsInCSSFile" );
-
-			grunt.task.run( "buildKeepSeparateBundles" );
-			grunt.task.run( "buildPageBundles" );
-
-			grunt.task.run( "resolveAndInjectDependencies:prod");
-
-			if( options.postProcessor )
-				grunt.task.run( "runPostProcessor" );
+			grunt.task.run( "buildBundlesAndParcels" );
 		}
 
-		// Removes any files not referenced in the pageMap
+		grunt.task.run( "buildJsCssTmplLists" );
+
+		if( options.postProcessor )
+			grunt.task.run( "runPostProcessor" );
+
+		// Removes any files not referenced in the parcels
 		grunt.task.run( "cleanup" );
 
 		if( mode === "prod" ) {
-			//TODO: only run the asset bundler targets
 			_.each( options.minificationTasks, function( taskConfig ) {
 				grunt.task.run( taskConfig.name );
 			} );
 		}
 
-		// Saves the bundleMap and pageMap to files.
-		grunt.task.run( "saveBundleAndPageJSONs" );
+		grunt.task.run( "saveCarteroJSON" );
 
 		// In dev mode...
 		if( mode === "dev" ) {
@@ -573,17 +563,11 @@ catch( e ) {
 
 	} );
 
-	grunt.registerTask( "buildKeepSeparateBundles", "Builds the keep separate bundle files.", function() {
+	grunt.registerTask( "buildBundlesAndParcels", "", function() {
 
 		_.each( _.values( bundles ), function( bundle ) {
 			bundle.buildCombinedFiles();
 		} );
-
-	} );
-
-	grunt.registerTask( "buildPageBundles", "Builds the bundles for each page", function() {
-
-		this.requires( "buildBundleAndPageJSONs:prod" );
 
 		_.each( _.values( parcels ), function( parcel ) {
 			parcel.buildCombinedFiles();
@@ -591,11 +575,10 @@ catch( e ) {
 
 	} );
 
-
-	grunt.registerTask( "resolveAndInjectDependencies", "", function( mode ) {
+	grunt.registerTask( "buildJsCssTmplLists", "", function() {
 
 		_.each( _.values( parcels ), function( parcel ) {
-			parcel.buildResourcesToLoad( mode );
+			parcel.buildResourcesToLoad();
 		} );
 
 	} );
@@ -633,6 +616,9 @@ catch( e ) {
 
 		} );
 
+		console.log( "REFERENCED FILES:" );
+		console.log( referencedFiles );
+
 		var filesToClean = grunt.file.expand( {
 				filter : function( fileName ) {
 					//cleaning assets that are not used by any page
@@ -652,7 +638,7 @@ catch( e ) {
 	} );
 
 	// Saves the bundleMap and pageMap contents to files.
-	grunt.registerTask( "saveBundleAndPageJSONs", "Persist the page and bundle JSONs", function() {
+	grunt.registerTask( "saveCarteroJSON", "", function() {
 
 		var parcelDataToSave = {};
 		_.each( _.values( parcels ), function( parcel ) {
@@ -749,68 +735,17 @@ catch( e ) {
 
 		var done = this.async();
 
-		var validFiles = [];
-
-/*
-
-		_.each( _.values( pageMap ), function( page ) {
-			validFiles = _.union( validFiles, _.map( _.filter( page.files, function( file ) { return _s.endsWith( file, ".js") ; } ), function( fileName ) {
-				return fileName.replace( "{APP_PAGES}/",  options.appPages.srcDir );
-			}) );
-		} );
-
-		_.each( _.values( bundleMap ), function( bundle ) {
-			validFiles = _.union( validFiles, _.map( _.filter( bundle.files, function( file ) { return _s.endsWith( file, ".js") ; } ), function( fileName ) {
-				return fileName.replace( "{ASSET_LIBRARY}/",  options.assetLibrary.srcDir );
-			}) );
-		} );
-*/
-
-		//console.log( _.pluck( parcels, "combinedFiles" ) );
-/*
-		_.each( _.values( parcels ), function( bundle ) {
-			var filePaths = [];
-			if( options.mode === "dev" )
-				filePaths = _.pluck( bundle.combinedFiles, "path" );
-			else {
-				_.each( bundle.combinedFiles, function( file ) {
-					filePaths = _.union( filePaths, file.sourceFilePaths );
-				} );
-			}
-			validFiles = _.union( validFiles,
-				_.map(
-					_.filter(
-						filePaths,//_.pluck( bundle.combinedFiles, "path" ),
-						function( filePath ) {
-							return _s.endsWith( filePath, ".js" );
-						} ),
-					function( filePath ) {
-						//Need to convert files with destination directory back to source directory
-						return filePath.replace( options.appPages.destDir, options.appPages.srcDir ).replace( options.assetLibrary.destDir, options.assetLibrary.srcDir );
-					} ) );
-		} );
-*/
-
 		async.each(
 			this.files,
 			function( file, callback ) {
-				var realPath = fs.realpathSync( file.src[0] );
-
-				console.log( file.src[0] );
-				//if( _.contains( validFiles, file.src[0] ) ) {
-					processFile( realPath , fs.realpathSync( file.dest ), callback );
-				//}
-				//else {
-				//	callback();
-				//}
-					
+				//var realPath = fs.realpathSync( file.src[0] );
+				var realPath = path.join( options.projectDir, file.src[ 0 ] );
+				processFile( realPath , /*fs.realpathSync( */file.dest /*)*/, callback );
 			},
 			function( err ) {
 				//user notified of errors (if any) while each file is bundled
 				done();
 			}
 		);
-
 	} );
-
 };
