@@ -695,21 +695,55 @@ catch( e ) {
 	} );
 
 	grunt.registerTask( "replaceCarteroDirTokens", "", function() {
-		function replaceStringInFile( fileName, matchString, replaceString ) {
-			var fileContents = fs.readFileSync( fileName ).toString();
-			fileContents = fileContents.replace( matchString, replaceString );
-			fs.writeFileSync( fileName, fileContents );
+		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
+
+			async.waterfall( [
+				function( callback ) {
+					fs.readFile( fileName, function( err, data) {
+						var fileContents = data.toString().replace( matchString, replaceString );
+						callback( err, fileContents );
+					} );
+				},
+				function( fileContents, callback ) {
+					fs.writeFile( fileName, fileContents, callback );
+				}
+			],
+			function( err ) {
+				if( err ) {
+					grunt.fail.warn( "Error while replacing ##cartero_dir tokens: " + err  );
+				}
+				callback( err );
+			} );
 		}
 
 		function isValidCarteroDirFile( fileName ) {
 			return _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
 		}
 
-		var assetFiles = _.filter( findit.sync( options.publicDir ), isValidCarteroDirFile );
-		_.each( assetFiles, function( fileName ) {
-			replaceStringInFile( fileName, /##cartero_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ) );
+		var done = this.async();
+
+		var assetFiles = [];
+
+		var finder = findit.find( options.publicDir );
+
+		finder.on( "file", function( file, stat ) {
+			if( isValidCarteroDirFile( file ) ) assetFiles.push( file );
 		} );
 
+		finder.on( "end", function() {
+			async.each(
+				assetFiles,
+				function( fileName, callback ) {
+					replaceStringInFile( fileName, /##cartero_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ), callback );
+				},
+				function( err ) {
+					if( err ) {
+						grunt.fail.warn( "Error while replacing ##cartero_dir tokens: " + err  );
+					}
+					done();
+				}
+			);
+		} );
 	} );
 
 	grunt.registerMultiTask( "carterobrowserify", "", function() {
