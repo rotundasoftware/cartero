@@ -35,7 +35,7 @@ module.exports = function(grunt) {
 	// Default values for the views task option.
 	var kViewsDirDefaults = {
 		filesToIgnore : /^_.*/,
-		foldersToIgnore : /^__.*/,
+		directoriesToIgnore : /^__.*/,
 		viewFileExt : [ ".jade" ],
 		directoriesToFlatten : /^_.*/
 	};
