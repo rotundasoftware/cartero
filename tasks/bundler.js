@@ -316,7 +316,6 @@ module.exports = function(grunt) {
 			} );
 		} );
 
-		// TODO: this should somehow be using options.appPages.pageFileRegExp
 		watch[ kCarteroTaskPrefix + "_view_file" ] = {
 			files : viewFilePatterns,
 			tasks : [ "processViewFileChange" ],
@@ -356,7 +355,6 @@ module.exports = function(grunt) {
 			if( _.contains( options.extToCopy, assetBundlerUtil.getFileExtension( filepath ) ) )
 				grunt.file.copy( filepath, newDest );
 
-			// TODO: this section can be cleaned up
 			_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
 				var taskName = preprocessingTask.name;
@@ -444,7 +442,6 @@ module.exports = function(grunt) {
 
 		// In dev mode...
 		if( mode === "dev" ) {
-			//TODO: re-enable
 			grunt.task.run( "watch" );
 		}
 
@@ -614,18 +611,12 @@ module.exports = function(grunt) {
 			var metadataForMode = parcel[ options.mode ];
 
 			referencedFiles = _.union( referencedFiles, metadataForMode.js, metadataForMode.css, metadataForMode.tmpl );
-			//	_.map( metadataForMode.js, resolvePageMapFileName ),
-			//	_.map( metadataForMode.css, resolvePageMapFileName ),
-			//	_.map( metadataForMode.tmpl, resolvePageMapFileName )
-			//);
 
 		} );
 
 		_.each( _.values( bundleMap ), function( bundleMetadata ) {
 
 			referencedFiles = _.union( referencedFiles, bundleMetadata.dynamicallyLoadedFiles );
-			//	_.map( bundleMetadata.dynamicallyLoadedFiles, resolveDynamicallyLoadedFileName )
-			//);
 
 		} );
 
@@ -638,7 +629,6 @@ module.exports = function(grunt) {
 					return ! _.contains( referencedFiles, fileName ) && _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
 				}
 			},
-			//[ options.assetLibrary.destDir + "**/*", options.appPages.destDir + "**/*" ]
 			[ options.publicDir + "/**/*" ]
 		);
 
@@ -785,7 +775,6 @@ module.exports = function(grunt) {
 		async.each(
 			this.files,
 			function( file, callback ) {
-				//var realPath = fs.realpathSync( file.src[0] );
 				var realPath = path.join( options.projectDir, file.src[ 0 ] );
 				processFile( realPath , /*fs.realpathSync( */file.dest /*)*/, callback );
 			},
