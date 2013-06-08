@@ -148,9 +148,7 @@ module.exports = function(grunt) {
 
 	}
 
-	function getExtension( fileName ) {
-		return fileName.substring( fileName.lastIndexOf( "." ) );
-	}
+
 
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
@@ -355,7 +353,7 @@ module.exports = function(grunt) {
 
 			newDest = assetBundlerUtil.mapAssetFileName( newDest, options.assetExtensionMap );
 
-			if( _.contains( options.extToCopy, getExtension( filepath ) ) )
+			if( _.contains( options.extToCopy, assetBundlerUtil.getFileExtension( filepath ) ) )
 				grunt.file.copy( filepath, newDest );
 
 			// TODO: this section can be cleaned up
@@ -458,7 +456,6 @@ module.exports = function(grunt) {
 
 		_.each( options.bundleAndViewDirs, function ( dirOptions ) {
 
-			//console.log( dirOptions.destDir + " " + dirOptions.path );
 			filesToCopy = _.union( filesToCopy, grunt.file.expandMapping(
 				_.map( options.extToCopy, function( extension ) {
 					return "**/*" + extension;
@@ -470,9 +467,6 @@ module.exports = function(grunt) {
 			) );
 		} );
 
-		//console.log( "FILES BEING COPIED:" );
-		//console.log( filesToCopy );
-
 		_.each( filesToCopy, function( fileSrcDest ) {
 			grunt.file.copy( fileSrcDest.src, fileSrcDest.dest );
 		} );
@@ -481,8 +475,6 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerTask( "replaceRelativeURLsInCSSFile", "", function() {
-
-try {
 
 		var cssFiles = [];
 
@@ -514,11 +506,6 @@ try {
 				done();
 			}
 		);
-}
-catch( e ) {
-	console.log( e );
-}
-
 	} );
 
 	grunt.registerTask( "runPostProcessor", "", function() {
@@ -554,9 +541,6 @@ catch( e ) {
 
 		try {
 			bundleMap = assetBundlerUtil.buildBundlesMap( options.library, options );
-
-			console.log( "BUNDLES: " );
-			console.log( JSON.stringify( bundleMap, null, "\t" ) );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e;
@@ -576,9 +560,6 @@ catch( e ) {
 
 		try {
 			pageMap = assetBundlerUtil.buildPagesMap( options.views, options );
-			//console.log( "PAGES: " );
-			//console.log( JSON.stringify( pageMap, null, "\t" ) );
-			//assetBundlerUtil.resolvePagesMap( pageMap, bundleMap, mode );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e.stack;
@@ -587,9 +568,6 @@ catch( e ) {
 			else
 				grunt.fail.fatal( errMsg );
 		}
-
-		//console.log( JSON.stringify( bundleMap, null, "\t" ) );
-		//console.log( JSON.stringify( pageMap, null, "\t" ) );
 
 		var result = cartero.doIt( bundleMap, pageMap, options );
 
