@@ -4,18 +4,20 @@
 </p>
 Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
+As of the time of this writing Cartero is available only for Node.js / Express, but it is easy to port to any environment.
+
 ## Benefits
 
-* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, and templates (e.g. keep person.coffee, person.scss, person.tmpl together in *one directory*).
+* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, templates, and images (e.g. keep person.coffee, person.scss, person.tmpl together in *one directory*).
 * Specify the exact bundles that are required for each page in the page's template.
 * Easily manage bundle dependencies.
 * All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 * All assets that live in the same directory as the page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, Marionette Modules, etc.).
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.).
 * Easily run your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
-* Easily include [Bower](http://bower.io/) components as bundles.
+* Easily use [Bower](http://bower.io/) components as bundles.
 
 ## Overview
 
@@ -166,9 +168,9 @@ module.exports = function( grunt ) {
 
 The five required options for the Cartero Grunt Task are `projectDir`, `library`, `views`, `publicDir`, and `mode`.
 
-The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `library-assets` and `view-assets` (containing assets specific to bundles and page views, respectively).
+The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped - `library-assets` and `view-assets` (containing assets that pertain to bundles and page views, respectively).
 
-The Cartero Grunt Task also takes options that allow you to call your favorite preprocessing and minification tasks (e.g. compiling .scss, uglifying javascript, etc.). See below for a complete list of options for the Cartero task.
+The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify javascript, etc.). See the [reference section](#reference) for a complete list of options for the Cartero task.
 
 Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it the path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
@@ -184,7 +186,7 @@ app.configure( function() {
 	app.set( "views" , path.join( __dirname, "views" ) );
 	app.use( express.static( path.join( __dirname, "static" ) ) );
 	// ...
-	app.use( carteroHook( __dirname ) );
+	app.use( carteroHook( __dirname ) );	// install the Cartero middleware
 } );
 ```
 
@@ -193,7 +195,7 @@ Now you are ready to go. To let Cartero know which asset bundles are required by
 ```jade
 // peopleList.jade
 
-// ##cartero_requires "jQuery", "dialogs/editPersonDialog"
+// ##cartero_requires "JQuery", "Dialogs/EditPersonDialog"
 
 doctype 5
 html(lang="en")
@@ -213,7 +215,7 @@ When you run the following command from the directory of your gruntfile:
 
 The Cartero Grunt Task will fire up, preprocess all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
-## Reference
+## <a id="reference"></a>Reference
 
 ### Cartero Grunt Task Options
 
@@ -234,13 +236,11 @@ options : {
 		// (required) The path to the directory containing asset bundles.
 		path : "assetLibrary",
 
-		// (default: /^_.*/) Files with names matching this regular expression
-		// will be completely ignored.
-		filesToIgnore : /^_.*/,
-
-		// (default: xyz) Directories with names matching this regular expression
-		// will be completely ignored.
-		directoriesToIgnore : /^__.*/,
+		// (default: true) When true, parent bundles are automatically added as a
+		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
+		// bundle would automatically depend on the `Dialogs` bundle, with no need
+		// to explicitly declare the dependency.
+		childrenDependOnParents : true,
 
 		// (default: /^_.*/) Files contained in directories with names matching this regular
 		// expression will be treated as part of the parent directory. This feature 
@@ -248,18 +248,21 @@ options : {
 		// when otherwise they would be considered their own bundles.
 		directoriesToFlatten : /^_.*/,
 
-		// (default: true) When true, parent bundles are automatically added as a
-		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
-		// bundle would automatically depend on the `Dialogs` bundle, with no need
-		// to explicitly declare the dependency.
-		childrenDependOnParents : true,
+		// (default: undefined) If you can't, or would rather not, define your bundle
+		// properties in `bundle.json` files that live in each bundle's directory, you can
+		// define your bundle properties using this option. For instance, if you are using
+		// bower, you may not modify the contents of the `components` directory, so you can
+		// use this option to provide bundle meta-data, instead of `bundle.json` files.
+		// This option expects a hash that maps bundle names to bundle meta-data objects,
+		// as described below in the bundle.json reference section.
+		bundleProperties : grunt.file.readJSON( "bundleProperties.json" ),
 
 		// (default: undefined) If your Asset Library has multiple directories, you
 		// may supply this property to give this directory a unique "namespace". For
 		// example, if your Asset Library is composed of Bower's "components" directory 
 		// and your own "assetLibrary" directory, you might give the "components" directory
 		// the "bower" namespace. Bundles in that directory would then be referenced by 
-		// pre-pending `bower/` to their name (e.g. `components/jQuery` -> `bower/jQuery`).
+		// pre-pending `bower/` to their name.
 		namespace : "app"
 	},
 
@@ -284,10 +287,15 @@ options : {
 		// specify an array of file extensions.
 		viewFileExt : ".html",
 
-		// The following three properties behave exactly as their counterparts in 
-		// the `library` option (discussed above).
+		// (default: /^_.*/) Files with names matching this regular expression
+		// will be completely ignored by Cartero.
 		filesToIgnore : /^_.*/,
+
+		// (default: /^__.*/) Directories with names matching this regular expression
+		// will be completely ignored by Cartero.
 		directoriesToIgnore : /^__.*/,
+
+		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
 		directoriesToFlatten : /^_.*/,
 	}
 
@@ -353,17 +361,34 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// appear in the array.
 	"filePriority" : [ "backbone.js" ],
 
-	// (default: /^_.*/) A regular expression that override the corresponding property 
-	// in the `library` option of the Cartero GruntTask for this bundle only.
-	"directoriesToFlatten" : /^_.*/,
-	
+	// (default: undefined) A an array of directories that overrides the corresponding  
+	// property in the `library` option of the Cartero GruntTask for this bundle only.
+	"directoriesToFlatten" : [ "mixins" ],
+
 	// (default: false) If true, assets in flattened subdirectories are served before
 	// assets in the root directory of the bundle. Otherwise, they are served after.
 	"prioritizeSubdirectories" : false,
 
-	// (default: false) If true, assets in flattened subdirectories are served before
-	// assets in the root directory of the bundle. Otherwise, they are served after.
+	// (default: false) This option can be used to compile separate combined asset files
+	// for this bundle in `prod` mode, instead of lumping them all together with rest of 
+	// the concatenated assets for the page being served. It is useful optimizing page load
+	// time. Large libraries like jQueryUI, for example, can be set as keepSeparate, so that
+	// they are loaded in parallel with the rest of your assets, and so that browsers
+	// can cache them between page loads. Note that setting this property to `true` does not
+	// guarantee that this bundle's files will *always* be kept totally separate. Under some 
+	// circumstances it is not possible to keep the files separate while honoring the 
+	// order in which assets should be served (e.g. when several `keepSeperate` bundles 
+	// depend on a not `keepSeperate` bundle). In these cases, the bundles files are 
+	// kept as separate as possible.
 	"keepSeparate" : true,
+	
+	// (default: undefined) An array of files that will only be served in dev mode, and
+	// that will be ignored in prod mode.
+	"devModeOnlyFiles" : [ "backbone.js" ],
+	
+	// (default: undefined) An array of files that will only be served in prod mode, and
+	// that will be ignored in dev mode.
+	"prodModeOnlyFiles" : [ "backbone.min.js" ],
 
 	// (default: undefined) An array of files that should be included when the bundle is
 	// sourced (i.e. copied to the public folder), but that should not be concatenated with
