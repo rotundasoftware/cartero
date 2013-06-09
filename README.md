@@ -4,7 +4,7 @@
 </p>
 Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-As of the time of this writing Cartero is available only for Node.js / Express, but it is easy to port to any environment.
+As of the time of this writing Cartero is available only for Node.js / Express, but it is designed to be easy to port to any environment.
 
 ## Benefits
 
@@ -17,7 +17,6 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 * All assets that live in the same directory as the page's template are automatically included when that page is rendered.
 * Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.).
 * Easily run your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
-* Easily use [Bower](http://bower.io/) components as bundles.
 
 ## Overview
 
@@ -94,7 +93,7 @@ When the `login.jade` template is rendered, the `login.coffee` and `login.scss` 
 
 ### The Cartero Grunt Task
 
-The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks, combining some brains with Grunt's brawn. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that maps each of your page view templates to a list of all the assets that it requires.
+The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that maps each of your page view templates to a list of all the assets that it requires.
 
 ### The Hook
 
@@ -138,6 +137,7 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
+				mode : "dev"
 				projectDir : __dirname,
 				library : {
 					path : "assetLibrary/"
@@ -148,12 +148,10 @@ module.exports = function( grunt ) {
 				publicDir : "static/"
 			}
 
-			dev : {
-				options : {
-					mode : "dev"
-				}
-			}
+			// `dev` target uses all the default options
+			dev : {},			
 
+			// `prod` target overrides the `mode` option
 			prod : {
 				options : {
 					mode : "prod"
@@ -209,9 +207,10 @@ html(lang="en")
 		// ...
 ```
 
-When you run the following command from the directory of your gruntfile:
+When you run either of the following commands from the directory of your gruntfile:
 
-	grunt cartero
+	grunt cartero:dev
+	grunt cartero:prod
 
 The Cartero Grunt Task will fire up, preprocess all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
@@ -251,8 +250,8 @@ options : {
 		// (default: undefined) If you can't, or would rather not, define your bundle
 		// properties in `bundle.json` files that live in each bundle's directory, you can
 		// define your bundle properties using this option. For instance, if you are using
-		// bower, you may not modify the contents of the `components` directory, so you can
-		// use this option to provide bundle meta-data, instead of `bundle.json` files.
+		// Bower, you are not allowed to modify the contents of its `components` directory, so
+		// you can use this option to provide bundle meta-data instead of `bundle.json` files.
 		// This option expects a hash that maps bundle names to bundle meta-data objects,
 		// as described below in the bundle.json reference section.
 		bundleProperties : grunt.file.readJSON( "bundleProperties.json" ),
@@ -261,9 +260,9 @@ options : {
 		// may supply this property to give this directory a unique "namespace". For
 		// example, if your Asset Library is composed of Bower's "components" directory 
 		// and your own "assetLibrary" directory, you might give the "components" directory
-		// the "bower" namespace. Bundles in that directory would then be referenced by 
-		// pre-pending `bower/` to their name.
-		namespace : "app"
+		// the "Bower" namespace. Bundles in that directory would then be referenced by 
+		// pre-pending `Bower/` to their name.
+		namespace : "App"
 	},
 
 	// (required) An object that specifies your views directory and related options. This
@@ -381,11 +380,11 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// depend on a not `keepSeperate` bundle). In these cases, the bundles files are 
 	// kept as separate as possible.
 	"keepSeparate" : true,
-	
+
 	// (default: undefined) An array of files that will only be served in dev mode, and
 	// that will be ignored in prod mode.
 	"devModeOnlyFiles" : [ "backbone.js" ],
-	
+
 	// (default: undefined) An array of files that will only be served in prod mode, and
 	// that will be ignored in dev mode.
 	"prodModeOnlyFiles" : [ "backbone.min.js" ],
@@ -431,4 +430,13 @@ It can be used in any type of asset processed by Cartero, including client side 
 
 ### cartero.json
 
+## FAQ
 
+### Does Cartero work with Rails, PHP, etc., or just with Node.js / Express?
+
+The heart of Cartero is an intelligent Grunt.js task, and can be used with any web framework. However, there is a small piece of logic called the Hook which must be called from your web framework, since it is used when each page is rendered. If you are interested in developing a Cartero Hook for your web framework of choice, keep reading, its not hard.
+
+The Hook is responsible for populating the `cartero_js`, `cartero_css`, and `cartero_tmpl` variables and making the available to the template being rendered. The specifics are somewhat dependent on your web framework, but the general idea is always the same.
+
+* When the Hook is configured or initialized, it should be passed the absolute path of the `projectDir`, as specified in your gruntfile options.
+* Each time a page is rendered, the Hook needs access to the absolute path of the template file. 
