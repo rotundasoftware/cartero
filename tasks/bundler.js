@@ -150,6 +150,240 @@ module.exports = function(grunt) {
 
 
 
+	function configureCarteroBrowserifyTask( options ) {
+
+		var carteroBrowserify = grunt.config( "carterobrowserify" ) || {};
+
+		var browserifyFiles = _.map( options.bundleAndViewDirs, function( dirOptions ) {
+			return {
+				cwd : dirOptions.path,
+				src : [ "**/*.js" ],
+				dest : dirOptions.destDir,
+				expand : true
+			};
+		} );
+
+		carteroBrowserify[ kCarteroTaskPrefix ] = {
+			options : {
+				isAutorunFile : function( filePath, fileSrc ) {
+					if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
+						return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
+					else
+						return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
+				}
+			},
+			files : browserifyFiles
+		};
+
+		grunt.config( "carterobrowserify", carteroBrowserify );
+	}
+
+	function configureUserDefinedTask( options, taskConfig, doWatch ) {
+
+		var taskName = taskConfig.name;
+
+		var task = grunt.config( taskName ) || {};
+
+		var files = [];
+
+		_.each( options.bundleAndViewDirs, function( dir ) {
+			files.push( {
+				expand: true,
+				cwd: dir.path,
+				src: [ "**/*" + taskConfig.inExt ],
+				dest: dir.destDir,
+				ext: taskConfig.outExt
+				} );
+		} );
+
+		task[ kCarteroTaskPrefix ] = {
+			files : files
+		};
+
+		if( ! _.isUndefined( taskConfig.options ) ) {
+			task[ kCarteroTaskPrefix ].options = taskConfig.options;
+		}
+
+		grunt.config( taskName, task );
+
+		// Configure a watch target to watch files with an `inExt` extension
+		// and run the preprocessing task.
+
+		if( doWatch ) {
+
+			var watch = grunt.config( "watch" ) || {};
+
+			watch[ kCarteroTaskPrefix + "_" + taskName ] = {
+				files : _.map( options.bundleAndViewDirs, function ( dir ) {
+					return dir.path + "/**/*" + taskConfig.inExt;
+				} ),
+				tasks : [ taskName + ":" + kCarteroTaskPrefix ],
+				options : {
+					nospawn : true
+				}
+			};
+
+			grunt.config( "watch", watch );
+		}
+	}
+
+	function registerWatchTaskListener( options ) {
+
+		grunt.event.on( "watch", function( action, filepath ) {
+
+			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
+			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
+				rebundle();
+			}
+
+			var dirOptions = _.find( options.bundleAndViewDirs, function( dirOptions ) {
+				return filepath.indexOf( dirOptions.path ) === 0;
+			} );
+
+			var newDest = filepath.replace( dirOptions.path, dirOptions.destDir );
+
+			newDest = assetBundlerUtil.mapAssetFileName( newDest, options.assetExtensionMap );
+
+			if( _.contains( options.extToCopy, assetBundlerUtil.getFileExtension( filepath ) ) )
+				grunt.file.copy( filepath, newDest );
+
+			_.each( options.preprocessingTasks, function( preprocessingTask ) {
+
+				var taskName = preprocessingTask.name;
+
+				// If the changed file's extension matches the task, set the file.
+				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
+					grunt.config( [ taskName, kCarteroTaskPrefix ], {
+						src : filepath,
+						dest : newDest,
+						options : preprocessingTask.options || {}
+					} );
+				}
+			} );
+
+			if( options.browserify ) {
+				if( _s.endsWith( filepath, ".js" ) ) {
+					grunt.config( [ "carterobrowserify", kCarteroTaskPrefix, "files" ], [ {
+						src : filepath,
+						dest : newDest
+					} ] );
+				}
+			}
+
+		} );
+	}
+
+	function configureWatchTaskForJsCssTmpl( options, ext ) {
+
+		var watch = grunt.config( "watch" ) || {};
+		var tasksToRun =  [];
+
+		if( options.browserify && ext === ".js" )
+			tasksToRun.push( "carterobrowserify:" + kCarteroTaskPrefix );
+
+		if( _.contains( options.carteroDirExt, ext ) )
+			tasksToRun.push( "replaceCarteroDirTokens" );
+
+		watch[ kCarteroTaskPrefix + "_" + ext ] = {
+			files : _.map( options.bundleAndViewDirs, function ( dir ) {
+				return dir.path + "/**/*" + ext;
+			} ),
+			tasks : tasksToRun,
+			options : {
+				nospawn : true
+			}
+		};
+
+		grunt.config( "watch", watch );
+	}
+
+	function queueTasksToRun( options ) {
+
+		grunt.task.run( kCarteroTaskPrefix + "_clean" );
+		grunt.task.run( "prepare" );
+		grunt.task.run( kCarteroTaskPrefix + "_copy" );
+
+		_.each( options.preprocessingTasks, function( preprocessingTask ) {
+			grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
+		} );
+
+		// Builds the bundleMap and pageMap to be used by later tasks
+		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+
+		if( options.browserify ) grunt.task.run( "carterobrowserify:" + kCarteroTaskPrefix );
+
+		grunt.task.run( "replaceCarteroDirTokens" );
+
+		// In prod mode...
+		if( mode === "prod" ) {
+			grunt.task.run( "replaceRelativeURLsInCSSFile" );
+			grunt.task.run( "buildBundlesAndParcels" );
+		}
+
+		grunt.task.run( "buildJsCssTmplLists" );
+
+		if( options.postProcessor )
+			grunt.task.run( "runPostProcessor" );
+
+		// Removes any files not referenced in the parcels
+		grunt.task.run( "cleanup" );
+
+		if( mode === "prod" ) {
+			_.each( options.minificationTasks, function( taskConfig ) {
+				grunt.task.run( taskConfig.name );
+			} );
+		}
+
+		grunt.task.run( "saveCarteroJSON" );
+
+		// In dev mode...
+		if( mode === "dev" ) {
+			grunt.task.run( "watch" );
+		}
+	}
+
+	function configureWatchViewFile( options ) {
+
+		var watch = grunt.config( "watch" ) || {};
+
+		var viewFilePatterns = [];
+
+		_.each( options.views, function( dirOptions ) {
+			_.each( dirOptions.viewFileExt, function( ext ) {
+				viewFilePatterns.push( dirOptions.path + "/**/*" + ext );
+			} );
+		} );
+
+		watch[ kCarteroTaskPrefix + "_view_file" ] = {
+			files : viewFilePatterns,
+			tasks : [ "processViewFileChange" ],
+			options : {
+				nospawn : true
+			}
+		};
+
+		grunt.config( "watch", watch );
+
+	}
+
+	function configureWatchBundleJSON( options ) {
+
+		var watch = grunt.config( "watch" ) || {};
+
+		// Watch changes to bundle.json files
+		watch[ kCarteroTaskPrefix + "_bundle_json" ] = {
+			files : _.map( options.views, function ( dir ) {
+					return dir.path + "/**/*" + "**/bundle.json";
+				} ),
+			tasks : [ "processBundleJSONChange" ],
+			options : {
+				nospawn : true
+			}
+		};
+
+		grunt.config( "watch", watch );
+	}
+
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		// Grab the options and apply defaults
@@ -210,240 +444,34 @@ module.exports = function(grunt) {
 
 		mode = options.mode;
 
-		var watch = grunt.config( "watch" ) || {};
-		var carteroBrowserify = grunt.config( "carterobrowserify" ) || {};
-
 		// For each supplied preprocessingTask, set up the task configuration:
 		// - files : All files of the given inExt in all `views` and `library` directories
 		// - options : Pass through options supplied in the processingTask
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
-			var taskName = preprocessingTask.name;
+			configureUserDefinedTask( options, preprocessingTask, true );
 
-			var task = grunt.config( taskName ) || {};
-
-			var files = [];
-
-			_.each( options.bundleAndViewDirs, function( dir ) {
-				files.push( {
-					expand: true,
-					cwd: dir.path,
-					src: [ "**/*" + preprocessingTask.inExt ],
-					dest: dir.destDir,
-					ext: preprocessingTask.outExt
-					} );
-			} );
-
-			task[ kCarteroTaskPrefix ] = {
-				files : files
-			};
-
-			if( ! _.isUndefined( preprocessingTask.options ) ) {
-				task[ kCarteroTaskPrefix ].options = preprocessingTask.options;
-			}
-
-			grunt.config( taskName, task );
-
-			// Configure a watch target to watch files with an `inExt` extension
-			// and run the preprocessing task.
-			watch[ kCarteroTaskPrefix + "_" + taskName ] = {
-				files : _.map( options.bundleAndViewDirs, function ( dir ) {
-					return dir.path + "/**/*" + preprocessingTask.inExt;
-				} ),
-				tasks : [ taskName + ":" + kCarteroTaskPrefix ],
-				options : {
-					nospawn : true
-				}
-			};
 		} );
 
 		// For each supplied minificationTask, set up the task configuration
 		_.each( options.minificationTasks, function( minificationTask ) {
 
-			var task = grunt.config( minificationTask.name ) || {};
-
-			var files = [];
-
-			_.each( options.bundleAndViewDirs, function( dir ) {
-				files.push( {
-					expand: true,
-					cwd: dir.destDir,
-					src: [ "**/*" + minificationTask.inExt ],
-					dest: dir.destDir,
-					ext: minificationTask.outExt
-				} );
-			} );
-
-			task[ kCarteroTaskPrefix ] = {
-				files : files
-			};
-
-			if( !_.isUndefined( minificationTask.options ) )
-				task[ kCarteroTaskPrefix ].options = minificationTask.options;
-
-			grunt.config( minificationTask.name, task );
+			configureUserDefinedTask( options, minificationTask, false );
 
 		} );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
 		_.each( options.extToCopy, function ( ext ) {
 
-			var tasksToRun =  [];
-
-			if( options.browserify && ext === ".js" )
-				tasksToRun.push( "carterobrowserify:" + kCarteroTaskPrefix );
-
-			if( _.contains( options.carteroDirExt, ext ) )
-				tasksToRun.push( "replaceCarteroDirTokens" );
-
-			watch[ kCarteroTaskPrefix + "_" + ext ] = {
-				files : _.map( options.bundleAndViewDirs, function ( dir ) {
-					return dir.path + "/**/*" + ext;
-				} ),
-				tasks : tasksToRun,
-				options : {
-					nospawn : true
-				}
-			};
+			configureWatchTaskForJsCssTmpl( options, ext );
 
 		} );
 
-		var viewFilePatterns = [];
+		registerWatchTaskListener( options );
 
-		_.each( options.views, function( dirOptions ) {
-			_.each( dirOptions.viewFileExt, function( ext ) {
-				viewFilePatterns.push( dirOptions.path + "/**/*" + ext );
-			} );
-		} );
+		configureCarteroBrowserifyTask( options );
 
-		watch[ kCarteroTaskPrefix + "_view_file" ] = {
-			files : viewFilePatterns,
-			tasks : [ "processViewFileChange" ],
-			options : {
-				nospawn : true
-			}
-		};
-
-		// Watch changes to bundle.json files
-		watch[ kCarteroTaskPrefix + "_bundle_json" ] = {
-			files : _.map( options.views, function ( dir ) {
-					return dir.path + "/**/*" + "**/bundle.json";
-				} ),
-			tasks : [ "processBundleJSONChange" ],
-			options : {
-				nospawn : true
-			}
-		};
-
-		grunt.config( "watch", watch );
-
-		grunt.event.on( "watch", function( action, filepath ) {
-
-			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
-				rebundle();
-			}
-
-			var dirOptions = _.find( options.bundleAndViewDirs, function( dirOptions ) {
-				return filepath.indexOf( dirOptions.path ) === 0;
-			} );
-
-			var newDest = filepath.replace( dirOptions.path, dirOptions.destDir );
-
-			newDest = assetBundlerUtil.mapAssetFileName( newDest, options.assetExtensionMap );
-
-			if( _.contains( options.extToCopy, assetBundlerUtil.getFileExtension( filepath ) ) )
-				grunt.file.copy( filepath, newDest );
-
-			_.each( options.preprocessingTasks, function( preprocessingTask ) {
-
-				var taskName = preprocessingTask.name;
-
-				// If the changed file's extension matches the task, set the file.
-				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
-					grunt.config( [ taskName, kCarteroTaskPrefix ], {
-						src : filepath,
-						dest : newDest,
-						options : preprocessingTask.options || {}
-					} );
-				}
-			} );
-
-			if( options.browserify ) {
-				if( _s.endsWith( filepath, ".js" ) ) {
-					grunt.config( [ "carterobrowserify", kCarteroTaskPrefix, "files" ], [ {
-						src : filepath,
-						dest : newDest
-					} ] );
-				}
-			}
-
-		} );
-
-		var browserifyFiles = _.map( options.bundleAndViewDirs, function( dirOptions ) {
-			return {
-				cwd : dirOptions.path,
-				src : [ "**/*.js" ],
-				dest : dirOptions.destDir,
-				expand : true
-			};
-		} );
-
-		carteroBrowserify[ kCarteroTaskPrefix ] = {
-			options : {
-				isAutorunFile : function( filePath, fileSrc ) {
-					if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
-						return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
-					else
-						return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
-				}
-			},
-			files : browserifyFiles
-		};
-
-		grunt.config( "carterobrowserify", carteroBrowserify );
-
-		grunt.task.run( kCarteroTaskPrefix + "_clean" );
-		grunt.task.run( "prepare" );
-		grunt.task.run( kCarteroTaskPrefix + "_copy" );
-
-		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-			grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
-		} );
-
-		// Builds the bundleMap and pageMap to be used by later tasks
-		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
-
-		if( options.browserify ) grunt.task.run( "carterobrowserify:" + kCarteroTaskPrefix );
-
-		grunt.task.run( "replaceCarteroDirTokens" );
-
-		// In prod mode...
-		if( mode === "prod" ) {
-			grunt.task.run( "replaceRelativeURLsInCSSFile" );
-			grunt.task.run( "buildBundlesAndParcels" );
-		}
-
-		grunt.task.run( "buildJsCssTmplLists" );
-
-		if( options.postProcessor )
-			grunt.task.run( "runPostProcessor" );
-
-		// Removes any files not referenced in the parcels
-		grunt.task.run( "cleanup" );
-
-		if( mode === "prod" ) {
-			_.each( options.minificationTasks, function( taskConfig ) {
-				grunt.task.run( taskConfig.name );
-			} );
-		}
-
-		grunt.task.run( "saveCarteroJSON" );
-
-		// In dev mode...
-		if( mode === "dev" ) {
-			grunt.task.run( "watch" );
-		}
+		queueTasksToRun( options );
 
 	} );
 
@@ -486,12 +514,9 @@ module.exports = function(grunt) {
 
 		var done = this.async();
 
-		console.log( "who" );
-
 		async.each(
 			cssFiles,
 			function( file, callback ) {
-				console.log( "hi" );
 				replaceRelativeURLsInCSSFile( file, callback );
 			},
 			function( err ) {
@@ -545,7 +570,7 @@ module.exports = function(grunt) {
 				grunt.fail.warn( errMsg );
 			else
 				grunt.fail.fatal( errMsg );
-			
+
 		}
 
 		browserifyAutorunFiles = [];
@@ -620,9 +645,6 @@ module.exports = function(grunt) {
 
 		} );
 
-		console.log( "REFERENCED FILES:" );
-		console.log( referencedFiles );
-
 		var filesToClean = grunt.file.expand( {
 				filter : function( fileName ) {
 					//cleaning assets that are not used by any page
@@ -631,8 +653,6 @@ module.exports = function(grunt) {
 			},
 			[ options.publicDir + "/**/*" ]
 		);
-
-		console.log( filesToClean );
 
 		_.each( filesToClean, function ( file ) {
 			grunt.file.delete( file );
