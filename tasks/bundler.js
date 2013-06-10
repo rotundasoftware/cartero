@@ -101,8 +101,8 @@ module.exports = function(grunt) {
 
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
-		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
-		grunt.task.run( "buildJsCssTmplLists" );
+		grunt.task.run( "buildBundleAndParcelRegistries:" + mode );
+		grunt.task.run( "buildJsCssTmplLists:dev" );
 		grunt.task.run( "saveCarteroJSON" );
 	}
 
@@ -311,7 +311,7 @@ module.exports = function(grunt) {
 		} );
 
 		// Builds the bundleMap and pageMap to be used by later tasks
-		grunt.task.run( "buildBundleAndPageJSONs:" + mode );
+		grunt.task.run( "buildBundleAndParcelRegistries:" + mode );
 
 		if( options.browserify ) grunt.task.run( "carterobrowserify:" + kCarteroTaskPrefix );
 
@@ -323,7 +323,7 @@ module.exports = function(grunt) {
 			grunt.task.run( "buildBundlesAndParcels" );
 		}
 
-		grunt.task.run( "buildJsCssTmplLists" );
+		grunt.task.run( "buildJsCssTmplLists:" + mode );
 
 		if( options.postProcessor )
 			grunt.task.run( "runPostProcessor" );
@@ -610,10 +610,10 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( "buildBundleAndPageJSONs", "Build bundle and page map JSONs", function( mode ) {
+	grunt.registerTask( "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
 
 		try {
-			bundleMap = assetBundlerUtil.buildBundlesMap( options.library, options );
+			bundleRegistry = assetBundlerUtil.buildBundleRegistry( options.library, options );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e.stack;
@@ -632,7 +632,7 @@ module.exports = function(grunt) {
 		} );
 
 		try {
-			pageMap = assetBundlerUtil.buildPagesMap( options.views, options );
+			parcelRegistry = assetBundlerUtil.buildParcelRegistry( options.views, options );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e.stack;
@@ -642,7 +642,7 @@ module.exports = function(grunt) {
 				grunt.fail.fatal( errMsg );
 		}
 
-		var result = cartero.doIt( bundleMap, pageMap, options );
+		var result = cartero.doIt( bundleRegistry, parcelRegistry, mode );
 
 		bundles = result.bundles;
 		parcels = result.parcels;
@@ -661,11 +661,17 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( "buildJsCssTmplLists", "", function() {
-
-		_.each( _.values( parcels ), function( parcel ) {
-			parcel.buildResourcesToLoad();
+	grunt.registerTask( "buildJsCssTmplLists", "", function( mode ) {
+try {
+			_.each( _.values( parcels ), function( parcel ) {
+			parcel.buildResourcesToLoad( mode );
 		} );
+}
+catch( e ) {
+	console.log( e.stack );
+	throw e;
+}
+
 
 	} );
 
