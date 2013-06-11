@@ -6,7 +6,7 @@
  * Licensed under the MIT license.
  */
 
-var assetBundlerUtil = require( "./../lib/util.js" ),
+var carteroUtil = require( "./../lib/util.js" ),
 	_ = require( "underscore" ),
 	_s = require( "underscore.string" ),
 	fs = require( "fs" ),
@@ -27,13 +27,10 @@ module.exports = function(grunt) {
 	// Prefix for all task targets added by assetBundler to avoid conflicts with already existing targets.
 	var kCarteroTaskPrefix = "CARTERO_";
 
-	var kCarteroCleanTaskName = kCarteroTaskPrefix + "_clean";
-	var kCarteroCopyTaskName = kCarteroTaskPrefix + "_copy";
-	var kCarteroPrepareTaskName = kCarteroTaskPrefix + "_prepare";
-	var kCarteroCleanupTaskName = kCarteroTaskPrefix + "_cleanup";
-
 	var kLibraryAssetsDirPrefix = "library-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
+
+	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views" ];
 
 	// cartero directive: When browserify is enabled, this directive is used in js files in appPages that should be automatically run upon loading.
 	var kBrowserifyAutorun = "##cartero_browserify_autorun";
@@ -88,9 +85,6 @@ module.exports = function(grunt) {
 	// Will contain the mode the assetBundler is being run with: `dev` or `prod`.
 	var mode;
 
-	//var bundles = {};
-	//var parcels = {};
-
 	var bundleRegistry = {};
 	var parcelRegistry = {};
 
@@ -101,7 +95,7 @@ module.exports = function(grunt) {
 	function rebundle() {
 		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
 		grunt.task.run( kCarteroTaskPrefix + "buildJsCssTmplLists:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJSON" );
+		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 	}
 
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
@@ -166,14 +160,6 @@ module.exports = function(grunt) {
 		} );
 
 		carteroBrowserify[ "default" ] = {
-			options : {
-				isAutorunFile : function( filePath, fileSrc ) {
-					if( isViewsFile( filePath.replace( projectDir + path.sep, "") ) )
-						return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
-					else
-						return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
-				}
-			},
 			files : browserifyFiles
 		};
 
@@ -181,11 +167,8 @@ module.exports = function(grunt) {
 	}
 
 	function configureUserDefinedTask( libraryAndViewDirs, taskConfig, doWatch, sourceIsDest ) {
-
 		var taskName = taskConfig.name;
-
 		var task = grunt.config( taskName ) || {};
-
 		var files = [];
 
 		_.each( libraryAndViewDirs, function( dir ) {
@@ -212,7 +195,6 @@ module.exports = function(grunt) {
 		// and run the preprocessing task.
 
 		if( doWatch ) {
-
 			var watch = grunt.config( "watch" ) || {};
 
 			watch[ kCarteroTaskPrefix + taskName ] = {
@@ -244,9 +226,9 @@ module.exports = function(grunt) {
 
 			var newDest = filepath.replace( dirOptions.path, dirOptions.destDir );
 
-			newDest = assetBundlerUtil.mapAssetFileName( newDest, assetExtensionMap );
+			newDest = carteroUtil.mapAssetFileName( newDest, assetExtensionMap );
 
-			if( _.contains( extToCopy, assetBundlerUtil.getFileExtension( filepath ) ) )
+			if( _.contains( extToCopy, carteroUtil.getFileExtension( filepath ) ) )
 				grunt.file.copy( filepath, newDest );
 
 			_.each( options.preprocessingTasks, function( preprocessingTask ) {
@@ -347,7 +329,6 @@ module.exports = function(grunt) {
 	function configureWatchViewFile( options ) {
 
 		var watch = grunt.config( "watch" ) || {};
-
 		var viewFilePatterns = [];
 
 		_.each( options.views, function( dirOptions ) {
@@ -368,7 +349,7 @@ module.exports = function(grunt) {
 
 	}
 
-	function configureWatchBundleJSON( options ) {
+	function configureWatchBundleJson( options ) {
 
 		var watch = grunt.config( "watch" ) || {};
 
@@ -377,7 +358,7 @@ module.exports = function(grunt) {
 			files : _.map( options.views, function ( dir ) {
 					return dir.path + "/**/*" + "**/bundle.json";
 				} ),
-			tasks : [ "processBundleJSONChange" ],
+			tasks : [ "processBundleJsonChange" ],
 			options : {
 				nospawn : true
 			}
@@ -423,10 +404,24 @@ module.exports = function(grunt) {
 
 	}
 
+	function validateConfigOptions( options ) {
+
+		_.each( kRequiredConfigOptions, function( configOption ) {
+			if( _.isUndefined( options[ configOption ] ) )
+				grunt.fail.fatal( "Option " + configOption + " is required.  Please add it to your cartero task configuration before proceeding." );
+		} );
+
+	}
+
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		// Grab the options and apply defaults
 		options = this.options();
+
+		validateConfigOptions( options );
+
+		options.projectDir = _s.rtrim( options.projectDir, "/" );
+		options.publicDir = _s.rtrim( options.publicDir, "/" );
 
 		if( ! _.isArray( options.library ) )
 			options.library = [ options.library ];
@@ -442,6 +437,8 @@ module.exports = function(grunt) {
 				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + bundleDirWithDefaults.namespace );
 			else
 				bundleDirWithDefaults.destDir = options.publicDir;
+			bundleDirWithDefaults.path = _s.rtrim( bundleDirWithDefaults.path, "/" );
+			bundleDirWithDefaults.destDir = _s.rtrim( bundleDirWithDefaults.destDir, "/" );
 			return bundleDirWithDefaults;
 		} );
 
@@ -451,6 +448,10 @@ module.exports = function(grunt) {
 			var viewDirWithDefaults = _.extend( {}, kViewsDirDefaults, viewDir );
 			viewDirWithDefaults.destDir = path.join( options.publicDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
 			if( _.isString( viewDirWithDefaults.viewFileExt ) ) viewDirWithDefaults.viewFileExt = [ viewDirWithDefaults.viewFileExt ];
+
+			viewDirWithDefaults.path = _s.rtrim( viewDirWithDefaults.path, "/" );
+			viewDirWithDefaults.destDir = _s.rtrim( viewDirWithDefaults.destDir, "/" );
+
 			return viewDirWithDefaults;
 		} );
 
@@ -517,7 +518,7 @@ module.exports = function(grunt) {
 		configureCarteroCopyTask( libraryAndViewDirs, extToCopy );
 
 		configureWatchViewFile( options );
-		configureWatchBundleJSON( options );
+		configureWatchBundleJson( options );
 
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, options.assetExtensionMap );
 
@@ -591,7 +592,7 @@ module.exports = function(grunt) {
 		rebundle();
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "processBundleJSONChange", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "processBundleJsonChange", "", function() {
 		rebundle();
 	} );
 
@@ -704,13 +705,13 @@ module.exports = function(grunt) {
 			};
 		} );
 
-		var carteroJSON = {};
+		var carteroJson = {};
 
-		carteroJSON.publicDir = options.publicDir;
-		carteroJSON.parcels = parcelDataToSave;
-		carteroJSON.mode = options.mode;
+		carteroJson.publicDir = options.publicDir;
+		carteroJson.parcels = parcelDataToSave;
+		carteroJson.mode = options.mode;
 
-		assetBundlerUtil.saveCarteroJSON( carteroJSON, options.projectDir );
+		carteroUtil.saveCarteroJson( carteroJson, options.projectDir );
 
 	} );
 
