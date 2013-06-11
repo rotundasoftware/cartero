@@ -450,13 +450,11 @@ From a high level perspective, the Hook is responsible for populating the `carte
 	publicDir : "static",
 
 	parcels : {
-
 		// A template's "parcel" is the collection of assets required when it is rendered. Parcels 
 		// are named using the relative path of their corresponding template file.
 		"views/peopleList/peopleList.jade" : {
 
-			// `js`, `css`, and `tmpl` are arrays of the paths of the assets in this parcel, which
-			// have been compiled by the Cartero Grunt Task.
+			// `js`, `css`, and `tmpl` are arrays of the paths of the assets in this parcel.
 
 			js : [
 				"static/library-assets/JQuery/jquery.js",
