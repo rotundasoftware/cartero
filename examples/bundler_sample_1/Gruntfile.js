@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		cartero : {
 			dist : {
 				options : {
-					mode : "prod",
+					mode : "dev",
 					projectDir : __dirname,
 					library : [
 						{
