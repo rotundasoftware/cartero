@@ -342,7 +342,12 @@ options : {
 		options : {
 			mangle : false
 		}
-	} ]
+	} ],
+
+	// (default: false) Catero includes built in support for the CommonJS modules, thanks
+	// to browserify. Set this option to `true` to automatically "browserify" your files.
+	// (If you use this option, please see browserifyExecuteOnLoad bundle.json property.) 
+	browserify : true
 }
 ```
 
@@ -393,7 +398,13 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// sourced (i.e. copied to the public folder), but that should not be concatenated with
 	// any other assets or served by the Hook. This feature allows you to accommodate
 	// ".css" or ".js" files that are "dynamically loaded" after the initial page load.
-	"dynamicallyLoadedFiles" : [ "ie-8.css" ]
+	"dynamicallyLoadedFiles" : [ "ie-8.css" ],
+
+	// Only used when the `browserify` option in the Cartero Grunk Task is enabled, this
+	// property is an array of JavaScript files that should be executed when they
+	// are loaded in the client. Files that are not included in this property will not
+	// be executed until they are `require`d by another file.
+	"browserifyExecuteOnLoad" : [ "backbone.js" ]
 }
 ```
 
@@ -411,22 +422,25 @@ This Directive is used in server side templates to specify that one template "in
 
 	##cartero_extends "layouts/site_layout.twig"
 
-
 #### ##cartero_dir
 
 When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder (i.e. the `publicDir` options).
 
 ```javascript
-var myDirName = "##cartero_dir";
+var myDirName = "##cartero_dirname";
 ```
 
 It can be used in any type of asset processed by Cartero, including client side template files.
 
 ```
-<script type="text/template" id="##cartero_dir">
+<script type="text/template" id="##cartero_dirname">
 	...
 </script>
 ```
+
+#### ##cartero_browserifyExecuteOnLoad
+
+When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files that should be automatically executed when they are loaded. You will definitely want to include this directive in the "main" JavaScript file for each page, since otherwise it would never be executed!
 
 ## FAQ
 

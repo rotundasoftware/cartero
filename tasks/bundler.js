@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 
 	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views" ];
 
-	// cartero directive: When browserify is enabled, this directive is used in js files in appPages that should be automatically run upon loading.
+	// cartero directive: When browserify is enabled, this directive is used in js files that should be automatically run upon loading.
 	var kBrowserifyAutorun = "##cartero_browserify_autorun";
 
 	// Default values for the views task option.
