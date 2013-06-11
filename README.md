@@ -481,9 +481,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
 
-The Hook generates the raw HTML that will include the assets in the page being rendered. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files and concatenate their contents.
-
-The Hook then sets the value of the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables to the HTML it has generated.
+The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files and concatenate their contents.
 
 #### Does Cartero address the issue of cache busting?
 
