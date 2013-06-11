@@ -17,7 +17,8 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 	browserify = require( "browserify" ),
 	async = require( "async" ),
 	through = require( "through" ),
-	cartero = require( "./../lib/cartero" );
+	Bundle = require( "./../lib/bundle" ),
+	Parcel = require( "./../lib/parcel" );
 
 'use strict';
 
@@ -164,7 +165,7 @@ module.exports = function(grunt) {
 			};
 		} );
 
-		carteroBrowserify = {
+		carteroBrowserify[ "default" ] = {
 			options : {
 				isAutorunFile : function( filePath, fileSrc ) {
 					if( isViewsFile( filePath.replace( projectDir + path.sep, "") ) )
@@ -214,7 +215,7 @@ module.exports = function(grunt) {
 
 			var watch = grunt.config( "watch" ) || {};
 
-			watch[ kCarteroTaskPrefix + "_" + taskName ] = {
+			watch[ kCarteroTaskPrefix + taskName ] = {
 				files : _.map( libraryAndViewDirs, function ( dir ) {
 					return dir.path + "/**/*" + taskConfig.inExt;
 				} ),
@@ -264,7 +265,7 @@ module.exports = function(grunt) {
 
 			if( browserify ) {
 				if( _s.endsWith( filepath, ".js" ) ) {
-					grunt.config( [ kCarteroTaskPrefix + "browserify", "files" ], [ {
+					grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
 						src : filepath,
 						dest : newDest
 					} ] );
@@ -285,7 +286,7 @@ module.exports = function(grunt) {
 		if( _.contains( options.carteroDirExt, ext ) )
 			tasksToRun.push( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
-		watch[ kCarteroTaskPrefix + "_" + ext ] = {
+		watch[ kCarteroTaskPrefix + ext ] = {
 			files : _.map( libraryAndViewDirs, function ( dir ) {
 				return dir.path + "/**/*" + ext;
 			} ),
@@ -505,7 +506,7 @@ module.exports = function(grunt) {
 		} );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
-		_.each( options.extToCopy, function ( ext ) {
+		_.each( extToCopy, function ( ext ) {
 
 			configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext );
 
@@ -514,6 +515,9 @@ module.exports = function(grunt) {
 		configureCarteroCleanTask( libraryAndViewDirs );
 		configureCarteroPrepareTask( libraryAndViewDirs );
 		configureCarteroCopyTask( libraryAndViewDirs, extToCopy );
+
+		configureWatchViewFile( options );
+		configureWatchBundleJSON( options );
 
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, options.assetExtensionMap );
 
@@ -613,7 +617,7 @@ module.exports = function(grunt) {
 	grunt.registerTask( kCarteroTaskPrefix + "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
 
 		try {
-			bundleRegistry = assetBundlerUtil.buildBundleRegistry( options.library, options );
+			bundleRegistry = Bundle.createRegistry( options.library, options );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e.stack;
@@ -625,7 +629,7 @@ module.exports = function(grunt) {
 		}
 
 		try {
-			parcelRegistry = assetBundlerUtil.buildParcelRegistry( options.views, bundleRegistry, options );
+			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, options );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e.stack;
@@ -634,12 +638,6 @@ module.exports = function(grunt) {
 			else
 				grunt.fail.fatal( errMsg );
 		}
-
-		//cartero.doIt( bundleRegistry, parcelRegistry, mode );
-
-		//bundles = result.bundles;
-		//parcels = result.parcels;
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "buildCombinedFiles", "", function() {
@@ -768,7 +766,9 @@ module.exports = function(grunt) {
 		} );
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "browserify", "", function() {
+	grunt.registerMultiTask( kCarteroTaskPrefix + "browserify", "", function() {
+try {
+
 
 		var browserifyAutorunFiles = [];
 
@@ -777,7 +777,7 @@ module.exports = function(grunt) {
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
-			if( isViewsFile( filePath.replace( projectDir + path.sep, "") ) )
+			if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
 				return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
 			else
 				return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
@@ -835,8 +835,6 @@ module.exports = function(grunt) {
 			} );
 		}
 
-
-
 		var done = this.async();
 
 		async.each(
@@ -850,5 +848,12 @@ module.exports = function(grunt) {
 				done();
 			}
 		);
+
+	}
+	catch( e ) {
+		console.log( e.stack );
+	}
 	} );
+
+
 };
