@@ -1,3 +1,3 @@
 {
-	"directoriesToFlatten" : "/.*/"
+	"directoriesToFlatten" : [ "lang", "plugins", "samples", "skins" ]
 }

@@ -87,12 +87,6 @@ module.exports = function(grunt) {
 	// Will contain the mode the assetBundler is being run with: `dev` or `prod`.
 	var mode;
 
-	// Store bundleMap metadata here while we're working on it.  Written to kBundleMapJSONFile at the end.
-	var bundleMap = {};
-
-	// Store pageMap metadata here while we're working on it.  Written to kBundleMapJSONFile at the end.
-	var pageMap = {};
-
 	var bundles = {};
 	var parcels = {};
 
@@ -181,7 +175,7 @@ module.exports = function(grunt) {
 		grunt.config( "carterobrowserify", carteroBrowserify );
 	}
 
-	function configureUserDefinedTask( libraryAndViewDirs, taskConfig, doWatch ) {
+	function configureUserDefinedTask( libraryAndViewDirs, taskConfig, doWatch, sourceIsDest ) {
 
 		var taskName = taskConfig.name;
 
@@ -192,7 +186,7 @@ module.exports = function(grunt) {
 		_.each( libraryAndViewDirs, function( dir ) {
 			files.push( {
 				expand: true,
-				cwd: dir.path,
+				cwd: sourceIsDest ? dir.destDir : dir.path,
 				src: [ "**/*" + taskConfig.inExt ],
 				dest: dir.destDir,
 				ext: taskConfig.outExt
@@ -461,6 +455,8 @@ module.exports = function(grunt) {
 		var libraryAndViewDirs = _.union( options.library, options.views );
 		var extToCopy = _.union( options.templateExt, kValidImageExt, kJSandCSSExt );
 
+		//options.libraryAndViewDirs = libraryAndViewDirs;
+
 		options = _.extend(
 			{},
 			kOptionsDefaults,
@@ -493,14 +489,14 @@ module.exports = function(grunt) {
 		// - options : Pass through options supplied in the processingTask
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
-			configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true );
+			configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, false );
 
 		} );
 
 		// For each supplied minificationTask, set up the task configuration
 		_.each( options.minificationTasks, function( minificationTask ) {
 
-			configureUserDefinedTask( libraryAndViewDirs, minificationTask, false );
+			configureUserDefinedTask( libraryAndViewDirs, minificationTask, false, true );
 
 		} );
 
@@ -624,13 +620,6 @@ module.exports = function(grunt) {
 
 		}
 
-		browserifyAutorunFiles = [];
-
-		_.each( _.keys( bundleMap ), function( bundleName ) {
-			var bundle = bundleMap[ bundleName ];
-			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
-		} );
-
 		try {
 			parcelRegistry = assetBundlerUtil.buildParcelRegistry( options.views, options );
 		}
@@ -662,17 +651,9 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerTask( "buildJsCssTmplLists", "", function( mode ) {
-try {
-			_.each( _.values( parcels ), function( parcel ) {
+		_.each( _.values( parcels ), function( parcel ) {
 			parcel.buildResourcesToLoad( mode );
 		} );
-}
-catch( e ) {
-	console.log( e.stack );
-	throw e;
-}
-
-
 	} );
 
 	// Figures out which asset files aren't referenced by the pageMap or bundleMap and removes them
@@ -688,9 +669,9 @@ catch( e ) {
 
 		} );
 
-		_.each( _.values( bundleMap ), function( bundleMetadata ) {
+		_.each( _.values( bundleRegistry ), function( bundle ) {
 
-			referencedFiles = _.union( referencedFiles, bundleMetadata.dynamicallyLoadedFiles );
+			referencedFiles = _.union( referencedFiles, bundle.dynamicallyLoadedFiles );
 
 		} );
 
@@ -785,7 +766,18 @@ catch( e ) {
 
 	grunt.registerMultiTask( "carterobrowserify", "", function() {
 
-		var isAutorunFile = this.options().isAutorunFile;
+		var browserifyAutorunFiles = [];
+
+		_.each( _.values( bundleDirectory ), function( bundle ) {
+			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
+		} );
+
+		function isAutorunFile( filePath, fileSrc ) {
+			if( isViewsFile( filePath.replace( projectDir + path.sep, "") ) )
+				return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
+			else
+				return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
+		}
 
 		function processFile( filePath, filePathDest, cb ) {
 
@@ -793,7 +785,7 @@ catch( e ) {
 
 			var fileContents = fs.readFileSync( filePath ).toString();
 
-			if( ! _.isUndefined( isAutorunFile ) && isAutorunFile( filePath, fileContents ) ) {
+			if( isAutorunFile( filePath, fileContents ) ) {
 				b.add( filePath );
 			}
 
@@ -838,6 +830,8 @@ catch( e ) {
 				cb( err );
 			} );
 		}
+
+
 
 		var done = this.async();
 
