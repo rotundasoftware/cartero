@@ -344,10 +344,10 @@ options : {
 		}
 	} ],
 
-	// (default: false) Catero includes built in support for the CommonJS modules, thanks
-	// to browserify. Set this option to `true` to automatically "browserify" your files.
-	// (If you use this option, please see browserifyExecuteOnLoad bundle.json property.) 
-	browserify : true
+	// (default: false) Catero includes built in support for CommonJS style modules, using
+	// browserify under the hood. Set this option to `true` to automatically "browserify" your
+	// files. (Also please see the browserifyExecuteOnLoad bundle.json property below.) 
+	commonJS : true
 }
 ```
 
