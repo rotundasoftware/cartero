@@ -15,7 +15,7 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 * All assets that live in the same directory as the page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.).
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). Enjoy built in support for CommonJS style modules in the browser via [Browserify](https://github.com/substack/node-browserify).
 * Easily run your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
 
 ## Overview
@@ -284,7 +284,7 @@ options : {
 		// as the view file. The parcel's contents are stored in the `cartero.json` file 
 		// and later used by the Hook when it serves assets for the view. You may also
 		// specify an array of file extensions.
-		viewFileExt : ".html",
+		viewFileExt : ".erb",
 
 		// (default: /^_.*/) Files with names matching this regular expression
 		// will be completely ignored by Cartero.
@@ -403,18 +403,18 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which it resides. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
 
-	##cartero_require "bower/jQuery", "app/Dialogs/EditPersonDialog"
+	##cartero_require "bower/jQuery", "App/Dialogs/EditPersonDialog"
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to indicate that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_require` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
+This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_require` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
 
 	##cartero_extends "layouts/site_layout.twig"
 
 
 #### ##cartero_dir
 
-When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder.
+When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder (i.e. the `publicDir` options).
 
 ```javascript
 var myDirName = "##cartero_dir";
@@ -427,8 +427,6 @@ It can be used in any type of asset processed by Cartero, including client side 
 	...
 </script>
 ```
-
-### cartero.json
 
 ## FAQ
 
