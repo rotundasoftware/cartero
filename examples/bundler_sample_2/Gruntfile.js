@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 		cartero : {
 			dist : {
 				options : {
-					mode : "prod",
+					mode : "dev",
 					library : {
 						path : "App/node_modules"
 					},
@@ -18,7 +18,8 @@ module.exports = function( grunt ) {
 						path : "App/WebServer/AppPages",
 						filesToIgnore : /^_.*/,
 						directoriesToIgnore : /^__.*/,
-						viewFileExt : ".swig"
+						viewFileExt : ".swig",
+						namespace : "MainViewDir"
 					},
 					publicDir : "App/WebServer/Static",
 					projectDir : __dirname,
