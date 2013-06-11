@@ -452,9 +452,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 	parcels : {
 
 		// A template's "parcel" is the collection of assets required when it is rendered. Parcels 
-		// are named using the relative path of their corresponding template file. (Thus the Hook
-		// needs to resolve the absolute path of the template file to a relative path in order to
-		// look up the content's of the template's parcel.)
+		// are named using the relative path of their corresponding template file.
 		"views/peopleList/peopleList.jade" : {
 
 			// `js`, `css`, and `tmpl` are arrays of the paths of the assets in this parcel, which
