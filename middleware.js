@@ -1,4 +1,4 @@
-var assetBundlerUtil = require( "./lib/util.js" ),
+var carteroUtil = require( "./lib/util.js" ),
 	fs = require( "fs" ),
 	_ = require( "underscore" ),
 	path = require( "path" ),
@@ -9,15 +9,15 @@ module.exports = function( rootDir ) {
 	var pageMap;
 	var configMap;
 	var staticDir;
-	var carteroJSON;
+	var carteroJson;
 
 	try {
-		carteroJSON = assetBundlerUtil.readCarteroJSON( rootDir );
-		pageMap = carteroJSON.parcels;
-		staticDir = carteroJSON.publicDir;
+		carteroJson = carteroUtil.readCarteroJson( rootDir );
+		pageMap = carteroJson.parcels;
+		staticDir = carteroJson.publicDir;
 	}
 	catch( e ) {
-		throw new Error( "Error while reading parcels.json file. Please run the grunt assetbundler task before running your application." + e.stack );
+		throw new Error( "Error while reading parcels.json file. Please run the grunt cartero task before running your application." + e.stack );
 	}
 
 	return function( req, res, next ) {

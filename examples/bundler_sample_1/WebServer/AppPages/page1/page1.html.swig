@@ -2,7 +2,7 @@
 
 <!-- ##cartero_requires "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities", "Main/LibWithImages" -->
 
-<!-- ##cartero_extends "../layout.html.swig" -->
+<!-- ##cartero_extends "layout.html.swig" -->
 
 {% block content %}
 
