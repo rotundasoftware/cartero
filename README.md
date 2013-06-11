@@ -372,7 +372,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 	// (default: false) If true, assets in flattened subdirectories are served before
 	// assets in the root directory of the bundle. Otherwise, they are served after.
-	"prioritizeSubdirectories" : false,
+	"prioritizeFlattenedDirectories" : false,
 
 	// (default: false) This option can be used to compile separate combined asset files
 	// for this bundle in `prod` mode, instead of lumping them all together with rest of 
