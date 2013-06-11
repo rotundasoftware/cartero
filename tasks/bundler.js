@@ -24,7 +24,7 @@ var assetBundlerUtil = require( "./../lib/util.js" ),
 module.exports = function(grunt) {
 
 	// Prefix for all task targets added by assetBundler to avoid conflicts with already existing targets.
-	var kCarteroTaskPrefix = "CARTERO";
+	var kCarteroTaskPrefix = "CARTERO_";
 
 	var kCarteroCleanTaskName = kCarteroTaskPrefix + "_clean";
 	var kCarteroCopyTaskName = kCarteroTaskPrefix + "_copy";
@@ -87,33 +87,37 @@ module.exports = function(grunt) {
 	// Will contain the mode the assetBundler is being run with: `dev` or `prod`.
 	var mode;
 
-	var bundles = {};
-	var parcels = {};
+	//var bundles = {};
+	//var parcels = {};
+
+	var bundleRegistry = {};
+	var parcelRegistry = {};
 
 	// Files that are browserified and need to be run upon loading.
 	var browserifyAutorunFiles = [];
 
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
-		grunt.task.run( "buildBundleAndParcelRegistries:" + mode );
-		grunt.task.run( "buildJsCssTmplLists:dev" );
-		grunt.task.run( "saveCarteroJSON" );
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
+		grunt.task.run( kCarteroTaskPrefix + "buildJsCssTmplLists:dev" );
+		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJSON" );
 	}
 
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
-	// TODO: make this stuff async.
-	function replaceRelativeURLsInCSSFile( fileName, callback ) {
+	function makeUrlsAbsoluteInCssFile( fileName, callback ) {
 		fs.readFile( fileName, function( err, data ) {
 
 			var fileContents = data.toString().replace( /url\(([^)]+)\)/g, function( match, url ) {
-				// don't need to do anything with absolute urls
+				// we don't support absolute URLs for now
 				if( url[0] === "/" ) return match;
 
-				var absolutePath = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
+				var pathRelativeToProjectDir = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
 
-				if( fs.existsSync( absolutePath ) ) {
-					var replacement = "url(" + fs.realpathSync( absolutePath ).replace( fs.realpathSync( options.publicDir ), "" ) + ")";
-					return replacement;
+				console.log( "pathRelativeToProjectDir: " + pathRelativeToProjectDir );
+
+				// sanity check: make sure url() contains a file path
+				if( fs.existsSync( pathRelativeToProjectDir ) ) {
+					return "url(" + pathRelativeToProjectDir.replace( options.publicDir, "" ) + ")";
 				}
 				else {
 					return match;
@@ -149,7 +153,7 @@ module.exports = function(grunt) {
 
 	function configureCarteroBrowserifyTask( libraryAndViewDirs, projectDir ) {
 
-		var carteroBrowserify = grunt.config( "carterobrowserify" ) || {};
+		var carteroBrowserify = grunt.config( kCarteroTaskPrefix + "browserify" ) || {};
 
 		var browserifyFiles = _.map( libraryAndViewDirs, function( dirOptions ) {
 			return {
@@ -160,7 +164,7 @@ module.exports = function(grunt) {
 			};
 		} );
 
-		carteroBrowserify[ kCarteroTaskPrefix ] = {
+		carteroBrowserify = {
 			options : {
 				isAutorunFile : function( filePath, fileSrc ) {
 					if( isViewsFile( filePath.replace( projectDir + path.sep, "") ) )
@@ -172,7 +176,7 @@ module.exports = function(grunt) {
 			files : browserifyFiles
 		};
 
-		grunt.config( "carterobrowserify", carteroBrowserify );
+		grunt.config( kCarteroTaskPrefix + "browserify", carteroBrowserify );
 	}
 
 	function configureUserDefinedTask( libraryAndViewDirs, taskConfig, doWatch, sourceIsDest ) {
@@ -260,7 +264,7 @@ module.exports = function(grunt) {
 
 			if( browserify ) {
 				if( _s.endsWith( filepath, ".js" ) ) {
-					grunt.config( [ "carterobrowserify", kCarteroTaskPrefix, "files" ], [ {
+					grunt.config( [ kCarteroTaskPrefix + "browserify", "files" ], [ {
 						src : filepath,
 						dest : newDest
 					} ] );
@@ -276,10 +280,10 @@ module.exports = function(grunt) {
 		var tasksToRun =  [];
 
 		if( options.browserify && ext === ".js" )
-			tasksToRun.push( "carterobrowserify:" + kCarteroTaskPrefix );
+			tasksToRun.push( kCarteroTaskPrefix + "browserify" );
 
 		if( _.contains( options.carteroDirExt, ext ) )
-			tasksToRun.push( "replaceCarteroDirTokens" );
+			tasksToRun.push( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		watch[ kCarteroTaskPrefix + "_" + ext ] = {
 			files : _.map( libraryAndViewDirs, function ( dir ) {
@@ -296,34 +300,34 @@ module.exports = function(grunt) {
 
 	function queueTasksToRun( mode, preprocessingTasks, minificationTasks, postProcessor ) {
 
-		grunt.task.run( kCarteroCleanTaskName );
-		grunt.task.run( kCarteroPrepareTaskName );
-		grunt.task.run( kCarteroCopyTaskName );
+		grunt.task.run( kCarteroTaskPrefix + "clean" );
+		grunt.task.run( kCarteroTaskPrefix + "prepare" );
+		grunt.task.run( kCarteroTaskPrefix + "copy" );
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 			grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
 		} );
 
 		// Builds the bundleMap and pageMap to be used by later tasks
-		grunt.task.run( "buildBundleAndParcelRegistries:" + mode );
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
 
-		if( options.browserify ) grunt.task.run( "carterobrowserify:" + kCarteroTaskPrefix );
+		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
 
-		grunt.task.run( "replaceCarteroDirTokens" );
+		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		// In prod mode...
 		if( mode === "prod" ) {
-			grunt.task.run( "replaceRelativeURLsInCSSFile" );
-			grunt.task.run( "buildBundlesAndParcels" );
+			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
+			grunt.task.run( kCarteroTaskPrefix + "buildCombinedFiles" );
 		}
 
-		grunt.task.run( "buildJsCssTmplLists:" + mode );
+		grunt.task.run( kCarteroTaskPrefix + "seperateFilesToServeByType" );
 
 		if( options.postProcessor )
-			grunt.task.run( "runPostProcessor" );
+			grunt.task.run( kCarteroTaskPrefix + "runPostProcessor" );
 
 		// Removes any files not referenced in the parcels
-		grunt.task.run( kCarteroCleanupTaskName );
+		grunt.task.run( kCarteroTaskPrefix + "cleanup" );
 
 		if( mode === "prod" ) {
 			_.each( options.minificationTasks, function( taskConfig ) {
@@ -331,7 +335,7 @@ module.exports = function(grunt) {
 			} );
 		}
 
-		grunt.task.run( "saveCarteroJSON" );
+		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 
 		// In dev mode...
 		if( mode === "dev" ) {
@@ -383,38 +387,38 @@ module.exports = function(grunt) {
 
 	function configureCarteroCleanTask( libraryAndViewDirs ) {
 
-		var taskConfig = grunt.config( kCarteroCleanTaskName ) || {};
+		var taskConfig = grunt.config( kCarteroTaskPrefix + "clean" ) || {};
 
 		taskConfig.options = {
 			libraryAndViewDirs : libraryAndViewDirs
 		};
 
-		grunt.config( kCarteroCleanTaskName, taskConfig );
+		grunt.config( kCarteroTaskPrefix + "clean", taskConfig );
 
 	}
 
 	function configureCarteroPrepareTask( libraryAndViewDirs ) {
 
-		var taskConfig = grunt.config( kCarteroPrepareTaskName ) || {};
+		var taskConfig = grunt.config( kCarteroTaskPrefix + "prepare" ) || {};
 
 		taskConfig.options = {
 			libraryAndViewDirs : libraryAndViewDirs
 		};
 
-		grunt.config( kCarteroPrepareTaskName, taskConfig );
+		grunt.config( kCarteroTaskPrefix + "prepare", taskConfig );
 
 	}
 
 	function configureCarteroCopyTask( libraryAndViewDirs, extToCopy ) {
 
-		var taskConfig = grunt.config( kCarteroCopyTaskName ) || {};
+		var taskConfig = grunt.config( kCarteroTaskPrefix + "copy" ) || {};
 
 		taskConfig.options = {
 			libraryAndViewDirs : libraryAndViewDirs,
 			extToCopy : extToCopy
 		};
 
-		grunt.config( kCarteroCopyTaskName, taskConfig );
+		grunt.config( kCarteroTaskPrefix + "copy", taskConfig );
 
 	}
 
@@ -519,7 +523,7 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( kCarteroCopyTaskName, "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
 
 		var taskConfig = this.options();
 
@@ -544,12 +548,12 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( "replaceRelativeURLsInCSSFile", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile", "", function() {
 
 		var cssFiles = [];
 
-		_.each( parcels, function( parcel ) {
-			_.each( parcel.combinedFiles, function( file ) {
+		_.each( parcelRegistry, function( parcel ) {
+			_.each( parcel.filesToServe, function( file ) {
 				_.each( file.sourceFilePaths, function( filePath ) {
 					if( _s.endsWith( filePath, ".css" ) )
 						cssFiles.push( filePath );
@@ -562,7 +566,7 @@ module.exports = function(grunt) {
 		async.each(
 			cssFiles,
 			function( file, callback ) {
-				replaceRelativeURLsInCSSFile( file, callback );
+				makeUrlsAbsoluteInCssFile( file, callback );
 			},
 			function( err ) {
 				if( err ) {
@@ -575,20 +579,20 @@ module.exports = function(grunt) {
 		);
 	} );
 
-	grunt.registerTask( "runPostProcessor", "", function() {
-		options.postProcessor( parcels );
+	grunt.registerTask( kCarteroTaskPrefix + "runPostProcessor", "", function() {
+		options.postProcessor( parcelRegistry );
 	} );
 
-	grunt.registerTask( "processViewFileChange", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "processViewFileChange", "", function() {
 		rebundle();
 	} );
 
-	grunt.registerTask( "processBundleJSONChange", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "processBundleJSONChange", "", function() {
 		rebundle();
 	} );
 
 	// Creates the assetLibrary and appPages destination directories
-	grunt.registerTask( kCarteroPrepareTaskName, "Prepare directories for build", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "prepare", "Prepare directories for build", function() {
 
 		var taskConfig = this.options();
 		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
@@ -597,7 +601,7 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( kCarteroCleanTaskName, "Clean output directories", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "clean", "Clean output directories", function() {
 
 		var taskConfig = this.options();
 		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
@@ -606,7 +610,7 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
+	grunt.registerTask( kCarteroTaskPrefix + "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
 
 		try {
 			bundleRegistry = assetBundlerUtil.buildBundleRegistry( options.library, options );
@@ -621,7 +625,7 @@ module.exports = function(grunt) {
 		}
 
 		try {
-			parcelRegistry = assetBundlerUtil.buildParcelRegistry( options.views, options );
+			parcelRegistry = assetBundlerUtil.buildParcelRegistry( options.views, bundleRegistry, options );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e.stack;
@@ -631,41 +635,41 @@ module.exports = function(grunt) {
 				grunt.fail.fatal( errMsg );
 		}
 
-		var result = cartero.doIt( bundleRegistry, parcelRegistry, mode );
+		//cartero.doIt( bundleRegistry, parcelRegistry, mode );
 
-		bundles = result.bundles;
-		parcels = result.parcels;
+		//bundles = result.bundles;
+		//parcels = result.parcels;
 
 	} );
 
-	grunt.registerTask( "buildBundlesAndParcels", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "buildCombinedFiles", "", function() {
 
-		_.each( _.values( bundles ), function( bundle ) {
+		_.each( _.values( bundleRegistry ), function( bundle ) {
 			bundle.buildCombinedFiles();
 		} );
 
-		_.each( _.values( parcels ), function( parcel ) {
+		_.each( _.values( parcelRegistry ), function( parcel ) {
 			parcel.buildCombinedFiles();
 		} );
 
 	} );
 
-	grunt.registerTask( "buildJsCssTmplLists", "", function( mode ) {
-		_.each( _.values( parcels ), function( parcel ) {
-			parcel.buildResourcesToLoad( mode );
+	grunt.registerTask( kCarteroTaskPrefix + "seperateFilesToServeByType", "", function() {
+		_.each( _.values( parcelRegistry ), function( parcel ) {
+			parcel.buildResourcesToLoad();
 		} );
 	} );
 
 	// Figures out which asset files aren't referenced by the pageMap or bundleMap and removes them
-	grunt.registerTask( kCarteroCleanupTaskName, "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "cleanup", "", function() {
 
 		var referencedFiles = [];
 
-		_.each( parcels, function( parcel ) {
+		_.each( parcelRegistry, function( parcel ) {
 
-			var metadataForMode = parcel[ options.mode ];
+			//var metadataForMode = parcel[ options.mode ];
 
-			referencedFiles = _.union( referencedFiles, metadataForMode.js, metadataForMode.css, metadataForMode.tmpl );
+			referencedFiles = _.union( referencedFiles, parcel.js, parcel.css, parcel.tmpl );
 
 		} );
 
@@ -691,14 +695,14 @@ module.exports = function(grunt) {
 	} );
 
 	// Saves the bundleMap and pageMap contents to files.
-	grunt.registerTask( "saveCarteroJSON", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "saveCarteroJson", "", function() {
 
 		var parcelDataToSave = {};
-		_.each( _.values( parcels ), function( parcel ) {
-			parcelDataToSave[ parcel.name ] = {
-				js : parcel[mode].js || [],
-				css : parcel[mode].css || [],
-				tmpl : parcel[mode].tmpl || []
+		_.each( _.values( parcelRegistry ), function( parcel ) {
+			parcelDataToSave[ parcel.path ] = {
+				js : parcel.js || [],
+				css : parcel.css || [],
+				tmpl : parcel.tmpl || []
 			};
 		} );
 
@@ -712,7 +716,7 @@ module.exports = function(grunt) {
 
 	} );
 
-	grunt.registerTask( "replaceCarteroDirTokens", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "replaceCarteroDirTokens", "", function() {
 		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
 
 			async.waterfall( [
@@ -764,11 +768,11 @@ module.exports = function(grunt) {
 		} );
 	} );
 
-	grunt.registerMultiTask( "carterobrowserify", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "browserify", "", function() {
 
 		var browserifyAutorunFiles = [];
 
-		_.each( _.values( bundleDirectory ), function( bundle ) {
+		_.each( _.values( bundleRegistry ), function( bundle ) {
 			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
 		} );
 
