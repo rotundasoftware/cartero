@@ -456,23 +456,23 @@ From a high level perspective, the Hook is responsible for populating the `carte
 		"views/peopleList/peopleList.jade" : {
 
 			// `js`, `css`, and `tmpl` are arrays of the paths of the compiled assets in this parcel, which
-			// have been compiled by the Cartero Grunt Task. All paths are relative to the `publicDir`. 
+			// have been compiled by the Cartero Grunt Task. All paths are relative to the `projectDir`. 
 
 			js : [
-				"library-assets/JQuery/jquery.js",
-				"library-assets/JQueryUI/jquery-ui.js",
+				"static/library-assets/JQuery/jquery.js",
+				"static/library-assets/JQueryUI/jquery-ui.js",
 				// ...
-				"view-assets/peopleList/peopleList.js"
+				"static/view-assets/peopleList/peopleList.js"
 			],
 
 			css : [
-				"library-assets/JQueryUI/jquery-ui.css",
+				"static/library-assets/JQueryUI/jquery-ui.css",
 				// ...
-				"view-assets/peopleList/peopleList.css"
+				"static/view-assets/peopleList/peopleList.css"
 			],
 
 			tmpl : [
-				"library-assets/Dialogs/EditPersonDialog/editPersonDialog.tmpl"
+				"static/library-assets/Dialogs/EditPersonDialog/editPersonDialog.tmpl"
 			]
 		},
 
@@ -483,7 +483,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
 
-The Hook then generates the raw HTML that will include the assets in the page being rendered. For the case of `js` and `css` files, it just needs to wrap the relative paths in the `cartero.json` file in `<script>` or `<link>` tags, respectively. For `tmpl` assets, the Hook needs to read the template files and return the concatenated contents of those files.
+The Hook then generates the raw HTML that will include the assets in the page being rendered. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags, respectively. For `tmpl` assets, the Hook needs to read the template files and concatenate the contents of those files.
 
 The Hook then sets the value of the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables to the HTML it has generated.
 
@@ -491,6 +491,6 @@ The Hook then sets the value of the `cartero_js`, `cartero_css`, and `cartero_tm
 
 Yes. The name of the concatenated asset files generated in `prod` mode includes an MD5 digest of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Since Cartero renames files in `prod` mode, won't file (image) urls used in my stylesheets break?
+#### Since Cartero combines files in `prod` mode, won't file (image) urls used in my stylesheets break?
 
-Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and replaces their arguments as appropriate.
+Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
