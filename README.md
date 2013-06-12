@@ -347,7 +347,7 @@ options : {
 
 ### Properties of bundle.json 
 
-Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, like its dependencies, and the order in which files in the bundle should be served. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.)
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.)
 
 ```javascript
 // Sample bundle.json file
