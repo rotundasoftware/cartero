@@ -339,9 +339,10 @@ options : {
 
 	// (default: undefined) Cartero includes built in support for CommonJS style modules, using
 	// Browserify under the hood. Set this option to `commonJS` to automatically "browserify" your
-	// files. (Also please see the `##cartero_commonJSExecuteOnLoad` directive below.). 
-	// Currently "commonJS" is the only supported value of this option.
-	moduleStyle : "commonJS"
+	// files. (Also please see the `##cartero_commonJSExecuteOnLoad` directive below.). Currently
+	// "commonJS" is the only supported value of this option, but of course you can use Cartero
+	// with RequireJS or whatever module system you prefer by leaving this option undefined.
+	jsModuleSystem : "commonJS"
 }
 ```
 
