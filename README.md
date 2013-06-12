@@ -171,13 +171,13 @@ Once you have configured the Cartero Grunt Task, you need to configure the Hook 
 
 	npm install cartero-express-hook
 
-You just need to `use` the middleware, passing it the path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
+Just `use` the middleware, passing it the absolute path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
 ```javascript
 // app.js
 
 var app = express();
-var carteroHook = require( "cartero-express-hook" ),
+var carteroMiddleware = require( "cartero-express-hook" ),
 // ...
 
 app.configure( function() {
@@ -185,7 +185,7 @@ app.configure( function() {
 	app.set( "views" , path.join( __dirname, "views" ) );
 	app.use( express.static( path.join( __dirname, "static" ) ) );
 	// ...
-	app.use( carteroHook( __dirname ) );	// install the Cartero Hook
+	app.use( carteroMiddleware( __dirname ) );	// install the Cartero Hook
 } );
 ```
 
