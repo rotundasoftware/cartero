@@ -17,10 +17,8 @@ var express = require( "express" ),
 
 var app = express();
 
-var kStaticDir = path.join( __dirname, "Static" );
-var kAppPagesDir = path.join( __dirname, "AppPages" );
-
-var projectRoot = "..";
+var kStaticDir = path.join( __dirname, "static" );
+var kAppPagesDir = path.join( __dirname, "views" );
 
 app.configure( function() {
 	app.set( "port" , process.env.PORT || 3000 );
@@ -32,7 +30,7 @@ app.configure( function() {
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
 	//app.use( myMethod() );
-	app.use( carteroMiddleware( path.join( __dirname, projectRoot ), "WebServer/Static", kAppPagesDir ) );
+	app.use( carteroMiddleware( path.join( __dirname ), "WebServer/Static", kAppPagesDir ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
@@ -44,7 +42,7 @@ app.engine( ".swig", cons.swig );
 
 swig.init({
     allowErrors: true, // allows errors to be thrown and caught by express instead of suppressed by Swig
-    root : __dirname + "/AppPages"
+    root : __dirname + "/views"
 });
 
 app.configure( "development" , function() {

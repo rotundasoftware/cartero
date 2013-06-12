@@ -12,13 +12,13 @@ module.exports = function( grunt ) {
 				projectDir : __dirname,
 				library : [
 					{
-						path : "AssetLibrary",
+						path : "library",
 						namespace : "Main"
 					}
 				],
 				views : [
 					{
-						path : "WebServer/AppPages",
+						path : "views",
 						filesToIgnore : /_.*/,
 						directoriesToIgnore : /__.*/,
 						viewFileExt : ".swig"
@@ -38,7 +38,7 @@ module.exports = function( grunt ) {
 						name : "less"
 					}
 				],
-				publicDir : "WebServer/Static",
+				publicDir : "static",
 				templateExt : [ ".tmpl" ],
 				minificationTasks : [
 					{
