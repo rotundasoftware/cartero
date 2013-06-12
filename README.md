@@ -143,7 +143,8 @@ module.exports = function( grunt ) {
 					path : "assetLibrary/"
 				},
 				views : {
-					path : "views/"
+					path : "views/",
+					viewFileExt : ".jade"
 				}
 				publicDir : "static/"
 			}
@@ -184,7 +185,7 @@ app.configure( function() {
 	app.set( "views" , path.join( __dirname, "views" ) );
 	app.use( express.static( path.join( __dirname, "static" ) ) );
 	// ...
-	app.use( carteroHook( __dirname ) );	// install the Cartero middleware
+	app.use( carteroHook( __dirname ) );	// install the Cartero Hook
 } );
 ```
 
@@ -233,7 +234,7 @@ options : {
 	// in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
 		// (required) The path to the directory containing asset bundles.
-		path : "assetLibrary",
+		path : "assetLibrary/",
 
 		// (default: true) When true, parent bundles are automatically added as a
 		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
@@ -273,18 +274,17 @@ options : {
 	"views" : {
 		// (required) The path to the directory containing your server side view templates.
 		// Generally this directory is called "views" in the Node.js / Express world.
-		path : "views",
+		path : "views/",
 
-		// (default : ".jade") You should change this property to match the extension of
-		// your server side template files, which of course depends on your template engine
-		// (e.g. nunjucks, erb, etc.). Files that match this extension are scanned for the
+		// (required) The file extension of your server side template files (e.g. ".nunjucks"
+		// ".erb", ".twig", etc.). Files that match this extension are scanned for the
 		// ##cartero_requires directive, and if found, the grunt task will compute a "parcel"
 		// of assets to serve when the template is rendered. The parcel is composed of all
 		// the assets in the required bundles, as well as assets that live in the same folder
 		// as the view file. The parcel's contents are stored in the `cartero.json` file 
 		// and later used by the Hook when it serves assets for the view. You may also
 		// specify an array of file extensions.
-		viewFileExt : ".erb",
+		viewFileExt : ".jade",
 
 		// (default: /^_.*/) Files with names matching this regular expression
 		// will be completely ignored by Cartero.
