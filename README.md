@@ -15,7 +15,7 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 * All assets that live in the same directory as a page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). Enjoy built in support for client-side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). If you'd like, enjoy built in support for client-side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
 * Easily run any and all of your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
 
 ## Overview
