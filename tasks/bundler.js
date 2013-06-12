@@ -31,7 +31,9 @@ module.exports = function(grunt) {
 	var kLibraryAssetsDirPrefix = "library-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
 
-	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views" ];
+	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views", "tmplExt" ];
+	var kRequiredLibraryConfigOptions = [ "path" ];
+	var kRequiredViewsConfigOptions = [ "path", "viewFileExt" ];
 
 	// cartero directive: When browserify is enabled, this directive is used in js files in views that should be automatically run upon loading.
 	var kbrowserifyExecuteOnLoad = "##cartero_browserify_executeOnLoad";
@@ -40,7 +42,6 @@ module.exports = function(grunt) {
 	var kViewsDirDefaults = {
 		filesToIgnore : /^_.*/,
 		directoriesToIgnore : /^__.*/,
-		viewFileExt : [ ".jade" ],
 		directoriesToFlatten : /^_.*/
 	};
 
@@ -52,8 +53,7 @@ module.exports = function(grunt) {
 
 	// Global default values
 	var kOptionsDefaults = {
-		browserify : false,
-		templateExt : [ ".jade" ]
+		browserify : false
 	};
 
 	var kValidImageExt = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
@@ -108,8 +108,6 @@ module.exports = function(grunt) {
 				if( url[0] === "/" ) return match;
 
 				var pathRelativeToProjectDir = fileName.replace(/\/[^\/]*$/,"/") + path.sep + url;
-
-				console.log( "pathRelativeToProjectDir: " + pathRelativeToProjectDir );
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
@@ -385,6 +383,20 @@ module.exports = function(grunt) {
 				grunt.fail.fatal( "Option " + configOption + " is required.  Please add it to your cartero task configuration before proceeding." );
 		} );
 
+		_.each( options.library, function( dirOptions ) {
+			_.each( kRequiredLibraryConfigOptions, function( configOption ) {
+				if( _.isUndefined( dirOptions[ configOption ] ) )
+					grunt.fail.fatal( "Option " + configOption + " in the `library` option is required.  Please add it to your cartero task configuration before proceeding." );
+			} );
+		} );
+
+		_.each( options.views, function( dirOptions ) {
+			_.each( kRequiredViewsConfigOptions, function( configOption ) {
+				if( _.isUndefined( dirOptions[ configOption ] ) )
+					grunt.fail.fatal( "Option " + configOption + " in the `views` option is required.  Please add it to your cartero task configuration before proceeding." );
+			} );
+		} );
+
 	}
 
 	function applyDefaultsAndSanitize( options ) {
@@ -450,7 +462,7 @@ module.exports = function(grunt) {
 		options = applyDefaultsAndSanitize( options );
 
 		var libraryAndViewDirs = _.union( options.library, options.views );
-		var extToCopy = _.union( options.templateExt, kValidImageExt, kJSandCSSExt );
+		var extToCopy = _.union( options.tmplExt, kValidImageExt, kJSandCSSExt );
 
 		var assetExtensionMap = {};
 
@@ -458,8 +470,8 @@ module.exports = function(grunt) {
 			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		//options.validOriginalAssetExt = _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.templateExt );
-		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.templateExt ) );
+		//options.validOriginalAssetExt = _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt );
+		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt ) );
 
 		mode = options.mode;
 
@@ -493,13 +505,13 @@ module.exports = function(grunt) {
 		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
 
 
-		var validCarteroDirExt = _.union( options.templateExt, kJSandCSSExt );
+		var validCarteroDirExt = _.union( options.tmplExt, kJSandCSSExt );
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
 		configureWatchViewFile( options );
 		configureWatchBundleJson( options );
 
-		var cleanableAssetExt = _.union( options.templateExt, kJSandCSSExt );
+		var cleanableAssetExt = _.union( options.tmplExt, kJSandCSSExt );
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
 
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );

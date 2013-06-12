@@ -9,31 +9,49 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				library : {
-					path : "App/node_modules"
-				},
-				views : {
-					path : "App/WebServer/AppPages",
-					filesToIgnore : /^_.*/,
-					directoriesToIgnore : /^__.*/,
-					viewFileExt : ".swig",
-					namespace : "MainViewDir"
-				},
-				publicDir : "App/WebServer/Static",
 				projectDir : __dirname,
-				tmplExt : ".tmpl",
-				browserify : true,
+				library : [
+					{
+						path : "library",
+						namespace : "Main",
+						bundleProperties : grunt.file.readJSON( "libraryBundleProperties.json" )
+					}
+				],
+				views : [
+					{
+						path : "views",
+						filesToIgnore : /_.*/,
+						directoriesToIgnore : /__.*/,
+						viewFileExt : ".swig"
+					}
+				],
+				preprocessingTasks : [
+					{
+						name : "coffee"
+					},
+					{
+						name : "sass"
+					},
+					{
+						name : "stylus"
+					},
+					{
+						name : "less"
+					}
+				],
+				publicDir : "static",
+				tmplExt : [ ".tmpl" ],
 				minificationTasks : [
 					{
 						name : "htmlmin",
-						suffixes : [ ".tmpl" ],
+						inExt : ".tmpl",
 						options : {
 							removeComments : true
 						}
 					},
 					{
 						name : "uglify",
-						suffixes : [ ".js" ],
+						inExt : ".js",
 						options : {
 							mangle : false
 						}
@@ -42,25 +60,23 @@ module.exports = function( grunt ) {
 			},
 			dev : {
 				options : {
-					mode : "dev",
+					mode : "dev"
 				}
 			},
 			prod : {
 				options : {
-					mode : "prod",
+					mode : "prod"
 				}
 			}
 		}
 	} );
 
-	grunt.loadNpmTasks( "grunt-contrib-copy" );
-	grunt.loadNpmTasks( "grunt-contrib-clean" );
 	grunt.loadNpmTasks( "grunt-contrib-sass");
 	grunt.loadNpmTasks( "grunt-contrib-compass" );
+	grunt.loadNpmTasks( "grunt-contrib-sass" );
 	grunt.loadNpmTasks( "grunt-contrib-less");
 	grunt.loadNpmTasks( "grunt-contrib-coffee");
 	grunt.loadNpmTasks( "grunt-contrib-stylus");
-	grunt.loadNpmTasks( "grunt-contrib-concat" );
 	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
