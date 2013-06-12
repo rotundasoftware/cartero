@@ -32,8 +32,8 @@ module.exports = function(grunt) {
 
 	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views" ];
 
-	// cartero directive: When browserify is enabled, this directive is used in js files that should be automatically run upon loading.
-	var kBrowserifyAutorun = "##cartero_browserify_autorun";
+	// cartero directive: When browserify is enabled, this directive is used in js files in views that should be automatically run upon loading.
+	var kbrowserifyExecuteOnLoad = "##cartero_browserify_execute_on_load";
 
 	// Default values for the views task option.
 	var kViewsDirDefaults = {
@@ -89,7 +89,7 @@ module.exports = function(grunt) {
 	var parcelRegistry = {};
 
 	// Files that are browserified and need to be run upon loading.
-	var browserifyAutorunFiles = [];
+	var browserifyExecuteOnLoadFiles = [];
 
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
@@ -356,7 +356,7 @@ module.exports = function(grunt) {
 		// Watch changes to bundle.json files
 		watch[ kCarteroTaskPrefix + "_bundle_json" ] = {
 			files : _.map( options.views, function ( dir ) {
-					return dir.path + "/**/*" + "**/bundle.json";
+					return dir.path + "/**/bundle.json";
 				} ),
 			tasks : [ "processBundleJsonChange" ],
 			options : {
@@ -751,17 +751,17 @@ module.exports = function(grunt) {
 
 	grunt.registerMultiTask( kCarteroTaskPrefix + "browserify", "", function() {
 
-		var browserifyAutorunFiles = [];
+		var browserifyExecuteOnLoadFiles = [];
 
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			browserifyAutorunFiles = _.union( browserifyAutorunFiles, bundle.browserifyAutorun );
+			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserifyExecuteOnLoad );
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
 			if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
-				return fileSrc.indexOf( kBrowserifyAutorun ) != -1;
+				return fileSrc.indexOf( kbrowserifyExecuteOnLoad ) != -1;
 			else
-				return _.contains( browserifyAutorunFiles, filePath.replace( options.projectDir + path.sep, "" ) );
+				return _.contains( browserifyExecuteOnLoadFiles, filePath.replace( options.projectDir + path.sep, "" ) );
 		}
 
 		function processFile( filePath, filePathDest, cb ) {
