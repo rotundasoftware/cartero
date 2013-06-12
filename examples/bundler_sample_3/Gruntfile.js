@@ -40,7 +40,7 @@ module.exports = function( grunt ) {
 					}
 				],
 				publicDir : "static",
-				tmplExt : [ ".tmpl" ],
+				tmplExt : [ ".tmpl", ".tmpl2" ],
 				minificationTasks : [
 					{
 						name : "htmlmin",

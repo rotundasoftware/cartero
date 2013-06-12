@@ -1,6 +1,4 @@
-
-<!--this is a comment -->
-<div id="carteroDude">
+<div id="carteroDude2">
 <br/>
 the line 222 below should say "page1" and NOT "cartero_dir"<br/>
 ##cartero_dir

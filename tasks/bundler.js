@@ -457,6 +457,9 @@ module.exports = function(grunt) {
 		if( ! _.isArray( options.views ) )
 			options.views = [ options.views ];
 
+		if( ! _.isArray( options.tmplExt ) )
+			options.tmplExt = [ options.tmplExt ];
+
 		validateConfigOptions( options );
 
 		options = applyDefaultsAndSanitize( options );
@@ -470,8 +473,8 @@ module.exports = function(grunt) {
 			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		//options.validOriginalAssetExt = _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt );
 		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt ) );
+		File.setTmplExtensions( options.tmplExt );
 
 		mode = options.mode;
 
