@@ -410,15 +410,19 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 #### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
-This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name. Generally you will want make the Directive a "comment" in whatever template language you are using.
 
-	##cartero_requires "Bower/jQuery", "App/Dialogs/EditPersonDialog"
+```html
+<!-- ##cartero_requires "Bower/jQuery", "App/Dialogs/EditPersonDialog" -->
+```
 
 #### ##cartero_extends *parentView*
 
 This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the view directory (pre-pended with the view directory's namespace, if it has one). 
 
-	##cartero_extends "layouts/site_layout.twig"
+```html
+<!-- ##cartero_extends "layouts/site_layout.twig" -->
+```
 
 #### ##cartero_dirname
 
