@@ -26,7 +26,7 @@ var carteroUtil = require( "./../lib/util.js" ),
 module.exports = function(grunt) {
 
 	// Prefix for all task targets added by assetBundler to avoid conflicts with already existing targets.
-	var kCarteroTaskPrefix = "CARTERO_";
+	var kCarteroTaskPrefix = "cartero_";
 
 	var kLibraryAssetsDirPrefix = "library-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
@@ -34,7 +34,7 @@ module.exports = function(grunt) {
 	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views" ];
 
 	// cartero directive: When browserify is enabled, this directive is used in js files in views that should be automatically run upon loading.
-	var kbrowserifyExecuteOnLoad = "##cartero_browserify_execute_on_load";
+	var kbrowserifyExecuteOnLoad = "##cartero_browserify_executeOnLoad";
 
 	// Default values for the views task option.
 	var kViewsDirDefaults = {
