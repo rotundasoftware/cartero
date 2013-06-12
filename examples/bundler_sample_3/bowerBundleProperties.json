@@ -1,0 +1,18 @@
+{
+	"Bower/jquery" : {
+		"whitelistedFiles" : [ "jquery.js" ],
+		"directoriesToFlatten" : [ "docs", "examples", "test" ]
+	},
+	"Bower/jquery-ui" : {
+		"whitelistedFiles" : [ "ui/jquery-ui.js", "themes/ui-lightness/jquery-ui.css" ],
+		"dependencies" : [ "Bower/jquery" ]
+	},
+	"Bower/backbone" : {
+		"whitelistedFiles" : [ "backbone.js" ],
+		"dependencies" :[ "Bower/underscore" ]
+	},
+	"Bower/underscore" : {
+		"whitelistedFiles" : [ "underscore.js" ],
+		"directoriesToFlatten" : [ "docs", "test" ]
+	}
+}

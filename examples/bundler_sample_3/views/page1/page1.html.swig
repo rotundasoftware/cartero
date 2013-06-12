@@ -1,6 +1,6 @@
 {% extends 'layout.html.swig' %}
 
-<!-- ##cartero_requires "Main/JQuery", "Main/JQuery/UI", "Main/Backbone/LibWithPriorities", "Main/LibWithImages" -->
+<!-- ##cartero_requires "Bower/jquery", "Bower/jquery-ui", "Main/LibWithPriorities", "Main/LibWithImages" -->
 
 <!-- ##cartero_extends "layout.html.swig" -->
 

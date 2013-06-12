@@ -15,6 +15,12 @@ module.exports = function( grunt ) {
 						path : "library",
 						namespace : "Main",
 						bundleProperties : grunt.file.readJSON( "libraryBundleProperties.json" )
+					},
+					{
+						path : "components",
+						namespace : "Bower",
+						directoriesToFlatten : /.*/,
+						bundleProperties : grunt.file.readJSON( "bowerBundleProperties.json" )
 					}
 				],
 				views : [

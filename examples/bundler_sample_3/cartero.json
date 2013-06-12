@@ -3,13 +3,10 @@
 	"parcels": {
 		"views/page1/page1_1/page1_1.html.swig": {
 			"js": [
-				"static/library-assets-Main/JQuery/UI/UI_5565cc2eed4495c21a262c7f9f126342.js",
-				"static/library-assets-Main/Backbone/Backbone_b9a8f3542dfa038250646c16e7072316.js",
-				"static/view-assets-0/page1/page1_1/page1_1.html.swig_9a12d1f775b24be08f135c85e53e2c5f.js"
+				"static/view-assets-0/page1/page1_1/page1_1.html.swig_389217d3e8d7ca239e0908e10ba8a0d0.js"
 			],
 			"css": [
-				"static/library-assets-Main/JQuery/UI/UI_2a83fb8ef5c2b323f3e3c349a3998cca.css",
-				"static/view-assets-0/page1/page1_1/page1_1.html.swig_ed1035d0f11bbd79e4a50a83162d1dd3.css"
+				"static/view-assets-0/page1/page1_1/page1_1.html.swig_a3d4dcfac76ccd020b68840402a46b7a.css"
 			],
 			"tmpl": [
 				"static/view-assets-0/page1/page1_1/page1_1.html.swig_0bea9d760f9286e248e8a8e18f5e4c91.tmpl"
@@ -17,13 +14,10 @@
 		},
 		"views/page1/page1.html.swig": {
 			"js": [
-				"static/library-assets-Main/JQuery/UI/UI_5565cc2eed4495c21a262c7f9f126342.js",
-				"static/library-assets-Main/Backbone/Backbone_b9a8f3542dfa038250646c16e7072316.js",
-				"static/view-assets-0/page1/page1.html.swig_9a12d1f775b24be08f135c85e53e2c5f.js"
+				"static/view-assets-0/page1/page1.html.swig_389217d3e8d7ca239e0908e10ba8a0d0.js"
 			],
 			"css": [
-				"static/library-assets-Main/JQuery/UI/UI_2a83fb8ef5c2b323f3e3c349a3998cca.css",
-				"static/view-assets-0/page1/page1.html.swig_ed1035d0f11bbd79e4a50a83162d1dd3.css"
+				"static/view-assets-0/page1/page1.html.swig_a3d4dcfac76ccd020b68840402a46b7a.css"
 			],
 			"tmpl": [
 				"static/view-assets-0/page1/page1.html.swig_0bea9d760f9286e248e8a8e18f5e4c91.tmpl"
@@ -31,7 +25,7 @@
 		},
 		"views/page2/page2.html.swig": {
 			"js": [
-				"static/view-assets-0/page2/page2.html.swig_e0898c8a1f027c9071ff1a750e20a2d6.js"
+				"static/view-assets-0/page2/page2.html.swig_8d9f2cde322e85df7d3da1f93d581c27.js"
 			],
 			"css": [],
 			"tmpl": []

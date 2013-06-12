@@ -1,6 +1,6 @@
 {% extends 'layout.html.swig' %}
 
-<!-- ##cartero_requires "Main/JQuery", "Main/Underscore/*" -->
+<!-- ##cartero_requires "Bower/jquery", "Main/UnderscoreMixins/*" -->
 
 {% block content %}
 

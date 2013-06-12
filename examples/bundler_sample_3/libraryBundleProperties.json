@@ -1,12 +1,5 @@
 {
 	"Main/CKEEditor" : {
 		"directoriesToFlatten" : [ "lang", "plugins", "samples", "skins" ]
-	},
-
-	"Main/JQuery/UI" : {
-		"keepSeparate" : true,
-		"directoriesToFlatten" : [ "images" ]
 	}
-
-	
 }
