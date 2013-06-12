@@ -302,8 +302,8 @@ options : {
 	"mode" : "dev",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
-	// such as compiling scss or coffee. You may include an entry for any task in this array, as 
-	// long as the task is available and registered using `grunt.loadNpmTasks` (just as if you were 
+	// such as compiling scss or coffee. You may include an entry for any task in this array, AS
+	// LONG AS THE TASK IS AVAILABLE AND REGISTERED using `grunt.loadNpmTasks` (just as if you were 
 	// to run the task yourself from your gruntfile). The task will be run on all files with the
 	// `inExt` file extension, and will change processed files to have the `outExt` extension, if
 	// provided. You can also provide an `options` property that will be forwarded to the task.
