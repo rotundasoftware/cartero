@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	carteroMiddleware = require( "grunt-cartero/middleware.js" ),
+	carteroMiddleware = require( "cartero-express-hook" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),

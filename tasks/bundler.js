@@ -404,12 +404,6 @@ module.exports = function(grunt) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
 
-		if( ! _.isArray( options.library ) )
-			options.library = [ options.library ];
-
-		if( ! _.isArray( options.views ) )
-			options.views = [ options.views ];
-
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.library = _.map( options.library, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
@@ -456,6 +450,12 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 
 		options = this.options();
+
+		if( ! _.isArray( options.library ) )
+			options.library = [ options.library ];
+
+		if( ! _.isArray( options.views ) )
+			options.views = [ options.views ];
 
 		validateConfigOptions( options );
 
@@ -772,7 +772,7 @@ module.exports = function(grunt) {
 		var browserifyExecuteOnLoadFiles = [];
 
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserifyExecuteOnLoad );
+			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserify_executeOnLoad );
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
