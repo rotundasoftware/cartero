@@ -8,66 +8,47 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig( {
 		cartero : {
-			dist : {
-				options : {
-					mode : "dev",
-					library : {
-						path : "App/node_modules"
-					},
-					views : {
-						path : "App/WebServer/AppPages",
-						filesToIgnore : /^_.*/,
-						directoriesToIgnore : /^__.*/,
-						viewFileExt : ".swig",
-						namespace : "MainViewDir"
-					},
-					publicDir : "App/WebServer/Static",
-					projectDir : __dirname,
-					templateExt : ".tmpl",
-					//serverSideTemplateSuffix : ".swig",
-					//useDirectoriesForDependencies : true,
-					browserify : true/*,
-					minificationTasks : [
-						{
-							name : "htmlmin",
-							suffixes : [ ".tmpl" ],
-							options : {
-								removeComments : true
-							}
-						},
-						{
-							name : "uglify",
-							suffixes : [ ".js" ],
-							options : {
-								mangle : false
-							}
-						}
-					]*/
-				}//,
-		//dist : {
-		//	mode : "prod"
-		//}
-			//dist : {
-//
-//			}
-
-			}	
-		},
-
-
-		requirify : {
-			dist : {
-				options : {
-					nodePaths : [ "WebServer/Static/AssetLibrary-assets/" ]
+			options : {
+				library : {
+					path : "App/node_modules"
 				},
-				files : [
+				views : {
+					path : "App/WebServer/AppPages",
+					filesToIgnore : /^_.*/,
+					directoriesToIgnore : /^__.*/,
+					viewFileExt : ".swig",
+					namespace : "MainViewDir"
+				},
+				publicDir : "App/WebServer/Static",
+				projectDir : __dirname,
+				templateExt : ".tmpl",
+				browserify : true,
+				minificationTasks : [
 					{
-						src : "WebServer/Static/AssetLibrary-assets/**/*.js"
+						name : "htmlmin",
+						suffixes : [ ".tmpl" ],
+						options : {
+							removeComments : true
+						}
 					},
 					{
-						src : "WebServer/Static/AppPages-assets/**/*.js"
+						name : "uglify",
+						suffixes : [ ".js" ],
+						options : {
+							mangle : false
+						}
 					}
 				]
+			},
+			dev : {
+				options : {
+					mode : "dev",
+				}
+			},
+			prod : {
+				options : {
+					mode : "prod",
+				}
 			}
 		}
 	} );

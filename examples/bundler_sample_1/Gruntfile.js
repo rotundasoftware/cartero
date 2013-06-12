@@ -8,56 +8,63 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig( {
 		cartero : {
-			dist : {
+			options : {
+				projectDir : __dirname,
+				library : [
+					{
+						path : "AssetLibrary",
+						namespace : "Main"
+					}
+				],
+				views : [
+					{
+						path : "WebServer/AppPages",
+						filesToIgnore : /_.*/,
+						directoriesToIgnore : /__.*/,
+						viewFileExt : ".swig"
+					}
+				],
+				preprocessingTasks : [
+					{
+						name : "coffee"
+					},
+					{
+						name : "sass"
+					},
+					{
+						name : "stylus"
+					},
+					{
+						name : "less"
+					}
+				],
+				publicDir : "WebServer/Static",
+				templateExt : [ ".tmpl" ],
+				minificationTasks : [
+					{
+						name : "htmlmin",
+						inExt : ".tmpl",
+						options : {
+							removeComments : true
+						}
+					},
+					{
+						name : "uglify",
+						inExt : ".js",
+						options : {
+							mangle : false
+						}
+					}
+				]
+			},
+			dev : {
 				options : {
-					mode : "prod",
-					projectDir : __dirname,
-					library : [
-						{
-							path : "AssetLibrary",
-							namespace : "Main"
-						}
-					],
-					views : [
-						{
-							path : "WebServer/AppPages",
-							filesToIgnore : /_.*/,
-							directoriesToIgnore : /__.*/,
-							viewFileExt : ".swig"
-						}
-					],
-					preprocessingTasks : [
-						{
-							name : "coffee"
-						},
-						{
-							name : "sass"
-						},
-						{
-							name : "stylus"
-						},
-						{
-							name : "less"
-						}
-					],
-					publicDir : "WebServer/Static",
-					templateExt : [ ".tmpl" ],
-					minificationTasks : [
-						{
-							name : "htmlmin",
-							inExt : ".tmpl",
-							options : {
-								removeComments : true
-							}
-						},
-						{
-							name : "uglify",
-							inExt : ".js",
-							options : {
-								mangle : false
-							}
-						}
-					]
+					mode : "dev"
+				}
+			},
+			prod : {
+				options : {
+					mode : "prod"
 				}
 			}
 		}

@@ -18,7 +18,8 @@ var carteroUtil = require( "./../lib/util.js" ),
 	async = require( "async" ),
 	through = require( "through" ),
 	Bundle = require( "./../lib/bundle" ),
-	Parcel = require( "./../lib/parcel" );
+	Parcel = require( "./../lib/parcel" ),
+	File = require( "./../lib/file" );
 
 'use strict';
 
@@ -228,7 +229,7 @@ module.exports = function(grunt) {
 
 			newDest = carteroUtil.mapAssetFileName( newDest, assetExtensionMap );
 
-			if( _.contains( extToCopy, carteroUtil.getFileExtension( filepath ) ) )
+			if( _.contains( extToCopy, File.getFileExtension( filepath ) ) )
 				grunt.file.copy( filepath, newDest );
 
 			_.each( options.preprocessingTasks, function( preprocessingTask ) {
@@ -451,13 +452,14 @@ module.exports = function(grunt) {
 		var libraryAndViewDirs = _.union( options.library, options.views );
 		var extToCopy = _.union( options.templateExt, kValidImageExt, kJSandCSSExt );
 
-		options.assetExtensionMap = {};
+		var assetExtensionMap = {};
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-			options.assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
+			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		options.validOriginalAssetExt = _.union( _.keys( options.assetExtensionMap ), kJSandCSSExt, options.templateExt );
+		//options.validOriginalAssetExt = _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.templateExt );
+		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.templateExt ) );
 
 		mode = options.mode;
 
@@ -488,6 +490,8 @@ module.exports = function(grunt) {
 		configureCarteroTask( "prepare", { libraryAndViewDirs : libraryAndViewDirs } );
 		configureCarteroTask( "copy", { libraryAndViewDirs : libraryAndViewDirs, extToCopy : extToCopy } );
 
+		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
+
 
 		var validCarteroDirExt = _.union( options.templateExt, kJSandCSSExt );
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
@@ -498,7 +502,7 @@ module.exports = function(grunt) {
 		var cleanableAssetExt = _.union( options.templateExt, kJSandCSSExt );
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
 
-		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, options.assetExtensionMap );
+		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
@@ -595,8 +599,10 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( kCarteroTaskPrefix + "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
 
+		var opts = this.options();
+
 		try {
-			bundleRegistry = Bundle.createRegistry( options.library, options );
+			bundleRegistry = Bundle.createRegistry( options.library, mode, opts.assetExtensionMap );
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e.stack;
@@ -607,20 +613,11 @@ module.exports = function(grunt) {
 
 		}
 
-		//console.log( bundleRegistry );
-
-		_.each( _.values( bundleRegistry ), function( bundle ) {
-			console.log( "bundle name: " + bundle.name );
-			_.each( bundle.dependencies, function( dependency ) {
-				console.log( dependency.name );
-			} );
-		} );
-
 		try {
-			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, options );
+			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, mode, opts.assetExtensionMap );
 		}
 		catch( e ) {
-			var errMsg = "Error while resolving pages: " + e;
+			var errMsg = "Error while resolving pages: " + e.stack;
 			if( mode === "dev" )
 				grunt.fail.warn( errMsg );
 			else
