@@ -2,7 +2,7 @@
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
-Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
 As of the time of this writing Cartero is available only for Node.js / Express, but it is designed to be easy to port to any environment.
 
@@ -14,15 +14,15 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 * All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* All assets that live in the same directory as the page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). Enjoy built in support for CommonJS style modules in the browser via [Browserify](https://github.com/substack/node-browserify).
-* Easily run your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
+* All assets that live in the same directory as a page's template are automatically included when that page is rendered.
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). Enjoy built in support for client-side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
+* Easily run any and all of your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
 
 ## Overview
 
 ### The Asset Library
 
-You keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_bundle_** that may contain javascript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
+Get ready for an overdue paradigm shift from the traditional js / css / template structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain javascript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
 
 ```
 assetLibrary/
