@@ -289,6 +289,9 @@ options : {
 		// Assets in flattened directories are served with a server side template when
 		// it is rendered, just as if they lived in the template's directory.
 		directoriesToFlatten : /^_.*/,
+
+		// (default: undefined) Analogous to its counterpart in the `library` option.
+		namespace : "Main"
 	}
 
 	// (required) The "public" directory of your application, that is, the directory that
@@ -396,7 +399,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	"dynamicallyLoadedFiles" : [ "ie-8.css" ],
 
 	// Only used when the `browserify` option in the Cartero Grunk Task is enabled, this
-	// property is an array of JavaScript files that should be executed when they
+	// property is an array of JavaScript files that should be executed as soon as they
 	// are loaded in the client. Files that are not included in this property will not
 	// be executed until they are `require`d by another file.
 	"browserify_executeOnLoad" : [ "backbone.js" ]
@@ -407,13 +410,13 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 #### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
-This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which it resides. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
 
-	##cartero_requires "bower/jQuery", "App/Dialogs/EditPersonDialog"
+	##cartero_requires "Bower/jQuery", "App/Dialogs/EditPersonDialog"
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
+This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the view directory (pre-pended with the view directory's namespace, if it has one). 
 
 	##cartero_extends "layouts/site_layout.twig"
 
