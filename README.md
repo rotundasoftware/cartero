@@ -8,7 +8,7 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 
 ## Benefits
 
-* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, templates, and images (e.g. keep `person.coffee`, person.scss`, `person.tmpl` together in *one directory*).
+* Instead of using separate directories for each type of asset, group your assets into "bundles" of related javascript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*).
 * Specify the exact bundles that are required for each page in the page's template.
 * Easily manage bundle dependencies.
 * All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
