@@ -337,10 +337,11 @@ options : {
 		}
 	} ],
 
-	// (default: false) Catero includes built in support for CommonJS style modules, using
-	// browserify under the hood. Set this option to `true` to automatically "browserify" your
-	// files. (Also please see the browserifyExecuteOnLoad bundle.json property below.) 
-	commonJS : true
+	// (default: undefined) Cartero includes built in support for CommonJS style modules, using
+	// Browserify under the hood. Set this option to `commonJS` to automatically "browserify" your
+	// files. (Also please see the `##cartero_commonJSExecuteOnLoad` directive below.). 
+	// Currently "commonJS" is the only supported value of this option.
+	moduleStyle : "commonJS"
 }
 ```
 
@@ -398,7 +399,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// property is an array of JavaScript files that should be executed when they
 	// are loaded in the client. Files that are not included in this property will not
 	// be executed until they are `require`d by another file.
-	"browserifyExecuteOnLoad" : [ "backbone.js" ]
+	"commonJSExecuteOnLoad" : [ "backbone.js" ]
 }
 ```
 
