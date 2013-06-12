@@ -226,11 +226,9 @@ options : {
 	"projectDir" : __dirname,
 
 	// (required) An object that specifies your Asset Library directory and related options. 
-	// This object *must* contain a "path" entry, pointing to the directory where your
-	// asset bundles are located. All other properties are optional. You may also supply
-	// an array of objects, instead of just one object, if you have multiple directories
-	// that contain bundles. For example, if you are using Bower, you will likely want
-	// to include both the "components" directory and an application specific directory
+	// You may also supply an array of objects, instead of just one object, if you have multiple
+	// directories  that contain bundles. For example, if you are using Bower, you will likely
+	// want to include both the "components" directory and an application specific directory
 	// in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
 		// (required) The path to the directory containing asset bundles.
@@ -266,11 +264,9 @@ options : {
 		namespace : "App"
 	},
 
-	// (required) An object that specifies your views directory and related options. This
-	// object *must* contain a "path" entry, pointing to the directory where your
-	// server side views (i.e. page templates) are located. All other properties are
-	// optional. As with the `library` option, you may supply an array of objects,
-	// instead of just one object, if you have multiple directories that contain views.
+	// (required) An object that specifies your views directory and related options.
+	// As with the `library` option, you may supply an array of objects, instead
+	// of just one object, if you have multiple directories that contain views.
 	"views" : {
 		// (required) The path to the directory containing your server side view templates.
 		// Generally this directory is called "views" in the Node.js / Express world.
