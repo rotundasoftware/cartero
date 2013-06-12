@@ -227,7 +227,7 @@ options : {
 
 	// (required) An object that specifies your Asset Library directory and related options. 
 	// You may also supply an array of objects, instead of just one object, if you have multiple
-	// directories  that contain bundles. For example, if you are using Bower, you will likely
+	// directories that contain bundles. For example, if you are using Bower, you will likely
 	// want to include both the "components" directory and an application specific directory
 	// in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
@@ -274,12 +274,7 @@ options : {
 
 		// (required) The file extension of your server side template files (e.g. ".nunjucks"
 		// ".erb", ".twig", etc.). Files that match this extension are scanned for the
-		// ##cartero_requires directive, and if found, the grunt task will compute a "parcel"
-		// of assets to serve when the template is rendered. The parcel is composed of all
-		// the assets in the required bundles, as well as assets that live in the same folder
-		// as the view file. The parcel's contents are stored in the `cartero.json` file 
-		// and later used by the Hook when it serves assets for the view. You may also
-		// specify an array of file extensions.
+		// ##cartero_requires directive (see below discussion of directives).
 		viewFileExt : ".jade",
 
 		// (default: /^_.*/) Files with names matching this regular expression
@@ -407,15 +402,15 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 ### Directives
 
-#### ##cartero_require *bundleName_1, [ bundleName_2, ... ]*
+#### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
 This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which it resides. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name.
 
-	##cartero_require "bower/jQuery", "App/Dialogs/EditPersonDialog"
+	##cartero_requires "bower/jQuery", "App/Dialogs/EditPersonDialog"
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_require` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
+This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the root view directory (as supplied in the `views` option of the Cartero Grunt Task). 
 
 	##cartero_extends "layouts/site_layout.twig"
 
