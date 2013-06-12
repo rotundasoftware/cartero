@@ -274,7 +274,7 @@ options : {
 
 		// (required) The file extension of your server side template files (e.g. ".nunjucks"
 		// ".erb", ".twig", etc.). Files that match this extension are scanned for the
-		// ##cartero_requires directive (see below discussion of directives).
+		// ##cartero_requires directive (see below discussion of directives for more info).
 		viewFileExt : ".jade",
 
 		// (default: /^_.*/) Files with names matching this regular expression
@@ -286,6 +286,8 @@ options : {
 		directoriesToIgnore : /^__.*/,
 
 		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
+		// Assets in flattened directories are served with a server side template when
+		// it is rendered, just as if they all lived in the same directory.
 		directoriesToFlatten : /^_.*/,
 	}
 
