@@ -15,7 +15,7 @@ As of the time of this writing Cartero is available only for Node.js / Express, 
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 * All assets that live in the same directory as a page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). If you'd like, enjoy built in support for client-side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
+* Use your preferred JavaScript module system (e.g. RequireJS, AMD, CommonJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). If you'd like, enjoy built in support for client side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
 * Easily run any and all of your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
 
 ## Overview
@@ -73,7 +73,7 @@ Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bund
 
 ### Page specific assets
 
-In addition to the assets in bundles that are required by a page, the assets that live in the same directory as a page's template will automatically be included when it is rendered. For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
+In addition to the assets in bundles that are required by a page, the assets that live in the same directory as a page's server side template will automatically be included when it is rendered. For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
 
 ```
 views/
