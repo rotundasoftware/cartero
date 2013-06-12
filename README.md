@@ -137,7 +137,6 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				mode : "dev"
 				projectDir : __dirname,
 				library : {
 					path : "assetLibrary/"
@@ -147,6 +146,7 @@ module.exports = function( grunt ) {
 					viewFileExt : ".jade"
 				}
 				publicDir : "static/"
+				mode : "dev"
 			}
 
 			// `dev` target uses all the default options
@@ -287,14 +287,14 @@ options : {
 
 		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
 		// Assets in flattened directories are served with a server side template when
-		// it is rendered, just as if they all lived in the same directory.
+		// it is rendered, just as if they lived in the template's directory.
 		directoriesToFlatten : /^_.*/,
 	}
 
 	// (required) The "public" directory of your application, that is, the directory that
 	// is served by your web server. In Node.js / Express applications this is generally the
 	// "static" directory. Like all paths in these options, it should be relative to `projectDir`.
-	"publicDir" : "static",
+	"publicDir" : "static/",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
 	// b) assets are not concatenated, and c) after finishing, the Cartero Grunt Task will
@@ -302,10 +302,10 @@ options : {
 	"mode" : "dev",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
-	// such as compiling scss or coffee. You may include an entry for any task in this array,
-	// as long as the task is available and registered using `grunt.loadNpmTasks` (just as if
-	// you were to run the task yourself from your gruntfile). The task will be run on all files
-	// with the `inExt` file extension, and will output files with the `outExt` extension, if
+	// such as compiling scss or coffee. You may include an entry for any task in this array, as 
+	// long as the task is available and registered using `grunt.loadNpmTasks` (just as if you were 
+	// to run the task yourself from your gruntfile). The task will be run on all files with the
+	// `inExt` file extension, and will change processed files to have the `outExt` extension, if
 	// provided. You can also provide an `options` property that will be forwarded to the task.
 	"preprocessingTasks" : [ {
 		name : "coffee",
