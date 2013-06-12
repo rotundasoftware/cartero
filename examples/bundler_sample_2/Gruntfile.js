@@ -21,7 +21,7 @@ module.exports = function( grunt ) {
 				},
 				publicDir : "App/WebServer/Static",
 				projectDir : __dirname,
-				templateExt : ".tmpl",
+				tmplExt : ".tmpl",
 				browserify : true,
 				minificationTasks : [
 					{

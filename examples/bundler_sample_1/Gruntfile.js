@@ -39,7 +39,7 @@ module.exports = function( grunt ) {
 					}
 				],
 				publicDir : "static",
-				templateExt : [ ".tmpl" ],
+				tmplExt : [ ".tmpl" ],
 				minificationTasks : [
 					{
 						name : "htmlmin",

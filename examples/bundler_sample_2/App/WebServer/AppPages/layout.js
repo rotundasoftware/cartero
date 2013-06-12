@@ -1,3 +1,3 @@
-//##cartero_browserify_execute_on_load
+//##cartero_browserify_executeOnLoad
 
 console.log( "in layout.js 8" );
