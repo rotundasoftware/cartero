@@ -420,7 +420,7 @@ This Directive is used in server side templates to specify which bundles they re
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to specify that one template "inherits" all of the assets of another. It is analogous to (and is often used in combination with) the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. *parentView* must be a path relative to the view directory (pre-pended with the view directory's `namespace`, if it has one). 
+This Directive is used in server side templates to specify that one template should "inherit" all of the assets of another. *parentView* must be a path relative to the view directory (pre-pended with the view directory's `namespace`, if it has one). 
 
 ```erb
 <%# ##cartero_extends "layouts/site_layout.twig" %>
