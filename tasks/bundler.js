@@ -607,11 +607,20 @@ module.exports = function(grunt) {
 
 		}
 
+		//console.log( bundleRegistry );
+
+		_.each( _.values( bundleRegistry ), function( bundle ) {
+			console.log( "bundle name: " + bundle.name );
+			_.each( bundle.dependencies, function( dependency ) {
+				console.log( dependency.name );
+			} );
+		} );
+
 		try {
 			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, options );
 		}
 		catch( e ) {
-			var errMsg = "Error while resolving pages: " + e.stack;
+			var errMsg = "Error while resolving pages: " + e;
 			if( mode === "dev" )
 				grunt.fail.warn( errMsg );
 			else

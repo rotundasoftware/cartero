@@ -1,3 +1,4 @@
 {
-	"keepSeparate" : true
+	"keepSeparate" : true,
+	"directoriesToFlatten" : [ "images" ]
 }
