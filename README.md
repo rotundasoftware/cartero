@@ -337,13 +337,11 @@ options : {
 		}
 	} ],
 
-	// (default: undefined) Cartero includes built in support for CommonJS style modules, using
-	// Browserify under the hood. Set this option to `commonJS` to automatically "browserify" your
-	// files. Currently  "commonJS" is the only supported value of this option, but of course
-	// you can use Cartero  with RequireJS or whatever module system you prefer by leaving this
-	// option undefined. Please see the `##cartero_commonJSExecuteOnLoad` directive below for
-	// more information on CommonJS style modules.
-	jsModuleSystem : "commonJS"
+	// (default: false) Cartero includes built in support for CommonJS style modules thanks
+	// to Browserify. Set this option to `true` to automatically "browserify" your files.
+	// (Also please see the `##cartero_browserifyExecuteOnLoad` directive below for important
+	// information on using this option.) 
+	browserify : true
 }
 ```
 
@@ -401,7 +399,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// property is an array of JavaScript files that should be executed when they
 	// are loaded in the client. Files that are not included in this property will not
 	// be executed until they are `require`d by another file.
-	"commonJSExecuteOnLoad" : [ "backbone.js" ]
+	"browserifyExecuteOnLoad" : [ "backbone.js" ]
 }
 ```
 
@@ -419,7 +417,7 @@ This Directive is used in server side templates to specify that one template "in
 
 	##cartero_extends "layouts/site_layout.twig"
 
-#### ##cartero_dir
+#### ##cartero_dirname
 
 When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder (i.e. the `publicDir` options).
 
@@ -437,7 +435,7 @@ It can be used in any type of asset processed by Cartero, including client side 
 
 #### ##cartero_browserifyExecuteOnLoad
 
-When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files that should be automatically executed when they are loaded. You will definitely want to include this directive in the "main" JavaScript file for each page, since otherwise it would never be executed!
+When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files to specify that they should be automatically executed when they are loaded. You will definitely want to include this directive in your "main" JavaScript files for each page, since otherwise they would never be executed!
 
 ## FAQ
 
