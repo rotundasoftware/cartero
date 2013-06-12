@@ -1,4 +1,3 @@
-W# Cartero
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
