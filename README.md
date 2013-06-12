@@ -422,7 +422,7 @@ This Directive is used in server side templates to specify that one template "in
 
 #### ##cartero_dirname
 
-When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your applications "public" folder (i.e. the `publicDir` options).
+When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your application's `publicDir`.
 
 ```javascript
 var myDirName = "##cartero_dirname";
