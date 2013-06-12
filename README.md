@@ -123,9 +123,7 @@ html(lang="en")
 
 First, install Cartero via npm:
 
-```
-npm install grunt-cartero
-```
+	npm install grunt-cartero
 
 Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, check out the [Getting Started](http://gruntjs.com/getting-started) guide.) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
@@ -169,13 +167,17 @@ The `projectDir` option specifices the root folder for your project. *All other 
 
 The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.). See the [reference section](#reference) for a complete list of options for the Cartero task.
 
-Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. You just need to install the middleware, passing it the path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
+Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware.
+
+	npm install cartero-express-hook
+
+You just need to `use` the middleware, passing it the path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
 ```javascript
 // app.js
 
 var app = express();
-var carteroHook = require( "cartero/middleware" ),
+var carteroHook = require( "cartero-express-hook" ),
 // ...
 
 app.configure( function() {
