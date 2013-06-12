@@ -124,10 +124,10 @@ html(lang="en")
 First, install Cartero via npm:
 
 ```
-npm install cartero
+npm install grunt-cartero
 ```
 
-Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, check out the [Getting Started](http://gruntjs.com/getting-started) guide.) Here is the minimal gruntfile configuration that is required to run the Cartero Grunt Task:
+Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, check out the [Getting Started](http://gruntjs.com/getting-started) guide.) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
 ```
 // example gruntfile
@@ -144,7 +144,8 @@ module.exports = function( grunt ) {
 					path : "views/",
 					viewFileExt : ".jade"
 				}
-				publicDir : "static/"
+				publicDir : "static/",
+				tmplExt : ".tmpl",
 				mode : "dev"
 			}
 
@@ -164,9 +165,7 @@ module.exports = function( grunt ) {
 };
 ```
 
-The five required options for the Cartero Grunt Task are `projectDir`, `library`, `views`, `publicDir`, and `mode`.
-
-The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps). (Cartero will automatically create two directories within `publicDir` into which processed assets will be dumped, `library-assets` and `view-assets`, containing assets that pertain to bundles and page views, respectively).
+The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps), and the `tmplExt` option tells Cartero the file extension(s) of your client side template files.
 
 The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.). See the [reference section](#reference) for a complete list of options for the Cartero task.
 
@@ -296,6 +295,9 @@ options : {
 	// (required) The "public" directory of your application, that is, the directory that
 	// is served by your web server. In Node.js / Express applications this is generally the
 	// "static" directory. Like all paths in these options, it should be relative to `projectDir`.
+	// Cartero will automatically create directories within `publicDir` into which processed
+	// assets will be dumped, named (by default) `library-assets` and `view-assets`, containing
+	// assets that pertain to bundles and page views, respectively.
 	"publicDir" : "static/",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
@@ -312,8 +314,8 @@ options : {
 	"preprocessingTasks" : [ {
 		name : "coffee",
 		inExt : ".coffee",
-		outExt : ".js",
-		options : {
+		outExt : ".js",			// optional
+		options : {				// optional
 			sourceMap : true
 		}
 	}, {
@@ -385,11 +387,11 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 	// (default: undefined) An array of files that will only be served in dev mode, and
 	// that will be ignored in prod mode.
-	"devModeOnlyFiles" : [ "backbone.js" ],
+	"devModeOnlyFiles" : [ "mixins/backbone.subviews-debug.js" ],
 
 	// (default: undefined) An array of files that will only be served in prod mode, and
 	// that will be ignored in dev mode.
-	"prodModeOnlyFiles" : [ "backbone.min.js" ],
+	"prodModeOnlyFiles" : [ "mixins/backbone.subviews.js" ],
 
 	// (default: undefined) An array of files that should be included when the bundle is
 	// sourced (i.e. copied to the public folder), but that should not be concatenated with
@@ -409,18 +411,19 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 #### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
-This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace is pre-pended to the bundle name. Generally you will want to enclose the Directive in the "comment" escape sequence for whatever template language you are using.
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in the "comment" escape sequence for whatever template language you are using.
 
-```html
-<!-- ##cartero_requires "Bower/jQuery", "App/Dialogs/EditPersonDialog" -->
+```erb
+<%# ##cartero_requires "App/Dialogs/EditPersonDialog" %>
+<%# All dependencies are automatically resolved and included %>
 ```
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the view directory (pre-pended with the view directory's `namespace`, if it has one). 
+This Directive is used in server side templates to specify that one template "inherits" all of the assets of another. It is analogous to (and is often used in combination with) the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. *parentView* must be a path relative to the view directory (pre-pended with the view directory's `namespace`, if it has one). 
 
-```html
-<!-- ##cartero_extends "layouts/site_layout.twig" -->
+```erb
+<%# ##cartero_extends "layouts/site_layout.twig" %>
 ```
 
 #### ##cartero_dir
@@ -428,7 +431,7 @@ This Directive is used in server side templates to specify that one template "in
 When your assets are processed, this Directive is replaced with the path of the directory in which it appears. It is similar in concept to the node.js global `__dirname`, but the path it evaluates to is relative to your application's `publicDir`.
 
 ```javascript
-var myDirName = "##cartero_dir";
+var templateId = "##cartero_dir";
 ```
 
 It can be used in any type of asset processed by Cartero, including client side template files.
