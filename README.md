@@ -1,10 +1,9 @@
-W# Cartero
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
-Cartero is an intelligent client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+Cartero is a client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-As of the time of this writing Cartero is available only for Node.js / Express, but it is designed to be easy to port to any environment.
+As of the time of this writing Cartero is available only for Node.js / Express, but only a small part of Cartero is web-framework specific, and it is designed to be easy to port to any environment.
 
 ## Benefits
 
@@ -93,7 +92,7 @@ When the `login.jade` template is rendered, the `login.coffee` and `login.scss` 
 
 ### The Cartero Grunt Task
 
-The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that maps each of your page view templates to a list of all the assets that it requires.
+The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that [enumerates the assets](#carteroJson) required for each of your page templates.
 
 ### The Hook
 
@@ -350,7 +349,7 @@ options : {
 
 ### Properties of bundle.json 
 
-Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.)
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, such as dependencies. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.)
 
 ```javascript
 // Sample bundle.json file
@@ -418,7 +417,7 @@ This Directive is used in server side templates to specify which bundles they re
 
 #### ##cartero_extends *parentView*
 
-This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the view directory (pre-pended with the view directory's namespace, if it has one). 
+This Directive is used in server side templates to specify that one template "inherits" the required bundles of another. It is analogous to the "extends" feature offered by [nunjucks](http://nunjucks.jlongster.com/), [Jade](http://jade-lang.com/), [Twig](http://twig.sensiolabs.org/), and other popular server side templating languages. Using this directive is equivalent to inlining the `##cartero_requires` directive from the *parentView*. *parentView* must be a path relative to the view directory (pre-pended with the view directory's `namespace`, if it has one). 
 
 ```html
 <!-- ##cartero_extends "layouts/site_layout.twig" -->
@@ -435,7 +434,7 @@ var myDirName = "##cartero_dir";
 It can be used in any type of asset processed by Cartero, including client side template files.
 
 ```
-<script type="text/template" id="##cartero_dirname">
+<script type="text/template" id="##cartero_dir">
 	...
 </script>
 ```
@@ -453,8 +452,8 @@ The heart of Cartero is an intelligent Grunt.js task, and can be used with any w
 From a high level perspective, the Hook is responsible for populating the `cartero_js`, `cartero_css`, and `cartero_tmpl` variables and making them available to the template being rendered. The implementation details are somewhat dependent on your web framework, but the general idea will always be similar.
 
 * When the Hook is configured or initialized, it should be passed the absolute path of your `projectDir`.
-* The Hook needs to be called before your web framework's "render" function to populate the three template variables for which it is responsible. It should be passed the absolute path of the template file being rendered.
-* The Hook uses the `cartero.json` file that was generated by the Cartero Grunt Task, located in the `projectDir`, to lookup the assets needed for the template being rendered. The `cartero.json` file has the following format. *All paths in the file are relative to `projectDir`.*
+* The Hook needs to be called before your web framework's "render" function to set the value of the three template variables for which it is responsible. It should be passed the absolute path of the template file being rendered.
+* <a name="carteroJson"></a>The Hook uses the `cartero.json` file that was generated by the Cartero Grunt Task, located in the `projectDir`, to lookup the assets needed for the template being rendered. The `cartero.json` file has the following format. *All paths in the file are relative to `projectDir`.*
 
 ```javascript
 // Sample catero.json file
@@ -496,7 +495,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
 
-The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole blob into `cartero_tmpl`.
+The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole shebang into `cartero_tmpl`.
 
 #### Does Cartero address the issue of cache busting?
 
@@ -505,3 +504,10 @@ Yes. The name of the concatenated asset files generated in `prod` mode includes 
 #### Since Cartero combines files in `prod` mode, won't file (image) urls used in my stylesheets break?
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
+
+## Cartero Hook Directory
+
+* Node.js / Express
+	* [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
+
+If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
