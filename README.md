@@ -339,7 +339,7 @@ options : {
 
 	// (default: false) Cartero includes built in support for CommonJS style modules thanks
 	// to Browserify. Set this option to `true` to automatically "browserify" your files.
-	// (Also please see the `##cartero_browserifyExecuteOnLoad` directive below for important
+	// (Also please see the `##cartero_browserify_executeOnLoad` directive below for important
 	// information on using this option.) 
 	browserify : true
 }
@@ -399,7 +399,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// property is an array of JavaScript files that should be executed when they
 	// are loaded in the client. Files that are not included in this property will not
 	// be executed until they are `require`d by another file.
-	"browserifyExecuteOnLoad" : [ "backbone.js" ]
+	"browserify_executeOnLoad" : [ "backbone.js" ]
 }
 ```
 
@@ -433,7 +433,7 @@ It can be used in any type of asset processed by Cartero, including client side 
 </script>
 ```
 
-#### ##cartero_browserifyExecuteOnLoad
+#### ##cartero_browserify_executeOnLoad
 
 When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files to specify that they should be automatically executed when they are loaded. You will definitely want to include this directive in your "main" JavaScript files for each page, since otherwise they would never be executed!
 
