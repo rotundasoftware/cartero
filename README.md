@@ -2,7 +2,7 @@
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
-Cartero is an intelligent asset manager for web applications, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+Cartero is an intelligent client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
 As of the time of this writing Cartero is available only for Node.js / Express, but it is designed to be easy to port to any environment.
 
@@ -496,7 +496,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
 
-The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files and concatenate their contents.
+The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole blob into `cartero_tmpl`.
 
 #### Does Cartero address the issue of cache busting?
 
