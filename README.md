@@ -369,8 +369,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	"prioritizeFlattenedDirectories" : false,
 
 	// (default: false) This option can be used to compile separate combined asset files
-	// for this bundle in `prod` mode, instead of lumping them all together with rest of 
-	// the concatenated assets for the page being served. It is useful optimizing page load
+	// for this bundle in `prod` mode, instead of lumping them all together with rest of the
+	// concatenated assets for the page being served. It is useful for optimizing page load
 	// time. Large libraries like jQueryUI, for example, can be set as keepSeparate, so that
 	// they are loaded in parallel with the rest of your assets, and so that browsers
 	// can cache them between page loads. Note that setting this property to `true` does not
@@ -378,7 +378,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// circumstances it is not possible to keep the files separate while honoring the 
 	// order in which assets should be served (e.g. when several `keepSeperate` bundles 
 	// depend on a not `keepSeperate` bundle). In these cases, the bundles files are 
-	// kept as separate as possible.
+	// kept "as separate as possible" - trust us, we did think it through.
 	"keepSeparate" : true,
 
 	// (default: undefined) An array of files that will only be served in dev mode, and
