@@ -434,7 +434,7 @@ var myDirName = "##cartero_dir";
 It can be used in any type of asset processed by Cartero, including client side template files.
 
 ```
-<script type="text/template" id="##cartero_dirname">
+<script type="text/template" id="##cartero_dir">
 	...
 </script>
 ```
