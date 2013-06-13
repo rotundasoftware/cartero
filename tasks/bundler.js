@@ -58,26 +58,6 @@ module.exports = function(grunt) {
 
 	var kValidImageExt = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
 
-	// Map specifying the supported preprocessing tasks, the file extension they process, and the file extension they output.
-	var compileAssetsMap = {
-		coffee : {
-			inExt : ".coffee",
-			outExt : ".js"
-		},
-		sass : {
-			inExt : ".scss",
-			outExt : ".css"
-		},
-		less : {
-			inExt : ".less",
-			outExt : ".css"
-		},
-		stylus : {
-			inExt : ".styl",
-			outExt : ".css"
-		}
-	};
-
 	var kJSandCSSExt = [ ".css", ".js" ];
 
 	// Will contain options passed into the assetBundler task with defaults applied.
@@ -436,14 +416,6 @@ module.exports = function(grunt) {
 			options
 		);
 
-		options.preprocessingTasks = _.map( options.preprocessingTasks, function( preprocessingTask ) {
-			var defaults = compileAssetsMap[ preprocessingTask.name ] || {};
-			var result = _.extend( {}, defaults, preprocessingTask );
-			if( _.isUndefined( result.outExt ) )
-				result.outExt = result.inExt;
-			return result;
-		} );
-
 		return options;
 	}
 
@@ -520,6 +492,8 @@ module.exports = function(grunt) {
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
+
+		console.log( grunt.config( "uglify" ).cartero_.files );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
 
@@ -685,7 +659,7 @@ module.exports = function(grunt) {
 					return ! _.contains( referencedFiles, fileName ) && _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
 				}
 			},
-			[ options.publicDir + "/**/*" ]
+			[ options.publicDir + "/**" ]
 		);
 
 		_.each( filesToClean, function ( file ) {
