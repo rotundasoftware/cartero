@@ -499,7 +499,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 Yes. The name of the concatenated asset files generated in `prod` mode includes an MD5 digest of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Since Cartero combines files in `prod` mode, won't file (image) urls used in my stylesheets break?
+#### Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
