@@ -21,7 +21,7 @@ As of the time of this writing Cartero only works with Node.js / Express, but [t
 
 ### The Asset Library
 
-Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
+Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
@@ -134,16 +134,16 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				projectDir : __dirname,
+				projectDir : __dirname,			// the root directory of your project. All other paths are relative to this directory.
 				library : {
-					path : "assetLibrary/"
+					path : "assetLibrary/"		// the path to your Asset Library directory
 				},
 				views : {
-					path : "views/",
-					viewFileExt : ".jade"
+					path : "views/",			// the directoy that contains your server side view templates
+					viewFileExt : ".jade"		// the file extension of your view templates
 				}
-				publicDir : "static/",
-				tmplExt : ".tmpl",
+				publicDir : "static/",			// your app's "public" folder (the "static" folder in Node.js / Express)
+				tmplExt : ".tmpl",				// the file extension(s) of your client side template files
 				mode : "dev"
 			}
 
@@ -163,9 +163,7 @@ module.exports = function( grunt ) {
 };
 ```
 
-The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps), and the `tmplExt` option tells Cartero the file extension(s) of your client side template files.
-
-The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.). See the [reference section](#reference) for a complete list of options for the Cartero task.
+The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.), and more. See the [reference section](#reference) for a complete list of options for the Cartero task.
 
 Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. Install the middleware:
 
@@ -360,7 +358,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 {
 	// (default: undefined) An array of bundles that this bundle depends on.
 	"dependencies" : [ "JQuery" ],
-	
+
 	// (default: undefined) If supplied, only assets listed in this array will be
 	// included when this bundle is required. If not supplied, all assets are included.
 	"whitelistedFiles" : [ "backbone.js" ],
