@@ -369,7 +369,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	"directoriesToFlatten" : [ "mixins" ],
 
 	// (default: false) If true, assets in flattened subdirectories are served before
-	// assets in the root directory of the bundle. Otherwise, they are served after.
+	// assets in the root directory of the bundle. Otherwise, they are served afterwards.
 	"prioritizeFlattenedDirectories" : false,
 
 	// (default: false) This option can be used to compile separate combined asset files
@@ -385,12 +385,11 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// kept "as separate as possible" - trust us, we did think it through.
 	"keepSeparate" : true,
 
-	// (default: undefined) An array of files that will only be served in dev mode, and
-	// that will be ignored in prod mode.
+	// (default: undefined) An array of files that will only be served in `dev` mode, and
+	// that will be ignored in `prod` mode.
 	"devModeOnlyFiles" : [ "mixins/backbone.subviews-debug.js" ],
 
-	// (default: undefined) An array of files that will only be served in prod mode, and
-	// that will be ignored in dev mode.
+	// (default: undefined) Just like `devModeOnlyFiles` but for `prod` mode.
 	"prodModeOnlyFiles" : [ "mixins/backbone.subviews.js" ],
 
 	// (default: undefined) An array of files that should be included when the bundle is
