@@ -511,11 +511,7 @@ If you develop a Hook for your web framework, please let us know and we'll add i
 
 ## About
 
-### Authors
-
 By Oleg Seletsky and David Beck ([@dgbeck](https://twitter.com/davegbeck))
-
-### License
 
 Copyright (c) 2013 Rotunda Software, LLC.
 
