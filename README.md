@@ -195,7 +195,7 @@ Now you are ready to go. To let Cartero know which asset bundles are required by
 ```jade
 // peopleList.jade
 
-// ##cartero_requires "JQuery", "Dialogs/EditPersonDialog"
+// ##cartero_requires "Dialogs/EditPersonDialog"
 
 doctype 5
 html(lang="en")
