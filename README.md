@@ -282,9 +282,8 @@ options : {
 		filesToIgnore : /^_.*/,				// (default: /^_.*/)
 		directoriesToIgnore : /^__.*/,		// (default: /^__.*/)
 
-		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
-		// Assets in flattened directories are served with a server side template when
-		// it is rendered, just as if they lived in the template's directory.
+		// (default: /^_.*/) Assets in flattened directories are served with a server side 
+		// template when it is rendered, just as if they lived in the template's directory.
 		directoriesToFlatten : /^_.*/,
 
 		// (default: undefined) Analogous to its counterpart in the `library` option.
