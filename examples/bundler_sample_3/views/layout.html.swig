@@ -4,8 +4,8 @@
 <head>
 
 {% block head %}
-{{ bundler_js|raw }}
-{{ bundler_css|raw }}
+{{ cartero_js|raw }}
+{{ cartero_css|raw }}
 {% endblock %}
 
 
@@ -14,7 +14,7 @@
 <body>
 {% block content %}{% endblock %}
 
-{{ bundler_tmpl|raw }}
+{{ cartero_tmpl|raw }}
 </body>
 
 

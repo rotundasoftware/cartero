@@ -4,7 +4,6 @@
 */
 
 var express = require( "express" ),
-	//routeManager = require( "./Libraries/routeManager.js" ),
 	carteroMiddleware = require( "cartero-express-hook" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
