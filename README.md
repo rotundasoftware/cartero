@@ -509,12 +509,14 @@ Yes and No. They would break, but Cartero automatically scans your `.css` files 
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
 
-## Authors
+## About
+
+### Authors
 
 * Oleg Seletsky
 * David Beck ([@dgbeck](https://twitter.com/davegbeck))
 
-## License
+### License
 
 Copyright (c) 2013 Rotunda Software, LLC.
 
