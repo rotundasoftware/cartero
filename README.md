@@ -460,8 +460,6 @@ From a high level perspective, the Hook is responsible for populating the `carte
 ```javascript
 // Sample catero.json file
 {
-	mode : "dev",		// in `prod` mode, assets will be minified and concatenated
-
 	// the relative path of the `publicDir`
 	publicDir : "static",
 
