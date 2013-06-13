@@ -15,7 +15,6 @@ var	_ = require( "underscore" ),
 	resolve = require( "resolve" ),
 	browserify = require( "browserify" ),
 	async = require( "async" ),
-	through = require( "through" ),
 	Bundle = require( "./../lib/bundle" ),
 	Parcel = require( "./../lib/parcel" ),
 	File = require( "./../lib/file" );

@@ -3,20 +3,20 @@
   "description": "The best Grunt plugin ever.",
   "version": "0.1.3",
   "author": {
-    "name": "Oleg Seletsky",
-    "email": "oleg.b.seletsky@gmail.com"
+    "name": "Rotunda Software",
+    "email": "support@rotundasoftware.com"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/go-oleg/bundler.git"
+    "url": "git://github.com/rotundasoftware/cartero/cartero.git"
   },
   "bugs": {
-    "url": "https://github.com/go-oleg/bundler/issues"
+    "url": "https://github.com/rotundasoftware/cartero/issues"
   },
   "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/go-oleg/bundler/blob/master/LICENSE-MIT"
+      "url": "https://github.com/rotundasoftware/cartero/blob/master/LICENSE-MIT"
     }
   ],
   "main": "Gruntfile.js",
@@ -44,21 +44,8 @@
     "findit": "~0.1.2",
     "path": "~0.4.9",
     "browserify": "~2.13.2",
-    "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.4.1",
-    "grunt-contrib-sass": "~0.3.0",
-    "grunt-contrib-less": "~0.5.1",
-    "grunt-contrib-coffee": "~0.7.0",
-    "grunt-contrib-stylus": "~0.5.0",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-watch": "~0.3.1",
-    "grunt-contrib-uglify": "~0.2.0",
-    "grunt-contrib-htmlmin": "~0.1.3",
-    "grunt-contrib-compass": "~0.2.0",
     "detective": "~2.1.1",
     "resolve": "~0.3.1",
-    "browserify": "~2.13.2",
-    "async": "~0.2.8",
-    "through": "~2.3.4"
+    "async": "~0.2.8"
   }
 }
