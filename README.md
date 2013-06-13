@@ -141,7 +141,7 @@ module.exports = function( grunt ) {
 				},
 				views : {
 					path : "views/",			// the directoy that contains your server side view templates.
-					viewFileExt : ".jade"		// the file extension of your view templates.
+					viewFileExt : ".jade"		// the file extension of your server side view templates.
 				}
 				publicDir : "static/",			// your app's "public" or "static" directory (where
 												// compiled assets will be dumped).
