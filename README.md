@@ -292,10 +292,9 @@ options : {
 
 	// (required) The "public" directory of your application, that is, the directory that
 	// is served by your web server. In Node.js / Express applications this is generally the
-	// "static" directory. Like all paths in these options, it should be relative to `projectDir`.
-	// Cartero will automatically create directories within `publicDir` into which processed
-	// assets will be dumped, named (by default) `library-assets` and `view-assets`, containing
-	// assets that pertain to bundles and page views, respectively.
+	// "static" directory. Cartero will automatically create directories within `publicDir` 
+	// into which processed assets will be dumped, named (by default) `library-assets` and 
+	// `view-assets`, containing assets that pertain to bundles and page views, respectively.
 	"publicDir" : "static/",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
@@ -357,7 +356,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// (default: undefined) An array of bundles that this bundle depends on.
 	"dependencies" : [ "JQuery" ],
 
-	// (default: undefined) If supplied, only assets listed in this array will be
+	// (default: undefined) If supplied, ONLY assets listed in this array will be
 	// included when this bundle is required. If not supplied, all assets are included.
 	"whitelistedFiles" : [ "backbone.js" ],
 
