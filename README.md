@@ -127,7 +127,7 @@ First, install Cartero via npm:
 
 Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
-```
+```javascript
 // example gruntfile
 
 module.exports = function( grunt ) {
