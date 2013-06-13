@@ -513,8 +513,7 @@ If you develop a Hook for your web framework, please let us know and we'll add i
 
 ### Authors
 
-* Oleg Seletsky
-* David Beck ([@dgbeck](https://twitter.com/davegbeck))
+By Oleg Seletsky and David Beck ([@dgbeck](https://twitter.com/davegbeck))
 
 ### License
 
