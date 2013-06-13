@@ -355,6 +355,15 @@ module.exports = function(grunt) {
 				grunt.fail.fatal( "Option " + configOption + " is required.  Please add it to your cartero task configuration before proceeding." );
 		} );
 
+		if( options.library && ! _.isArray( options.library ) )
+			options.library = [ options.library ];
+
+		if( options.views &&  ! _.isArray( options.views ) )
+			options.views = [ options.views ];
+
+		if( options.tmplExt && ! _.isArray( options.tmplExt ) )
+			options.tmplExt = [ options.tmplExt ];
+
 		_.each( options.library, function( dirOptions ) {
 			_.each( kRequiredLibraryConfigOptions, function( configOption ) {
 				if( _.isUndefined( dirOptions[ configOption ] ) )
@@ -414,15 +423,6 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 		options = this.options();
 
-		if( options.library && ! _.isArray( options.library ) )
-			options.library = [ options.library ];
-
-		if( options.views &&  ! _.isArray( options.views ) )
-			options.views = [ options.views ];
-
-		if( options.tmplExt && ! _.isArray( options.tmplExt ) )
-			options.tmplExt = [ options.tmplExt ];
-
 		validateConfigOptions( options );
 
 		options = applyDefaultsAndSanitize( options );
@@ -445,23 +445,17 @@ module.exports = function(grunt) {
 		// - files : All files of the given inExt in all `views` and `library` directories
 		// - options : Pass through options supplied in the processingTask
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-
 			configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, false );
-
 		} );
 
 		// For each supplied minificationTask, set up the task configuration
 		_.each( options.minificationTasks, function( minificationTask ) {
-
 			configureUserDefinedTask( libraryAndViewDirs, minificationTask, false, true );
-
 		} );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
 		_.each( extToCopy, function ( ext ) {
-
 			configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext, validCarteroDirExt );
-
 		} );
 
 		configureCarteroTask( "clean", { libraryAndViewDirs : libraryAndViewDirs } );
@@ -469,7 +463,6 @@ module.exports = function(grunt) {
 		configureCarteroTask( "copy", { libraryAndViewDirs : libraryAndViewDirs, extToCopy : extToCopy } );
 
 		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
-
 
 		var validCarteroDirExt = processedAssetExts;
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
@@ -489,9 +482,7 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
-
 		var taskConfig = this.options();
-
 		var filesToCopy = [];
 
 		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
@@ -510,12 +501,11 @@ module.exports = function(grunt) {
 		_.each( filesToCopy, function( fileSrcDest ) {
 			grunt.file.copy( fileSrcDest.src, fileSrcDest.dest );
 		} );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile", "", function() {
-
 		var cssFiles = [];
+		var done = this.async();
 
 		_.each( parcelRegistry, function( parcel ) {
 			_.each( parcel.filesToServe, function( file ) {
@@ -525,8 +515,6 @@ module.exports = function(grunt) {
 				} );
 			} );
 		} );
-
-		var done = this.async();
 
 		async.each(
 			cssFiles,
@@ -538,7 +526,6 @@ module.exports = function(grunt) {
 					console.log( "Error while replacing relative URLs in CSS file with absolute ones: " + e );
 					throw err;
 				}
-
 				done();
 			}
 		);
@@ -558,25 +545,20 @@ module.exports = function(grunt) {
 
 	// Creates the assetLibrary and appPages destination directories
 	grunt.registerTask( kCarteroTaskPrefix + "prepare", "Prepare directories for build", function() {
-
 		var taskConfig = this.options();
 		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
 			grunt.file.mkdir( dirOptions.destDir );
 		} );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "clean", "Clean output directories", function() {
-
 		var taskConfig = this.options();
 		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
 			grunt.file.delete( dirOptions.destDir );
 		} );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
-
 		var opts = this.options();
 
 		try {
@@ -588,7 +570,6 @@ module.exports = function(grunt) {
 				grunt.fail.warn( errMsg );
 			else
 				grunt.fail.fatal( errMsg );
-
 		}
 
 		try {
@@ -604,7 +585,6 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "buildCombinedFiles", "", function() {
-
 		_.each( _.values( bundleRegistry ), function( bundle ) {
 			bundle.buildCombinedFiles();
 		} );
@@ -612,7 +592,6 @@ module.exports = function(grunt) {
 		_.each( _.values( parcelRegistry ), function( parcel ) {
 			parcel.buildCombinedFiles();
 		} );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "seperateFilesToServeByType", "", function() {
@@ -623,9 +602,7 @@ module.exports = function(grunt) {
 
 	// Figures out which asset files aren't referenced by the pageMap or bundleMap and removes them
 	grunt.registerTask( kCarteroTaskPrefix + "cleanup", "", function() {
-
 		var options = this.options();
-
 		var referencedFiles = [];
 
 		_.each( parcelRegistry, function( parcel ) {
@@ -648,12 +625,10 @@ module.exports = function(grunt) {
 		_.each( filesToClean, function ( file ) {
 			grunt.file.delete( file );
 		} );
-
 	} );
 
 	// Saves the bundleMap and pageMap contents to files.
 	grunt.registerTask( kCarteroTaskPrefix + "saveCarteroJson", "", function() {
-
 		var parcelDataToSave = {};
 		_.each( _.values( parcelRegistry ), function( parcel ) {
 			parcelDataToSave[ parcel.path ] = {
@@ -670,12 +645,11 @@ module.exports = function(grunt) {
 		carteroJson.mode = options.mode;
 
 		fs.writeFileSync( path.join( options.projectDir, kCarteroJsonFile ), JSON.stringify( carteroJson, null, "\t" ) );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "replaceCarteroDirTokens", "", function() {
-
 		var options = this.options();
+
 		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
 
 			async.waterfall( [
@@ -702,9 +676,7 @@ module.exports = function(grunt) {
 		}
 
 		var done = this.async();
-
 		var assetFiles = [];
-
 		var finder = findit.find( options.publicDir );
 
 		finder.on( "file", function( file, stat ) {
@@ -728,7 +700,6 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerMultiTask( kCarteroTaskPrefix + "browserify", "", function() {
-
 		var browserifyExecuteOnLoadFiles = [];
 
 		_.each( _.values( bundleRegistry ), function( bundle ) {
@@ -745,7 +716,7 @@ module.exports = function(grunt) {
 		function processFile( filePath, filePathDest, cb ) {
 
 			var b = browserify();
-
+			var requiredFiles;
 			var fileContents = fs.readFileSync( filePath ).toString();
 
 			if( isAutorunFile( filePath, fileContents ) ) {
@@ -753,8 +724,6 @@ module.exports = function(grunt) {
 			}
 
 			b.require( filePath );
-
-			var requiredFiles;
 
 			try {
 				requiredFiles = detective( fileContents );
