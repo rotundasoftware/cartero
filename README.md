@@ -178,7 +178,7 @@ Then `use` it, passing it the absolute path of your project directory (i.e. the 
 // app.js
 
 var app = express();
-var carteroMiddleware = require( "cartero-express-hook" ),
+var carteroMiddleware = require( "cartero-express-hook" );
 // ...
 
 app.configure( function() {
@@ -214,7 +214,7 @@ When you run either of the following commands from the directory of your gruntfi
 	grunt cartero:dev
 	grunt cartero:prod
 
-The Cartero Grunt Task will fire up, preprocess all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
+The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
 ## <a id="reference"></a>Reference
 
@@ -229,10 +229,10 @@ options : {
 	// (required) An object that specifies your Asset Library directory and related options. 
 	// You may also supply an array of objects, instead of just one object, if you have multiple
 	// directories that contain bundles. For example, if you are using Bower, you will likely
-	// want to include both the "components" directory and an application specific directory
-	// in your Asset Library, so the library option would be an array of two objects.
+	// want to include both the Bower "components" directory and an application specific 
+	// directory in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
-		// (required) The path to the directory containing asset bundles.
+		// (required) The relative path to the directory containing asset bundles.
 		path : "assetLibrary/",
 
 		// (default: true) When true, parent bundles are automatically added as a
@@ -270,7 +270,6 @@ options : {
 	// of just one object, if you have multiple directories that contain views.
 	"views" : {
 		// (required) The path to the directory containing your server side view templates.
-		// Generally this directory is called "views" in the Node.js / Express world.
 		path : "views/",
 
 		// (required) The file extension of your server side template files (e.g. ".nunjucks"
@@ -278,13 +277,10 @@ options : {
 		// ##cartero_requires directive (see below discussion of directives for more info).
 		viewFileExt : ".jade",
 
-		// (default: /^_.*/) Files with names matching this regular expression
-		// will be completely ignored by Cartero.
-		filesToIgnore : /^_.*/,
-
-		// (default: /^__.*/) Directories with names matching this regular expression
-		// will be completely ignored by Cartero.
-		directoriesToIgnore : /^__.*/,
+		// Files or directories with names matching these regular
+		// expressions will be completely ignored by Cartero.
+		filesToIgnore : /^_.*/,				// (default: /^_.*/)
+		directoriesToIgnore : /^__.*/,		// (default: /^__.*/)
 
 		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
 		// Assets in flattened directories are served with a server side template when
