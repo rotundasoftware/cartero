@@ -414,13 +414,13 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
 		options = this.options();
 
-		if( ! _.isArray( options.library ) )
+		if( options.library && ! _.isArray( options.library ) )
 			options.library = [ options.library ];
 
-		if( ! _.isArray( options.views ) )
+		if( options.views &&  ! _.isArray( options.views ) )
 			options.views = [ options.views ];
 
-		if( ! _.isArray( options.tmplExt ) )
+		if( options.tmplExt && ! _.isArray( options.tmplExt ) )
 			options.tmplExt = [ options.tmplExt ];
 
 		validateConfigOptions( options );
@@ -485,6 +485,7 @@ module.exports = function(grunt) {
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
+
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
@@ -628,15 +629,11 @@ module.exports = function(grunt) {
 		var referencedFiles = [];
 
 		_.each( parcelRegistry, function( parcel ) {
-
 			referencedFiles = _.union( referencedFiles, parcel.js, parcel.css, parcel.tmpl );
-
 		} );
 
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-
 			referencedFiles = _.union( referencedFiles, bundle.dynamicallyLoadedFiles );
-
 		} );
 
 		var filesToClean = grunt.file.expand( {
