@@ -460,7 +460,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 ```javascript
 // Sample catero.json file
 {
-	mode : "dev",
+	mode : "dev",		// in `prod` mode, assets will be minified and concatenated
 
 	// the relative path of the `publicDir`
 	publicDir : "static",
@@ -494,8 +494,6 @@ From a high level perspective, the Hook is responsible for populating the `carte
 	}
 }
 ```
-
-The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
 
 The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole shebang into `cartero_tmpl`.
 
