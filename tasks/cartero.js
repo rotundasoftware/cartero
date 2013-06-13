@@ -198,7 +198,7 @@ module.exports = function(grunt) {
 
 			var newDest = filepath.replace( dirOptions.path, dirOptions.destDir );
 
-			newDest = carteroUtil.mapAssetFileName( newDest, assetExtensionMap );
+			newDest = File.mapAssetFileName( newDest, assetExtensionMap );
 
 			if( _.contains( extToCopy, File.getFileExtension( filepath ) ) )
 				grunt.file.copy( filepath, newDest );
