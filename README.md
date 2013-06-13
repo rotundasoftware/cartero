@@ -21,7 +21,7 @@ As of the time of this writing Cartero only works with Node.js / Express, but [t
 
 ### The Asset Library
 
-Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. For example, take the following example library.
+Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
@@ -125,32 +125,35 @@ First, install Cartero via npm:
 
 	npm install grunt-cartero
 
-Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, check out the [Getting Started](http://gruntjs.com/getting-started) guide.) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
+Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
-```
+```javascript
 // example gruntfile
 
 module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				projectDir : __dirname,
+				projectDir : __dirname,			// the root directory of your project. All other paths in 
+												// these options are relative to this directory.
 				library : {
-					path : "assetLibrary/"
+					path : "assetLibrary/"		// the relative path to your Asset Library directory.
 				},
 				views : {
-					path : "views/",
-					viewFileExt : ".jade"
+					path : "views/",			// the directoy that contains your server side view templates.
+					viewFileExt : ".jade"		// the file extension of your server side view templates.
 				}
-				publicDir : "static/",
-				tmplExt : ".tmpl",
+				publicDir : "static/",			// your app's "public" or "static" directory (into which
+												// processed assets will ultimately be dumped).
+
+				tmplExt : ".tmpl",				// the file extension(s) of your client side template files.
 				mode : "dev"
 			}
 
-			// `dev` target uses all the default options
+			// `dev` target uses all the default options.
 			dev : {},			
 
-			// `prod` target overrides the `mode` option
+			// `prod` target overrides the `mode` option.
 			prod : {
 				options : {
 					mode : "prod"
@@ -163,21 +166,19 @@ module.exports = function( grunt ) {
 };
 ```
 
-The `projectDir` option specifices the root folder for your project. *All other paths in the gruntfile should be relative to this directory.* The `library` option specifies the path(s) to your Asset Library directory(ies), and the `views` option specifies the directory(ies) that contains your server side view templates. The `publicDir` option tells Cartero where your application's "public" folder is located (generally the "static" folder in Node.js / Express apps), and the `tmplExt` option tells Cartero the file extension(s) of your client side template files.
-
-The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.). See the [reference section](#reference) for a complete list of options for the Cartero task.
+The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.), and more. See the [reference section](#reference) for a complete list of options for the Cartero task.
 
 Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. Install the middleware:
 
 	npm install cartero-express-hook
 
-Then `use` it, passing it the absolute path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
+Then `use` it, passing the absolute path of your project directory (i.e. the `projectDir` option from the gruntfile configuration).
 
 ```javascript
 // app.js
 
 var app = express();
-var carteroMiddleware = require( "cartero-express-hook" ),
+var carteroMiddleware = require( "cartero-express-hook" );
 // ...
 
 app.configure( function() {
@@ -194,7 +195,7 @@ Now you are ready to go. To let Cartero know which asset bundles are required by
 ```jade
 // peopleList.jade
 
-// ##cartero_requires "JQuery", "Dialogs/EditPersonDialog"
+// ##cartero_requires "Dialogs/EditPersonDialog"
 
 doctype 5
 html(lang="en")
@@ -213,7 +214,7 @@ When you run either of the following commands from the directory of your gruntfi
 	grunt cartero:dev
 	grunt cartero:prod
 
-The Cartero Grunt Task will fire up, preprocess all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
+The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
 ## <a id="reference"></a>Reference
 
@@ -228,10 +229,10 @@ options : {
 	// (required) An object that specifies your Asset Library directory and related options. 
 	// You may also supply an array of objects, instead of just one object, if you have multiple
 	// directories that contain bundles. For example, if you are using Bower, you will likely
-	// want to include both the "components" directory and an application specific directory
-	// in your Asset Library, so the library option would be an array of two objects.
+	// want to include both the Bower "components" directory and an application specific 
+	// directory in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
-		// (required) The path to the directory containing asset bundles.
+		// (required) The relative path to the directory containing asset bundles.
 		path : "assetLibrary/",
 
 		// (default: true) When true, parent bundles are automatically added as a
@@ -269,7 +270,6 @@ options : {
 	// of just one object, if you have multiple directories that contain views.
 	"views" : {
 		// (required) The path to the directory containing your server side view templates.
-		// Generally this directory is called "views" in the Node.js / Express world.
 		path : "views/",
 
 		// (required) The file extension of your server side template files (e.g. ".nunjucks"
@@ -277,17 +277,13 @@ options : {
 		// ##cartero_requires directive (see below discussion of directives for more info).
 		viewFileExt : ".jade",
 
-		// (default: /^_.*/) Files with names matching this regular expression
-		// will be completely ignored by Cartero.
-		filesToIgnore : /^_.*/,
+		// Files or directories with names matching these regular
+		// expressions will be completely ignored by Cartero.
+		filesToIgnore : /^_.*/,				// (default: /^_.*/)
+		directoriesToIgnore : /^__.*/,		// (default: /^__.*/)
 
-		// (default: /^__.*/) Directories with names matching this regular expression
-		// will be completely ignored by Cartero.
-		directoriesToIgnore : /^__.*/,
-
-		// (default: /^_.*/) Behaves exactly as its counterpart in the `library` option.
-		// Assets in flattened directories are served with a server side template when
-		// it is rendered, just as if they lived in the template's directory.
+		// (default: /^_.*/) Assets in flattened directories are served with a server side 
+		// template when it is rendered, just as if they lived in the template's directory.
 		directoriesToFlatten : /^_.*/,
 
 		// (default: undefined) Analogous to its counterpart in the `library` option.
@@ -296,10 +292,9 @@ options : {
 
 	// (required) The "public" directory of your application, that is, the directory that
 	// is served by your web server. In Node.js / Express applications this is generally the
-	// "static" directory. Like all paths in these options, it should be relative to `projectDir`.
-	// Cartero will automatically create directories within `publicDir` into which processed
-	// assets will be dumped, named (by default) `library-assets` and `view-assets`, containing
-	// assets that pertain to bundles and page views, respectively.
+	// "static" directory. Cartero will automatically create directories within `publicDir` 
+	// into which processed assets will be dumped, named (by default) `library-assets` and 
+	// `view-assets`, containing assets that pertain to bundles and page views, respectively.
 	"publicDir" : "static/",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
@@ -360,8 +355,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 {
 	// (default: undefined) An array of bundles that this bundle depends on.
 	"dependencies" : [ "JQuery" ],
-	
-	// (default: undefined) If supplied, only assets listed in this array will be
+
+	// (default: undefined) If supplied, ONLY assets listed in this array will be
 	// included when this bundle is required. If not supplied, all assets are included.
 	"whitelistedFiles" : [ "backbone.js" ],
 
@@ -374,7 +369,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	"directoriesToFlatten" : [ "mixins" ],
 
 	// (default: false) If true, assets in flattened subdirectories are served before
-	// assets in the root directory of the bundle. Otherwise, they are served after.
+	// assets in the root directory of the bundle. Otherwise, they are served afterwards.
 	"prioritizeFlattenedDirectories" : false,
 
 	// (default: false) This option can be used to compile separate combined asset files
@@ -390,12 +385,11 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// kept "as separate as possible" - trust us, we did think it through.
 	"keepSeparate" : true,
 
-	// (default: undefined) An array of files that will only be served in dev mode, and
-	// that will be ignored in prod mode.
+	// (default: undefined) An array of files that will only be served in `dev` mode, and
+	// that will be ignored in `prod` mode.
 	"devModeOnlyFiles" : [ "mixins/backbone.subviews-debug.js" ],
 
-	// (default: undefined) An array of files that will only be served in prod mode, and
-	// that will be ignored in dev mode.
+	// (default: undefined) Just like `devModeOnlyFiles` but for `prod` mode.
 	"prodModeOnlyFiles" : [ "mixins/backbone.subviews.js" ],
 
 	// (default: undefined) An array of files that should be included when the bundle is
@@ -416,7 +410,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 #### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
-This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in the "comment" escape sequence for whatever template language you are using.
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in a "comment" block of whatever template language you are using, as shown here (.erb syntax).
 
 ```erb
 <%# ##cartero_requires "App/Dialogs/EditPersonDialog" %>
@@ -466,8 +460,6 @@ From a high level perspective, the Hook is responsible for populating the `carte
 ```javascript
 // Sample catero.json file
 {
-	mode : "dev",
-
 	// the relative path of the `publicDir`
 	publicDir : "static",
 
@@ -501,21 +493,26 @@ From a high level perspective, the Hook is responsible for populating the `carte
 }
 ```
 
-The format of this file is exactly the same in `dev` and `prod` mode, but `prod` mode the assets will be minified and concatenated.
-
-The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole shebang into `cartero_tmpl`.
+* The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole shebang into `cartero_tmpl`.
 
 #### Does Cartero address the issue of cache busting?
 
 Yes. The name of the concatenated asset files generated in `prod` mode includes an MD5 digest of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Since Cartero combines files in `prod` mode, won't file (image) urls used in my stylesheets break?
+#### Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
 ## Cartero Hook Directory
 
-* Node.js / Express
-	* [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
+* Node.js / Express: [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
+
+## About
+
+By Oleg Seletsky and [David Beck](https://twitter.com/davegbeck)
+
+Copyright (c) 2013 Rotunda Software, LLC.
+
+Licensed under the MIT License.
