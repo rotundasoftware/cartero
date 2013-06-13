@@ -148,46 +148,46 @@ module.exports = function(grunt) {
 	function configureUserDefinedTask( libraryAndViewDirs, taskConfig, doWatch, sourceIsDest ) {
 		var taskName = taskConfig.name;
 		var task = grunt.config( taskName ) || {};
-		var files = [];
+		var watch = grunt.config( "watch" ) || {};
 
 		_.each( libraryAndViewDirs, function( dir ) {
-			files.push( {
+
+			var taskTarget = kCarteroTaskPrefix + dir.path;
+
+			var files = [ {
 				expand: true,
 				cwd: sourceIsDest ? dir.destDir : dir.path,
 				src: [ "**/*" + taskConfig.inExt ],
 				dest: dir.destDir,
 				ext: taskConfig.outExt
-				} );
-		} );
+			} ];
 
-		task[ kCarteroTaskPrefix ] = {
-			files : files
-		};
-
-		if( ! _.isUndefined( taskConfig.options ) ) {
-			task[ kCarteroTaskPrefix ].options = taskConfig.options;
-		}
-
-		grunt.config( taskName, task );
-
-		// Configure a watch target to watch files with an `inExt` extension
-		// and run the preprocessing task.
-
-		if( doWatch ) {
-			var watch = grunt.config( "watch" ) || {};
-
-			watch[ kCarteroTaskPrefix + taskName ] = {
-				files : _.map( libraryAndViewDirs, function ( dir ) {
-					return dir.path + "/**/*" + taskConfig.inExt;
-				} ),
-				tasks : [ taskName + ":" + kCarteroTaskPrefix ],
-				options : {
-					nospawn : true
-				}
+			task[ taskTarget ] = {
+				files : files
 			};
 
-			grunt.config( "watch", watch );
-		}
+			if( ! _.isUndefined( taskConfig.options ) ) {
+				if( _.isFunction( taskConfig.options ) )
+					task[ taskTarget ].options = taskConfig.options( { srcDir : dir.path, destDir : dir.destDir } );
+				else
+					task[ taskTarget ].options = taskConfig.options;
+			}
+
+			if( doWatch ) {
+				watch[ kCarteroTaskPrefix + taskName + "_" + taskTarget ] = {
+					files : [ dir.path + "/**/*" + taskConfig.inExt ],
+					tasks : [ taskName + ":" + taskTarget ],
+					options : {
+						nospawn : true
+					}
+				};
+			}
+
+		} );
+
+		grunt.config( taskName, task );
+		grunt.config( "watch", watch );
+
 	}
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
@@ -216,11 +216,9 @@ module.exports = function(grunt) {
 
 				// If the changed file's extension matches the task, set the file.
 				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
-					grunt.config( [ taskName, kCarteroTaskPrefix ], {
-						src : filepath,
-						dest : newDest,
-						options : preprocessingTask.options || {}
-					} );
+					grunt.config( [ taskName, kCarteroTaskPrefix, "src" ], filepath );
+					grunt.config( [ taskName, kCarteroTaskPrefix, "dest" ], newDest );
+
 				}
 			} );
 
@@ -267,7 +265,8 @@ module.exports = function(grunt) {
 		grunt.task.run( kCarteroTaskPrefix + "copy" );
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-			grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
+			//grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
+			grunt.task.run( preprocessingTask.name );
 		} );
 
 		// Builds the bundleMap and pageMap to be used by later tasks
@@ -298,6 +297,10 @@ module.exports = function(grunt) {
 		}
 
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
+
+		console.log( grunt.config().coffee.cartero_library );
+
+		console.log( grunt.config().watch );
 
 		// In dev mode...
 		if( mode === "dev" ) {
@@ -420,7 +423,7 @@ module.exports = function(grunt) {
 	}
 
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
-
+try {
 		options = this.options();
 
 		if( ! _.isArray( options.library ) )
@@ -493,10 +496,11 @@ module.exports = function(grunt) {
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
-		console.log( grunt.config( "uglify" ).cartero_.files );
-
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
-
+}
+catch ( e ) {
+	console.log( e.stack );
+}
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {

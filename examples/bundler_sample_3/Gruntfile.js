@@ -38,9 +38,15 @@ module.exports = function( grunt ) {
 						outExt : ".js"
 					},
 					{
-						name : "sass",
+						name : "compass",
 						inExt : ".scss",
-						outExt : ".css"
+						outExt : ".css",
+						options : function( env ) {
+							return {
+								sassDir : env.srcDir,
+								cssDir : env.destDir
+							};
+						}
 					},
 					{
 						name : "stylus",
