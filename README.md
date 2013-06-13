@@ -516,5 +516,5 @@ If you develop a Hook for your web framework, please let us know and we'll add i
 
 ## License
 
-Copyright (c) 2013 Rotunda Software, LLC
+Copyright (c) 2013 Rotunda Software, LLC.
 Licensed under the MIT License.
