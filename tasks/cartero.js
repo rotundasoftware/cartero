@@ -69,7 +69,7 @@ module.exports = function(grunt) {
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
 		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "buildJsCssTmplLists:dev" );
+		grunt.task.run( kCarteroTaskPrefix + "seperateFilesToServeByType:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 	}
 
@@ -102,7 +102,7 @@ module.exports = function(grunt) {
 	// returns true if the given fileName represents a server-side view
 	function isViewFile( fileName ) {
 		var viewFile = _.find( options.views, function( dirOptions ) {
-			return _s.startsWith( fileName, dirOptions.path ) && _.contains( dirOptions.viewFileExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
+			return _s.startsWith( fileName, dirOptions.path ) && _.contains( dirOptions.viewFileExt, File.getFileExtension( fileName ) );
 		} );
 
 		return ! _.isUndefined( viewFile );
@@ -309,7 +309,7 @@ module.exports = function(grunt) {
 
 		watch[ kCarteroTaskPrefix + "_view_file" ] = {
 			files : viewFilePatterns,
-			tasks : [ "processViewFileChange" ],
+			tasks : [ kCarteroTaskPrefix + "processViewFileChange" ],
 			options : {
 				nospawn : true
 			}
@@ -328,7 +328,7 @@ module.exports = function(grunt) {
 			files : _.map( options.views, function ( dir ) {
 					return dir.path + "/**/bundle.json";
 				} ),
-			tasks : [ "processBundleJsonChange" ],
+			tasks : [ kCarteroTaskPrefix + "processBundleJsonChange" ],
 			options : {
 				nospawn : true
 			}
@@ -615,7 +615,7 @@ module.exports = function(grunt) {
 		var filesToClean = grunt.file.expand( {
 				filter : function( fileName ) {
 					//cleaning assets that are not used by any page
-					return ! _.contains( referencedFiles, fileName ) && _.contains( options.cleanableAssetExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
+					return ! _.contains( referencedFiles, fileName ) && _.contains( options.cleanableAssetExt, File.getFileExtension( fileName ) );
 				}
 			},
 			[ options.publicDir + "/**" ]
@@ -671,7 +671,7 @@ module.exports = function(grunt) {
 		}
 
 		function isValidCarteroDirFile( fileName ) {
-			return _.contains( options.validCarteroDirExt, fileName.substring( fileName.lastIndexOf( "." ) ) );
+			return _.contains( options.validCarteroDirExt, File.getFileExtension( fileName ) );
 		}
 
 		var done = this.async();
