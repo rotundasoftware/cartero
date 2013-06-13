@@ -56,9 +56,7 @@ module.exports = function(grunt) {
 		browserify : false
 	};
 
-	var kValidImageExt = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
-
-	var kJSandCSSExt = [ ".css", ".js" ];
+	var kValidImageExts = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
 
 	// Will contain options passed into the assetBundler task with defaults applied.
 	var options = {};
@@ -112,7 +110,7 @@ module.exports = function(grunt) {
 	}
 
 	// returns true if the given fileName is in a `views` directory
-	function isViewsFile( fileName ) {
+	function fileIsInViewDirectory( fileName ) {
 		var result = _.find( options.views, function( dirOptions ) {
 			return _s.startsWith( fileName, dirOptions.path );
 		} );
@@ -429,8 +427,10 @@ module.exports = function(grunt) {
 
 		options = applyDefaultsAndSanitize( options );
 
+		var processedAssetExts = _.union( options.tmplExt, [ ".js", ".css" ] );
+
 		var libraryAndViewDirs = _.union( options.library, options.views );
-		var extToCopy = _.union( options.tmplExt, kValidImageExt, kJSandCSSExt );
+		var extToCopy = _.union( kValidImageExts, processedAssetExts );
 
 		var assetExtensionMap = {};
 
@@ -438,7 +438,7 @@ module.exports = function(grunt) {
 			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt ) );
+		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), processedAssetExts ) );
 		File.setTmplExtensions( options.tmplExt );
 
 		// For each supplied preprocessingTask, set up the task configuration:
@@ -471,13 +471,13 @@ module.exports = function(grunt) {
 		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
 
 
-		var validCarteroDirExt = _.union( options.tmplExt, kJSandCSSExt );
+		var validCarteroDirExt = processedAssetExts;
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
 		configureWatchViewFile( options );
 		configureWatchBundleJson( options );
 
-		var cleanableAssetExt = _.union( options.tmplExt, kJSandCSSExt );
+		var cleanableAssetExt = processedAssetExts;
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
 
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
@@ -739,7 +739,7 @@ module.exports = function(grunt) {
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
-			if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
+			if( fileIsInViewDirectory( filePath.replace( options.projectDir + path.sep, "") ) )
 				return fileSrc.indexOf( kBrowserifyExecuteOnLoad ) != -1;
 			else
 				return _.contains( browserifyExecuteOnLoadFiles, filePath.replace( options.projectDir + path.sep, "" ) );
