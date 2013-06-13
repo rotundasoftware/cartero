@@ -33,16 +33,24 @@ module.exports = function( grunt ) {
 				],
 				preprocessingTasks : [
 					{
-						name : "coffee"
+						name : "coffee",
+						inExt : ".coffee",
+						outExt : ".js"
 					},
 					{
-						name : "sass"
+						name : "sass",
+						inExt : ".scss",
+						outExt : ".css"
 					},
 					{
-						name : "stylus"
+						name : "stylus",
+						inExt : ".styl",
+						outExt : ".css"
 					},
 					{
-						name : "less"
+						name : "less",
+						inExt : ".less",
+						outExt : ".css"
 					}
 				],
 				publicDir : "static",
