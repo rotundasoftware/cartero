@@ -1,13 +1,12 @@
 /*
- * grunt-asset-bundler
- * https://github.com/go-oleg/bundler
+ * grunt-cartero
+ * https://github.com/rotundasoftware/cartero
  *
- * Copyright (c) 2013 Oleg Seletsky
+ * Copyright (c) 2013 Rotunda Software, LLC
  * Licensed under the MIT license.
  */
 
-var carteroUtil = require( "./../lib/util.js" ),
-	_ = require( "underscore" ),
+var	_ = require( "underscore" ),
 	_s = require( "underscore.string" ),
 	fs = require( "fs" ),
 	findit = require( "findit" ),
@@ -27,6 +26,7 @@ module.exports = function(grunt) {
 
 	// Prefix for all task targets added by assetBundler to avoid conflicts with already existing targets.
 	var kCarteroTaskPrefix = "cartero_";
+	var kCarteroJsonFile = "cartero.json";
 
 	var kLibraryAssetsDirPrefix = "library-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
@@ -36,7 +36,7 @@ module.exports = function(grunt) {
 	var kRequiredViewsConfigOptions = [ "path", "viewFileExt" ];
 
 	// cartero directive: When browserify is enabled, this directive is used in js files in views that should be automatically run upon loading.
-	var kbrowserifyExecuteOnLoad = "##cartero_browserify_executeOnLoad";
+	var kBrowserifyExecuteOnLoad = "##cartero_browserify_executeOnLoad";
 
 	// Default values for the views task option.
 	var kViewsDirDefaults = {
@@ -63,9 +63,6 @@ module.exports = function(grunt) {
 	// Will contain options passed into the assetBundler task with defaults applied.
 	var options = {};
 
-	// Will contain the mode the assetBundler is being run with: `dev` or `prod`.
-	var mode;
-
 	var bundleRegistry = {};
 	var parcelRegistry = {};
 
@@ -74,7 +71,7 @@ module.exports = function(grunt) {
 
 	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
-		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "buildJsCssTmplLists:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 	}
@@ -116,13 +113,11 @@ module.exports = function(grunt) {
 
 	// returns true if the given fileName is in a `views` directory
 	function isViewsFile( fileName ) {
-
 		var result = _.find( options.views, function( dirOptions ) {
 			return _s.startsWith( fileName, dirOptions.path );
 		} );
 
 		return ! _.isUndefined( result );
-
 	}
 
 	function configureCarteroBrowserifyTask( libraryAndViewDirs, projectDir ) {
@@ -298,10 +293,6 @@ module.exports = function(grunt) {
 
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 
-		console.log( grunt.config().coffee.cartero_library );
-
-		console.log( grunt.config().watch );
-
 		// In dev mode...
 		if( mode === "dev" ) {
 			grunt.task.run( "watch" );
@@ -423,7 +414,6 @@ module.exports = function(grunt) {
 	}
 
 	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
-try {
 		options = this.options();
 
 		if( ! _.isArray( options.library ) )
@@ -450,8 +440,6 @@ try {
 
 		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt ) );
 		File.setTmplExtensions( options.tmplExt );
-
-		mode = options.mode;
 
 		// For each supplied preprocessingTask, set up the task configuration:
 		// - files : All files of the given inExt in all `views` and `library` directories
@@ -497,10 +485,6 @@ try {
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
-}
-catch ( e ) {
-	console.log( e.stack );
-}
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
@@ -645,8 +629,6 @@ catch ( e ) {
 
 		_.each( parcelRegistry, function( parcel ) {
 
-			//var metadataForMode = parcel[ options.mode ];
-
 			referencedFiles = _.union( referencedFiles, parcel.js, parcel.css, parcel.tmpl );
 
 		} );
@@ -690,7 +672,7 @@ catch ( e ) {
 		carteroJson.parcels = parcelDataToSave;
 		carteroJson.mode = options.mode;
 
-		carteroUtil.saveCarteroJson( carteroJson, options.projectDir );
+		fs.writeFileSync( path.join( options.projectDir, kCarteroJsonFile ), JSON.stringify( carteroJson, null, "\t" ) );
 
 	} );
 
@@ -758,7 +740,7 @@ catch ( e ) {
 
 		function isAutorunFile( filePath, fileSrc ) {
 			if( isViewsFile( filePath.replace( options.projectDir + path.sep, "") ) )
-				return fileSrc.indexOf( kbrowserifyExecuteOnLoad ) != -1;
+				return fileSrc.indexOf( kBrowserifyExecuteOnLoad ) != -1;
 			else
 				return _.contains( browserifyExecuteOnLoadFiles, filePath.replace( options.projectDir + path.sep, "" ) );
 		}
@@ -782,7 +764,7 @@ catch ( e ) {
 			}
 			catch( e ) {
 				var errMsg =  "Failed to parse file " + filePath + ": " + e ;
-				if( mode === "dev")
+				if( options.mode === "dev")
 					grunt.fail.warn( errMsg );
 				else
 					grunt.fail.fatal( errMsg );
@@ -802,7 +784,7 @@ catch ( e ) {
 			function( err, src ) {
 				if( err ) {
 					var errMsg =  "Error while browserifying " + filePath + " : " +  err;
-					if( mode === "dev" )
+					if( options.mode === "dev" )
 						grunt.fail.warn( errMsg );
 					else
 						grunt.fail.fatal( errMsg );
@@ -821,7 +803,7 @@ catch ( e ) {
 			this.files,
 			function( file, callback ) {
 				var realPath = path.join( options.projectDir, file.src[ 0 ] );
-				processFile( realPath , /*fs.realpathSync( */file.dest /*)*/, callback );
+				processFile( realPath , file.dest, callback );
 			},
 			function( err ) {
 				//user notified of errors (if any) while each file is bundled
