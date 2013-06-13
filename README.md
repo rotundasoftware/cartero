@@ -360,10 +360,13 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 {
 	// (default: undefined) An array of bundles that this bundle depends on.
 	"dependencies" : [ "JQuery" ],
+	
+	// (default: undefined) If supplied, only assets listed in this array will be
+	// included when this bundle is required. If not supplied, all assets are included.
+	"whitelistedFiles" : [ "backbone.js" ],
 
-	// (default: undefined) An array of file names within the bundle. Files in this
-	// array will be served before any other files in the bundle, in the order they
-	// appear in the array.
+	// (default: undefined) Files in this array will be served before any other files
+	// in the bundle, in the order they appear in the array.
 	"filePriority" : [ "backbone.js" ],
 
 	// (default: undefined) A an array of directories that overrides the corresponding  
