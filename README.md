@@ -137,23 +137,23 @@ module.exports = function( grunt ) {
 				projectDir : __dirname,			// the root directory of your project. All other paths in 
 												// these options are relative to this directory.
 				library : {
-					path : "assetLibrary/"		// the path to your Asset Library directory
+					path : "assetLibrary/"		// the relative path to your Asset Library directory.
 				},
 				views : {
-					path : "views/",			// the directoy that contains your server side view templates
-					viewFileExt : ".jade"		// the file extension of your view templates
+					path : "views/",			// the directoy that contains your server side view templates.
+					viewFileExt : ".jade"		// the file extension of your view templates.
 				}
 				publicDir : "static/",			// your app's "public" or "static" directory (where
-												// compiled assets will be dumped.)
+												// compiled assets will be dumped).
 
-				tmplExt : ".tmpl",				// the file extension(s) of your client side template files
+				tmplExt : ".tmpl",				// the file extension(s) of your client side template files.
 				mode : "dev"
 			}
 
-			// `dev` target uses all the default options
+			// `dev` target uses all the default options.
 			dev : {},			
 
-			// `prod` target overrides the `mode` option
+			// `prod` target overrides the `mode` option.
 			prod : {
 				options : {
 					mode : "prod"
