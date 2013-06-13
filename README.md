@@ -134,8 +134,8 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				projectDir : __dirname,			// the root directory of your project. All other paths are
-												// relative to this directory.
+				projectDir : __dirname,			// the root directory of your project. All other paths in 
+												// these options are relative to this directory.
 				library : {
 					path : "assetLibrary/"		// the path to your Asset Library directory
 				},
