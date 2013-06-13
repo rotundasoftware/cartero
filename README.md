@@ -511,7 +511,7 @@ If you develop a Hook for your web framework, please let us know and we'll add i
 
 ## About
 
-By Oleg Seletsky and David Beck ([@dgbeck](https://twitter.com/davegbeck))
+By Oleg Seletsky and [David Beck](https://twitter.com/davegbeck)
 
 Copyright (c) 2013 Rotunda Software, LLC.
 
