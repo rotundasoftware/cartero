@@ -505,7 +505,6 @@ Yes and No. They would break, but Cartero automatically scans your `.css` files 
 
 ## Cartero Hook Directory
 
-* Node.js / Express
-	* [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
+* Node.js / Express: [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
