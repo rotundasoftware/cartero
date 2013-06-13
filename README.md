@@ -410,7 +410,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 #### ##cartero_requires *bundleName_1, [ bundleName_2, ... ]*
 
-This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in the "comment" escape sequence for whatever template language you are using.
+This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in the "comment" escape sequence for whatever template language you are using, as shown here (.erb syntax).
 
 ```erb
 <%# ##cartero_requires "App/Dialogs/EditPersonDialog" %>
