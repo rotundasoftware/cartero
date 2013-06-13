@@ -404,12 +404,6 @@ module.exports = function(grunt) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
 
-		if( ! _.isArray( options.library ) )
-			options.library = [ options.library ];
-
-		if( ! _.isArray( options.views ) )
-			options.views = [ options.views ];
-
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.library = _.map( options.library, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
@@ -457,6 +451,15 @@ module.exports = function(grunt) {
 
 		options = this.options();
 
+		if( ! _.isArray( options.library ) )
+			options.library = [ options.library ];
+
+		if( ! _.isArray( options.views ) )
+			options.views = [ options.views ];
+
+		if( ! _.isArray( options.tmplExt ) )
+			options.tmplExt = [ options.tmplExt ];
+
 		validateConfigOptions( options );
 
 		options = applyDefaultsAndSanitize( options );
@@ -470,8 +473,8 @@ module.exports = function(grunt) {
 			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		//options.validOriginalAssetExt = _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt );
 		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), kJSandCSSExt, options.tmplExt ) );
+		File.setTmplExtensions( options.tmplExt );
 
 		mode = options.mode;
 
@@ -772,7 +775,7 @@ module.exports = function(grunt) {
 		var browserifyExecuteOnLoadFiles = [];
 
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserifyExecuteOnLoad );
+			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserify_executeOnLoad );
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {

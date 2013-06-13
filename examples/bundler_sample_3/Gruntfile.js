@@ -15,6 +15,12 @@ module.exports = function( grunt ) {
 						path : "library",
 						namespace : "Main",
 						bundleProperties : grunt.file.readJSON( "libraryBundleProperties.json" )
+					},
+					{
+						path : "components",
+						namespace : "Bower",
+						directoriesToFlatten : /.*/,
+						bundleProperties : grunt.file.readJSON( "bowerBundleProperties.json" )
 					}
 				],
 				views : [
@@ -40,7 +46,7 @@ module.exports = function( grunt ) {
 					}
 				],
 				publicDir : "static",
-				tmplExt : [ ".tmpl" ],
+				tmplExt : [ ".tmpl", ".tmpl2" ],
 				minificationTasks : [
 					{
 						name : "htmlmin",

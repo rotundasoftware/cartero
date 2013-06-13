@@ -5,7 +5,7 @@
 
 var express = require( "express" ),
 	//routeManager = require( "./Libraries/routeManager.js" ),
-	carteroMiddleware = require( "grunt-cartero/middleware.js" ),
+	carteroMiddleware = require( "cartero-express-hook" ),
 	http = require( "http" ),
 	cons = require('consolidate'),
 	swig = require('swig'),
@@ -22,19 +22,16 @@ var kAppPagesDir = path.join( __dirname, "views" );
 
 app.configure( function() {
 	app.set( "port" , process.env.PORT || 3000 );
-	app.set( "views" , __dirname + "/AppPages" );
-	//app.set( "views", __dirname );
+	app.set( "views" , __dirname + "/views" );
 	app.set( "view engine", "swig");
 	app.use( express.favicon() );
 	app.use( express.logger( "dev" ) );
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
-	//app.use( myMethod() );
-	app.use( carteroMiddleware( path.join( __dirname ), "WebServer/Static", kAppPagesDir ) );
+	app.use( carteroMiddleware(  __dirname ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
-	//app.use( express.static( path.join( __dirname, "Static" ) ) );
 	app.use( express.static( kStaticDir ) );
 } );
 
