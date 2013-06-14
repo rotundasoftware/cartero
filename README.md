@@ -447,7 +447,7 @@ When the `browserify` option in the Cartero Grunk Task is enabled, this directiv
 
 ## FAQ
 
-#### Does Cartero work with Rails, PHP, etc., or just with Node.js / Express?
+#### Q: Does Cartero work with Rails, PHP, etc., or just with Node.js / Express?
 
 The heart of Cartero is an intelligent Grunt.js task, and can be used with any web framework. However, there is a small piece of logic called the Hook which must be called from your web framework, since it is used when each page is rendered. If you are interested in developing a Cartero Hook for your web framework of choice, keep reading - it's not hard.
 
@@ -495,21 +495,21 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 * The Hook then generates the raw HTML that will include the assets in the page being rendered and puts it into the `cartero_js`, `cartero_css`, and `cartero_tmpl` template variables. For the case of `js` and `css` files, it just needs to transform the paths in the `cartero.json` file to be relative to the `publicDir`, and then wrap them in `<script>` or `<link>` tags. For `tmpl` assets, the Hook needs to read the files, concatenate their contents, and then put the whole shebang into `cartero_tmpl`.
 
-#### Does Cartero address the issue of cache busting?
+#### Q: Does Cartero address the issue of cache busting?
 
 Yes. The name of the concatenated asset files generated in `prod` mode includes an MD5 digest of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
+#### Q: Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
-#### The "watch" task terminates on JS/CSS errors. How can I keep it running through errors?
+#### Q: The "watch" task terminates on JS/CSS errors. How can I keep it running through errors?
 
 Use the Grunt `--force` flag:
 
 	grunt cartero:dev --watch --force
 
-#### I'm getting the error: EMFILE, too many open files
+#### Q: I'm getting the error: EMFILE, too many open files
 
 EMFILE mean you've reached the OS limit of concurrently open files. There aren't much we can do about it, however you can increase the limit yourself.
 
