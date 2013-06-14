@@ -211,10 +211,10 @@ html(lang="en")
 
 When you run either of the following commands from the directory of your gruntfile:
 
-	grunt cartero:dev
+	grunt cartero:dev --watch
 	grunt cartero:prod
 
-The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will automatically watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
+The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will  watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
 ## <a id="reference"></a>Reference
 
@@ -298,8 +298,8 @@ options : {
 	"publicDir" : "static/",
 
 	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
-	// b) assets are not concatenated, and c) after finishing, the Cartero Grunt Task will
-	// automatically watch all of your assets for changes and reprocess them as needed.
+	// b) assets are not concatenated, and c) if the `--watch` flag is set, after finishing, the
+	// Cartero Grunt Task will watch all of your assets for changes and reprocess them as needed.
 	"mode" : "dev",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
