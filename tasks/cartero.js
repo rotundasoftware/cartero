@@ -388,15 +388,15 @@ module.exports = function(grunt) {
 
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.library = _.map( options.library, function( bundleDir ) {
-			var bundleDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
+			var libraryDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
 
-			if( ! _.isUndefined( bundleDirWithDefaults.namespace ) )
-				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + "-" + bundleDirWithDefaults.namespace );
+			if( ! _.isUndefined( libraryDirWithDefaults.namespace ) )
+				libraryDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + "-" + libraryDirWithDefaults.namespace );
 			else
-				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix );
-			bundleDirWithDefaults.path = _s.rtrim( bundleDirWithDefaults.path, "/" );
-			bundleDirWithDefaults.destDir = _s.rtrim( bundleDirWithDefaults.destDir, "/" );
-			return bundleDirWithDefaults;
+				libraryDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix );
+			libraryDirWithDefaults.path = _s.rtrim( libraryDirWithDefaults.path, "/" );
+			libraryDirWithDefaults.destDir = _s.rtrim( libraryDirWithDefaults.destDir, "/" );
+			return libraryDirWithDefaults;
 		} );
 
 		// apply the defaults to all viewDirs and add destination directory
