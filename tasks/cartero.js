@@ -29,6 +29,7 @@ module.exports = function(grunt) {
 
 	var kLibraryAssetsDirPrefix = "library-assets-";
 	var kViewAssetsDirPrefix = "view-assets-";
+	var kDefaultLibraryAssetsDir = "library-assets";
 
 	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views", "tmplExt" ];
 	var kRequiredLibraryConfigOptions = [ "path" ];
@@ -393,7 +394,7 @@ module.exports = function(grunt) {
 			if( ! _.isUndefined( bundleDirWithDefaults.namespace ) )
 				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + bundleDirWithDefaults.namespace );
 			else
-				bundleDirWithDefaults.destDir = options.publicDir;
+				bundleDirWithDefaults.destDir = path.join( options.publicDir, kDefaultLibraryAssetsDir );
 			bundleDirWithDefaults.path = _s.rtrim( bundleDirWithDefaults.path, "/" );
 			bundleDirWithDefaults.destDir = _s.rtrim( bundleDirWithDefaults.destDir, "/" );
 			return bundleDirWithDefaults;
