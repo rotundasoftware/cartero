@@ -503,7 +503,7 @@ Yes. The name of the concatenated asset files generated in `prod` mode includes 
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
-#### When I am using Cartero in `dev` mode with the `--watch` flag set, JavaScript or CSS errors cause the watch process to stop. Is there a way around this?
+#### When I am using the `--watch` flag, JavaScript or CSS errors cause a fatal error. Is there a way around this?
 
 Yes. Use the Grunt `--force` flag:
 
