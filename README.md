@@ -503,9 +503,9 @@ Yes. The name of the concatenated asset files generated in `prod` mode includes 
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
-#### Is there a way to keep the watch task running even if there is a fatal error from one of the `preprocessingTasks`?
+#### The "watch" task terminates on JS/CSS errors. How can I keep it running through errors?
 
-Yes. Use the Grunt `--force` flag:
+Use the Grunt `--force` flag:
 
 	grunt cartero:dev --watch --force
 
