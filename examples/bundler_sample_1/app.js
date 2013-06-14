@@ -49,6 +49,14 @@ app.get( "/page1/page1.html.swig", function( req, res ) {
 	res.render( kAppPagesDir + "/page1/page1.html.swig" );
 } );
 
+app.get( "/page3/page3.html.swig", function( req, res ) {
+	res.render( kAppPagesDir + "/page3/page3.html.swig" );
+} );
+
+app.get( "/personInfo/personInfo.html.swig", function( req, res ) {
+	res.render( kAppPagesDir + "/personInfo/personInfo.html.swig" );
+} );
+
 app.get( "/page2/page2.html.swig", function( req, res ) {
 	res.render( kAppPagesDir + "/page2/page2.html.swig" );
 } );
