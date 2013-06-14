@@ -8,8 +8,7 @@ module.exports = function( grunt ) {
 				tmplExt : [ ".tmpl" ],
 				library : [
 					{
-						path : "library",
-						namespace : "Main"
+						path : "library"
 					}
 				],
 				views : [

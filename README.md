@@ -163,6 +163,7 @@ module.exports = function( grunt ) {
 	} );
 
 	grunt.loadNpmTasks( "grunt-cartero" );
+	grunt.loadNpmTasks( "grunt-contrib-watch" );	// only needed if the `dev` mode `--watch` flag is used
 };
 ```
 
