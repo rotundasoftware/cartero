@@ -23,7 +23,7 @@ var	_ = require( "underscore" ),
 
 module.exports = function(grunt) {
 
-	// Prefix for all task targets added by assetBundler to avoid conflicts with already existing targets.
+	// Prefix for all task targets added by cartero to avoid conflicts with already existing targets.
 	var kCarteroTaskPrefix = "cartero_";
 	var kCarteroJsonFile = "cartero.json";
 
@@ -57,7 +57,7 @@ module.exports = function(grunt) {
 
 	var kValidImageExts = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
 
-	// Will contain options passed into the assetBundler task with defaults applied.
+	// Will contain options passed into the cartero task with defaults applied.
 	var options = {};
 
 	var bundleRegistry = {};
@@ -66,7 +66,7 @@ module.exports = function(grunt) {
 	// Files that are browserified and need to be run upon loading.
 	var browserifyExecuteOnLoadFiles = [];
 
-	// Convenience function that is used by the watch tasks when assetBundler metadata changes and the pageMap and bundleMap need to be rebuilt.
+	// Convenience function that is used by the watch tasks when cartero metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
 		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "seperateFilesToServeByType:dev" );
