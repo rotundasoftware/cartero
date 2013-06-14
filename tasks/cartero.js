@@ -652,7 +652,6 @@ module.exports = function(grunt) {
 
 		carteroJson.publicDir = options.publicDir;
 		carteroJson.parcels = parcelDataToSave;
-		carteroJson.mode = options.mode;
 
 		fs.writeFileSync( path.join( options.projectDir, kCarteroJsonFile ), JSON.stringify( carteroJson, null, "\t" ) );
 	} );
