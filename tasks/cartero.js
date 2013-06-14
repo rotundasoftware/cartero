@@ -165,7 +165,7 @@ module.exports = function(grunt) {
 					task[ taskTarget ].options = taskConfig.options;
 			}
 
-			if( doWatch ) {
+			if( doWatch && options.watch ) {
 				watch[ kCarteroTaskPrefix + taskName + "_" + taskTarget ] = {
 					files : [ dir.path + "/**/*" + taskConfig.inExt ],
 					tasks : [ taskName + ":" + taskTarget ],
@@ -291,7 +291,7 @@ module.exports = function(grunt) {
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 
 		// In dev mode...
-		if( mode === "dev" ) {
+		if( mode === "dev" && options.watch ) {
 			grunt.task.run( "watch" );
 		}
 	}
@@ -384,6 +384,8 @@ module.exports = function(grunt) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
 
+		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
+
 		// apply the defaults to all bundleDirs and add the destination directory
 		options.library = _.map( options.library, function( bundleDir ) {
 			var bundleDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
@@ -452,11 +454,6 @@ module.exports = function(grunt) {
 			configureUserDefinedTask( libraryAndViewDirs, minificationTask, false, true );
 		} );
 
-		// Loop through the assets that don't require preprocessing and create/configure the target
-		_.each( extToCopy, function ( ext ) {
-			configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext, validCarteroDirExt );
-		} );
-
 		configureCarteroTask( "clean", { libraryAndViewDirs : libraryAndViewDirs } );
 		configureCarteroTask( "prepare", { libraryAndViewDirs : libraryAndViewDirs } );
 		configureCarteroTask( "copy", { libraryAndViewDirs : libraryAndViewDirs, extToCopy : extToCopy } );
@@ -466,8 +463,15 @@ module.exports = function(grunt) {
 		var validCarteroDirExt = processedAssetExts;
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
-		configureWatchViewFile( options );
-		configureWatchBundleJson( options );
+		// Loop through the assets that don't require preprocessing and create/configure the target
+		if( options.watch ) {
+			_.each( extToCopy, function ( ext ) {
+				configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext, validCarteroDirExt );
+			} );
+
+			configureWatchViewFile( options );
+			configureWatchBundleJson( options );
+		}
 
 		var cleanableAssetExt = processedAssetExts;
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
