@@ -27,9 +27,8 @@ module.exports = function(grunt) {
 	var kCarteroTaskPrefix = "cartero_";
 	var kCarteroJsonFile = "cartero.json";
 
-	var kLibraryAssetsDirPrefix = "library-assets-";
-	var kViewAssetsDirPrefix = "view-assets-";
-	var kDefaultLibraryAssetsDir = "library-assets";
+	var kLibraryAssetsDirPrefix = "library-assets";
+	var kViewAssetsDirPrefix = "view-assets";
 
 	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views", "tmplExt" ];
 	var kRequiredLibraryConfigOptions = [ "path" ];
@@ -70,7 +69,7 @@ module.exports = function(grunt) {
 	// Convenience function that is used by the watch tasks when cartero metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
 		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "seperateFilesToServeByType:dev" );
+		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 	}
 
@@ -275,7 +274,7 @@ module.exports = function(grunt) {
 			grunt.task.run( kCarteroTaskPrefix + "buildCombinedFiles" );
 		}
 
-		grunt.task.run( kCarteroTaskPrefix + "seperateFilesToServeByType" );
+		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType" );
 
 		if( options.postProcessor )
 			grunt.task.run( kCarteroTaskPrefix + "runPostProcessor" );
@@ -392,9 +391,9 @@ module.exports = function(grunt) {
 			var bundleDirWithDefaults = _.extend( {}, kLibraryDirDefaults, bundleDir );
 
 			if( ! _.isUndefined( bundleDirWithDefaults.namespace ) )
-				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + bundleDirWithDefaults.namespace );
+				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix + "-" + bundleDirWithDefaults.namespace );
 			else
-				bundleDirWithDefaults.destDir = path.join( options.publicDir, kDefaultLibraryAssetsDir );
+				bundleDirWithDefaults.destDir = path.join( options.publicDir, kLibraryAssetsDirPrefix );
 			bundleDirWithDefaults.path = _s.rtrim( bundleDirWithDefaults.path, "/" );
 			bundleDirWithDefaults.destDir = _s.rtrim( bundleDirWithDefaults.destDir, "/" );
 			return bundleDirWithDefaults;
@@ -402,9 +401,16 @@ module.exports = function(grunt) {
 
 		// apply the defaults to all viewDirs and add destination directory
 		var viewAssetsDirCounter = 0;
+		var numViewDirs = options.views.length;
 		options.views = _.map( options.views, function( viewDir ) {
 			var viewDirWithDefaults = _.extend( {}, kViewsDirDefaults, viewDir );
-			viewDirWithDefaults.destDir = path.join( options.publicDir, kViewAssetsDirPrefix + viewAssetsDirCounter++ );
+			var destDir;
+			if( numViewDirs === 1 )
+				destDir = path.join( options.publicDir, kViewAssetsDirPrefix );
+			else
+				destDir = path.join( options.publicDir, kViewAssetsDirPrefix + "-" + viewAssetsDirCounter++ );
+			viewDirWithDefaults.destDir = destDir;
+
 			if( _.isString( viewDirWithDefaults.viewFileExt ) ) viewDirWithDefaults.viewFileExt = [ viewDirWithDefaults.viewFileExt ];
 
 			viewDirWithDefaults.path = _s.rtrim( viewDirWithDefaults.path, "/" );
@@ -598,9 +604,9 @@ module.exports = function(grunt) {
 		} );
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "seperateFilesToServeByType", "", function() {
+	grunt.registerTask( kCarteroTaskPrefix + "separateFilesToServeByType", "", function() {
 		_.each( _.values( parcelRegistry ), function( parcel ) {
-			parcel.buildResourcesToLoad();
+			parcel.separateFilesToServeByType();
 		} );
 	} );
 
