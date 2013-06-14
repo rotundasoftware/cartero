@@ -503,6 +503,20 @@ Yes. The name of the concatenated asset files generated in `prod` mode includes 
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
+#### When I am using the `--watch` flag, JavaScript or CSS errors cause a fatal error. Is there a way around this?
+
+Yes. Use the Grunt `--force` flag:
+
+	grunt cartero:dev --watch --force
+
+#### I'm getting the error: EMFILE, too many open files
+
+EMFILE mean you've reached the OS limit of concurrently open files. There aren't much we can do about it, however you can increase the limit yourself.
+
+Add `ulimit -n [number of files]` to your .bashrc/.zshrc file to increase the soft limit.
+
+If you reach the OS hard limit, you can follow this [StackOverflow answer](http://stackoverflow.com/questions/34588/how-do-i-change-the-number-of-open-files-limit-in-linux/34645#34645) to increase it.
+
 ## Cartero Hook Directory
 
 * Node.js / Express: [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
