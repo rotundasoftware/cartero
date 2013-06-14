@@ -65,10 +65,6 @@ app.get("/page1/page1_1/page1_1.html.swig", function( req, res ) {
 	res.render( kAppPagesDir + "/page1/page1_1/page1_1.html.swig" );
 } );
 
-app.get( "/login*", function( req, res ) {
-	res.render( "web-terminal/login.swig" );
-} );
-
 http.createServer( app ).listen( app.get( "port" ), function() {
 	console.log( "Express server listening on port " + app.get("port") );
 } );
