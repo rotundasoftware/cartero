@@ -77,7 +77,9 @@ module.exports = function(grunt) {
 	function makeUrlsAbsoluteInCssFile( fileName, callback ) {
 		fs.readFile( fileName, function( err, data ) {
 
-			var fileContents = data.toString().replace( /url\(([^)]+)\)/g, function( match, url ) {
+			var fileContents = data.toString().replace( /url\(\s*?[\"\']?\s*?([^)]+)\s*?[\"\']?\s*?\)/g, function( match, url ) {
+				url = url.trim();
+
 				// we don't support absolute URLs for now
 				if( url[0] === "/" ) return match;
 

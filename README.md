@@ -512,7 +512,7 @@ Use the Grunt `--force` flag:
 
 #### Q: I'm getting the error: EMFILE, too many open files
 
-EMFILE mean you've reached the OS limit of concurrently open files. There aren't much we can do about it, however you can increase the limit yourself.
+EMFILE mean you've reached the OS limit of concurrently open files. There isn't much we can do about it, however you can increase the limit yourself.
 
 Add `ulimit -n [number of files]` to your .bashrc/.zshrc file to increase the soft limit.
 
@@ -520,7 +520,7 @@ If you reach the OS hard limit, you can follow this [StackOverflow answer](http:
 
 ## Cartero Hook Directory
 
-* Node.js / Express: [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
+* Node.js / Express: [cartero-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
 
