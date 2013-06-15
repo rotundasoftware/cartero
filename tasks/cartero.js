@@ -85,7 +85,7 @@ module.exports = function(grunt) {
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
-					return "url(" + pathRelativeToProjectDir.replace( options.publicDir, "" ) + ")";
+					return "url(" + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
 				}
 				else {
 					return match;
@@ -652,7 +652,6 @@ module.exports = function(grunt) {
 
 		carteroJson.publicDir = options.publicDir;
 		carteroJson.parcels = parcelDataToSave;
-		carteroJson.mode = options.mode;
 
 		fs.writeFileSync( path.join( options.projectDir, kCarteroJsonFile ), JSON.stringify( carteroJson, null, "\t" ) );
 	} );
@@ -717,10 +716,10 @@ module.exports = function(grunt) {
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
-			if( fileIsInViewDirectory( filePath.replace( options.projectDir + path.sep, "") ) )
+			if( fileIsInViewDirectory( path.relative( options.projectDir, filePath ) ) )
 				return fileSrc.indexOf( kBrowserifyExecuteOnLoad ) != -1;
 			else
-				return _.contains( browserifyExecuteOnLoadFiles, filePath.replace( options.projectDir + path.sep, "" ) );
+				return _.contains( browserifyExecuteOnLoadFiles, path.relative( options.projectDir, filePath ) );
 		}
 
 		function processFile( filePath, filePathDest, cb ) {
