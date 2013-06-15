@@ -180,8 +180,10 @@ module.exports = function(grunt) {
 		} );
 
 		grunt.config( taskName, task );
-		grunt.config( "watch", watch );
 
+		if( doWatch && options.watch ) {
+			grunt.config( "watch", watch );
+		}
 	}
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
