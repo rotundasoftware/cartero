@@ -506,6 +506,8 @@ Yes and No. They would break, but Cartero automatically scans your `.css` files 
 
 #### Q: The "watch" task terminates on JS/CSS errors. Can I keep it running through errors?
 
+Yes. Use the Grunt `--force` flag.
+
 	grunt cartero:dev --watch --force
 
 #### Q: I'm getting the error: EMFILE, too many open files
