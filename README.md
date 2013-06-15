@@ -3,7 +3,7 @@
 </p>
 Cartero is a client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-As of the time of this writing Cartero only works with Node.js / Express, but [the small part](https://github.com/rotundasoftware/cartero-express-hook) of Cartero that is web framework specific is designed to be easy to port to any environment.
+As of the time of this writing Cartero only works with Node.js / Express, but [the very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is  easy to port to any environment.
 
 ## Benefits
 
