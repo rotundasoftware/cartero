@@ -1,5 +1,5 @@
 /*
- * grunt-cartero
+ * Cartero v0.1.0
  * https://github.com/rotundasoftware/cartero
  *
  * Copyright (c) 2013 Rotunda Software, LLC

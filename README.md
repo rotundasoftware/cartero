@@ -504,15 +504,13 @@ Yes. The name of the concatenated asset files generated in `prod` mode includes 
 
 Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
-#### Q: The "watch" task terminates on JS/CSS errors. How can I keep it running through errors?
-
-Use the Grunt `--force` flag:
+#### Q: The "watch" task terminates on JS/CSS errors. Can I keep it running through errors?
 
 	grunt cartero:dev --watch --force
 
 #### Q: I'm getting the error: EMFILE, too many open files
 
-EMFILE mean you've reached the OS limit of concurrently open files. There isn't much we can do about it, however you can increase the limit yourself.
+EMFILE means you've reached the OS limit of concurrently open files. There isn't much we can do about it, however you can increase the limit yourself.
 
 Add `ulimit -n [number of files]` to your .bashrc/.zshrc file to increase the soft limit.
 
