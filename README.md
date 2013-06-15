@@ -3,7 +3,7 @@
 </p>
 Cartero is a client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-As of the time of this writing Cartero only works with Node.js / Express, but [the small part](https://github.com/rotundasoftware/cartero-express-hook) of Cartero that is web framework specific is designed to be easy to port to any environment.
+As of the time of this writing Cartero only works with Node.js / Express, but [the very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is  easy to port to any environment.
 
 ## Benefits
 
@@ -512,7 +512,7 @@ Use the Grunt `--force` flag:
 
 #### Q: I'm getting the error: EMFILE, too many open files
 
-EMFILE mean you've reached the OS limit of concurrently open files. There aren't much we can do about it, however you can increase the limit yourself.
+EMFILE mean you've reached the OS limit of concurrently open files. There isn't much we can do about it, however you can increase the limit yourself.
 
 Add `ulimit -n [number of files]` to your .bashrc/.zshrc file to increase the soft limit.
 
@@ -520,7 +520,7 @@ If you reach the OS hard limit, you can follow this [StackOverflow answer](http:
 
 ## Cartero Hook Directory
 
-* Node.js / Express: [caretro-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
+* Node.js / Express: [cartero-express-hook](https://github.com/rotundasoftware/cartero-express-hook)
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
 
