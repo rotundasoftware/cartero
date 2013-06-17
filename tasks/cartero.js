@@ -77,6 +77,8 @@ module.exports = function(grunt) {
 	function makeUrlsAbsoluteInCssFile( fileName, callback ) {
 		fs.readFile( fileName, function( err, data ) {
 
+			console.log( "replacing css urls in " + fileName );
+
 			var fileContents = data.toString().replace( /url\(\s*?[\"\']?\s*?([^)]+)\s*?[\"\']?\s*?\)/g, function( match, url ) {
 				url = url.trim();
 
@@ -145,7 +147,6 @@ module.exports = function(grunt) {
 		var watch = grunt.config( "watch" ) || {};
 
 		_.each( libraryAndViewDirs, function( dir ) {
-
 			var taskTarget = kCarteroTaskPrefix + dir.path;
 
 			var files = [ {
@@ -176,7 +177,6 @@ module.exports = function(grunt) {
 					}
 				};
 			}
-
 		} );
 
 		grunt.config( taskName, task );
@@ -187,10 +187,8 @@ module.exports = function(grunt) {
 	}
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
-
 		grunt.event.on( "watch", function( action, filepath ) {
-
-			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
+			// if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
 			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
 				rebundle();
 			}
@@ -214,7 +212,6 @@ module.exports = function(grunt) {
 				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
 					grunt.config( [ taskName, kCarteroTaskPrefix, "src" ], filepath );
 					grunt.config( [ taskName, kCarteroTaskPrefix, "dest" ], newDest );
-
 				}
 			} );
 
@@ -226,12 +223,10 @@ module.exports = function(grunt) {
 					} ] );
 				}
 			}
-
 		} );
 	}
 
 	function configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext, validCarteroDirExt ) {
-
 		var watch = grunt.config( "watch" ) || {};
 		var tasksToRun =  [];
 
@@ -255,31 +250,30 @@ module.exports = function(grunt) {
 	}
 
 	function queueTasksToRun( mode, preprocessingTasks, minificationTasks, postProcessor ) {
-
 		grunt.task.run( kCarteroTaskPrefix + "clean" );
 		grunt.task.run( kCarteroTaskPrefix + "prepare" );
 		grunt.task.run( kCarteroTaskPrefix + "copy" );
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-			//grunt.task.run( preprocessingTask.name + ":" + kCarteroTaskPrefix );
 			grunt.task.run( preprocessingTask.name );
 		} );
 
-		// Builds the bundleMap and pageMap to be used by later tasks
+		// When in prod mode, need to replace relative URLs in CSS files with absolute ones because CSS file location
+		// may change due to bundling.
+		if( mode === "prod" ) {
+			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
+		}
+
+		// Builds the bundle and parcel registries to be used by later tasks
 		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
 
 		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
 
 		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
-		// In prod mode...
-		if( mode === "prod" ) {
-			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
-			grunt.task.run( kCarteroTaskPrefix + "buildCombinedFiles" );
-		}
-
 		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType" );
 
+		// undocumented hook to do custom post processing
 		if( options.postProcessor )
 			grunt.task.run( kCarteroTaskPrefix + "runPostProcessor" );
 
@@ -301,7 +295,6 @@ module.exports = function(grunt) {
 	}
 
 	function configureWatchViewFile( options ) {
-
 		var watch = grunt.config( "watch" ) || {};
 		var viewFilePatterns = [];
 
@@ -320,11 +313,9 @@ module.exports = function(grunt) {
 		};
 
 		grunt.config( "watch", watch );
-
 	}
 
 	function configureWatchBundleJson( options ) {
-
 		var watch = grunt.config( "watch" ) || {};
 
 		// Watch changes to bundle.json files
@@ -342,17 +333,14 @@ module.exports = function(grunt) {
 	}
 
 	function configureCarteroTask( taskName, options ) {
-
 		var taskConfig = grunt.config( kCarteroTaskPrefix + taskName ) || {};
 
 		taskConfig.options = options;
 
 		grunt.config( kCarteroTaskPrefix + taskName, taskConfig );
-
 	}
 
 	function validateConfigOptions( options ) {
-
 		_.each( kRequiredConfigOptions, function( configOption ) {
 			if( _.isUndefined( options[ configOption ] ) )
 				grunt.fail.fatal( "Option " + configOption + " is required.  Please add it to your cartero task configuration before proceeding." );
@@ -380,11 +368,9 @@ module.exports = function(grunt) {
 					grunt.fail.fatal( "Option " + configOption + " in the `views` option is required.  Please add it to your cartero task configuration before proceeding." );
 			} );
 		} );
-
 	}
 
-	function applyDefaultsAndSanitize( options ) {
-
+	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
 
@@ -432,12 +418,11 @@ module.exports = function(grunt) {
 		return options;
 	}
 
-	grunt.registerMultiTask( "cartero", "Your task description goes here.", function() {
+	grunt.registerMultiTask( "cartero", "Cartero asset manager.", function() {
 		options = this.options();
 
 		validateConfigOptions( options );
-
-		options = applyDefaultsAndSanitize( options );
+		options = applyDefaultsAndNormalize( options );
 
 		var processedAssetExts = _.union( options.tmplExt, [ ".js", ".css" ] );
 
@@ -471,6 +456,8 @@ module.exports = function(grunt) {
 
 		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
 
+		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
+
 		var validCarteroDirExt = processedAssetExts;
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
@@ -492,7 +479,6 @@ module.exports = function(grunt) {
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
-
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
@@ -520,14 +506,12 @@ module.exports = function(grunt) {
 	grunt.registerTask( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile", "", function() {
 		var cssFiles = [];
 		var done = this.async();
+		var opts = this.options();
 
-		_.each( parcelRegistry, function( parcel ) {
-			_.each( parcel.filesToServe, function( file ) {
-				_.each( file.sourceFilePaths, function( filePath ) {
-					if( _s.endsWith( filePath, ".css" ) )
-						cssFiles.push( filePath );
-				} );
-			} );
+		_.each( opts.libraryAndViewDirs, function( dirOptions ) {
+			cssFiles = _.union( cssFiles, _.filter( findit.sync( dirOptions.destDir ), function( file ) {
+				return File.getFileExtension( file ) === ".css";
+			} ) );
 		} );
 
 		async.each(
@@ -596,16 +580,6 @@ module.exports = function(grunt) {
 			else
 				grunt.fail.fatal( errMsg );
 		}
-	} );
-
-	grunt.registerTask( kCarteroTaskPrefix + "buildCombinedFiles", "", function() {
-		_.each( _.values( bundleRegistry ), function( bundle ) {
-			bundle.buildCombinedFiles();
-		} );
-
-		_.each( _.values( parcelRegistry ), function( parcel ) {
-			parcel.buildCombinedFiles();
-		} );
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "separateFilesToServeByType", "", function() {
