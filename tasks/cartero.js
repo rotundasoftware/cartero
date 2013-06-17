@@ -68,7 +68,8 @@ module.exports = function(grunt) {
 
 	// Convenience function that is used by the watch tasks when cartero metadata changes and the pageMap and bundleMap need to be rebuilt.
 	function rebundle() {
-		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:dev" );
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleRegistry:dev" );
+		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
 		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 	}
@@ -261,10 +262,13 @@ module.exports = function(grunt) {
 			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
 		}
 
-		// Builds the bundle and parcel registries to be used by later tasks
-		grunt.task.run( kCarteroTaskPrefix + "buildBundleAndParcelRegistries:" + mode );
+		// Builds the bundle registry
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleRegistry:" + mode );
 
 		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
+
+		// Builds the parcelRegistry
+		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:" + mode );
 
 		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
@@ -451,7 +455,9 @@ module.exports = function(grunt) {
 		configureCarteroTask( "prepare", { libraryAndViewDirs : libraryAndViewDirs } );
 		configureCarteroTask( "copy", { libraryAndViewDirs : libraryAndViewDirs, extToCopy : extToCopy } );
 
-		configureCarteroTask( "buildBundleAndParcelRegistries", { assetExtensionMap : assetExtensionMap } );
+		configureCarteroTask( "buildBundleRegistry", { assetExtensionMap : assetExtensionMap } );
+
+		configureCarteroTask( "buildParcelRegistry", { assetExtensionMap : assetExtensionMap } );
 
 		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
 
@@ -553,7 +559,7 @@ module.exports = function(grunt) {
 		} );
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "buildBundleAndParcelRegistries", "Build bundle and page map JSONs", function( mode ) {
+	grunt.registerTask( kCarteroTaskPrefix + "buildBundleRegistry", "Build bundle registry.", function( mode ) {
 		var opts = this.options();
 
 		try {
@@ -566,6 +572,10 @@ module.exports = function(grunt) {
 			else
 				grunt.fail.fatal( errMsg );
 		}
+	} );
+
+	grunt.registerTask( kCarteroTaskPrefix + "buildParcelRegistry", "Build parcel registry", function( mode ) {
+		var opts = this.options();
 
 		try {
 			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, mode, opts.assetExtensionMap );

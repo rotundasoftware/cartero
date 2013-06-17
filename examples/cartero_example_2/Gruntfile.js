@@ -20,14 +20,14 @@ module.exports = function( grunt ) {
 				minificationTasks : [
 					{
 						name : "htmlmin",
-						suffixes : [ ".tmpl" ],
+						inExt : ".html",
 						options : {
 							removeComments : true
 						}
 					},
 					{
 						name : "uglify",
-						suffixes : [ ".js" ],
+						inExt : ".js",
 						options : {
 							mangle : false
 						}
@@ -49,6 +49,7 @@ module.exports = function( grunt ) {
 
 	grunt.loadNpmTasks( "grunt-contrib-htmlmin" );
 	grunt.loadNpmTasks( "grunt-contrib-uglify" );
+	grunt.loadNpmTasks( "grunt-contrib-watch" );
 	grunt.loadNpmTasks( "grunt-cartero" );
 
 };
