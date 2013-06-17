@@ -1,6 +1,6 @@
 {
   "name": "application-name",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "node ./WebServer/app.js"
@@ -13,7 +13,7 @@
     "swig": "~0.13.5",
     "consolidate": "~0.9.0",
     "path": "~0.4.9",
-    "grunt-cartero": "~0.1.0",
+    "cartero": "~0.1.0",
     "cartero-express-hook": "~0.1.0",
     "grunt-contrib-watch": "~0.3.1",
     "grunt-contrib-uglify": "~0.2.0",

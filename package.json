@@ -1,7 +1,7 @@
 {
-  "name": "grunt-cartero",
+  "name": "cartero",
   "description": "An asset manager for modern web apps.",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "author": {
     "name": "Rotunda Software",
     "email": "support@rotundasoftware.com"
