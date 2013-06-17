@@ -15,6 +15,7 @@
     "path": "~0.4.9",
     "grunt-cartero": "~0.1.0",
     "cartero-express-hook": "~0.1.0",
+    "grunt-contrib-watch": "~0.3.1",
     "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-htmlmin": "~0.1.3"
   },
