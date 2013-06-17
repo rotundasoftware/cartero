@@ -328,7 +328,7 @@ module.exports = function(grunt) {
 
 		// Watch changes to bundle.json files
 		watch[ kCarteroTaskPrefix + "_bundle_json" ] = {
-			files : _.map( options.views, function ( dir ) {
+			files : _.map( options.library, function ( dir ) {
 					return dir.path + "/**/bundle.json";
 				} ),
 			tasks : [ kCarteroTaskPrefix + "processBundleJsonChange" ],
@@ -487,6 +487,8 @@ module.exports = function(grunt) {
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
+
+		console.log( grunt.config().watch );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
 	} );
