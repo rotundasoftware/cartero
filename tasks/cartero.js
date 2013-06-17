@@ -1,5 +1,5 @@
 /*
- * grunt-cartero
+ * Cartero v0.1.0
  * https://github.com/rotundasoftware/cartero
  *
  * Copyright (c) 2013 Rotunda Software, LLC
@@ -76,9 +76,6 @@ module.exports = function(grunt) {
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
 	function makeUrlsAbsoluteInCssFile( fileName, callback ) {
 		fs.readFile( fileName, function( err, data ) {
-
-			console.log( "replacing css urls in " + fileName );
-
 			var fileContents = data.toString().replace( /url\(\s*?[\"\']?\s*?([^)]+)\s*?[\"\']?\s*?\)/g, function( match, url ) {
 				url = url.trim();
 
@@ -187,38 +184,38 @@ module.exports = function(grunt) {
 	}
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
-		grunt.event.on( "watch", function( action, filepath ) {
-			// if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filepath, "bundle.json" ) ) {
+		grunt.event.on( "watch", function( action, filePath ) {
+			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
+			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filePath, "bundle.json" ) ) {
 				rebundle();
 			}
 
 			var dirOptions = _.find( libraryAndViewDirs, function( dirOptions ) {
-				return filepath.indexOf( dirOptions.path ) === 0;
+				return filePath.indexOf( dirOptions.path ) === 0;
 			} );
 
-			var newDest = filepath.replace( dirOptions.path, dirOptions.destDir );
+			var newDest = filePath.replace( dirOptions.path, dirOptions.destDir );
 
 			newDest = File.mapAssetFileName( newDest, assetExtensionMap );
 
-			if( _.contains( extToCopy, File.getFileExtension( filepath ) ) )
-				grunt.file.copy( filepath, newDest );
+			if( _.contains( extToCopy, File.getFileExtension( filePath ) ) )
+				grunt.file.copy( filePath, newDest );
 
 			_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
 				var taskName = preprocessingTask.name;
 
 				// If the changed file's extension matches the task, set the file.
-				if( _s.endsWith( filepath, preprocessingTask.inExt ) ) {
-					grunt.config( [ taskName, kCarteroTaskPrefix, "src" ], filepath );
+				if( _s.endsWith( filePath, preprocessingTask.inExt ) ) {
+					grunt.config( [ taskName, kCarteroTaskPrefix, "src" ], filePath );
 					grunt.config( [ taskName, kCarteroTaskPrefix, "dest" ], newDest );
 				}
 			} );
 
 			if( browserify ) {
-				if( _s.endsWith( filepath, ".js" ) ) {
+				if( _s.endsWith( filePath, ".js" ) ) {
 					grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
-						src : filepath,
+						src : filePath,
 						dest : newDest
 					} ] );
 				}
