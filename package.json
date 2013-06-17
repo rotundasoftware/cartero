@@ -1,5 +1,5 @@
 {
-  "name": "grunt-cartero",
+  "name": "cartero",
   "description": "An asset manager for modern web apps.",
   "version": "0.1.0",
   "author": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/rotundasoftware/cartero/cartero.git"
+    "url": "git://github.com/rotundasoftware/cartero.git"
   },
   "bugs": {
     "url": "https://github.com/rotundasoftware/cartero/issues"
