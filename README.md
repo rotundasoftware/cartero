@@ -16,6 +16,7 @@ As of the time of this writing Cartero only works with Node.js / Express, but [t
 * All assets that live in the same directory as a page's template are automatically included when that page is rendered.
 * Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). If you'd like, even enjoy built in support for client side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
 * Easily run any and all of your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
+* Works in harmony with package managers like [Bower](http://bower.io/).
 
 ## Overview
 
@@ -92,7 +93,7 @@ When the `login.jade` template is rendered, the `login.coffee` and `login.scss` 
 
 ### The Cartero Grunt Task
 
-The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that glues together other Grunt.js tasks. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that [enumerates the assets](#carteroJson) required for each of your page templates.
+The heart of Cartero is an intelligent [Grunt.js](http://gruntjs.com/) task that ties together other Grunt.js tasks. You configure and call the **_Cartero Grunt Task_** from your application's gruntfile. You specify exactly which preprocessing and minification tasks your application needs, and those tasks are then called by the Cartero task at the appropriate times. After the Cartero task is finished, all of your assets will be preprocessed, and, in production mode, concatenated and minified. Additionally, the Cartero task generates a `cartero.json` file that [enumerates the assets](#carteroJson) required for each of your page templates.
 
 ### The Hook
 
@@ -125,7 +126,7 @@ First, install Cartero via npm:
 
 	npm install grunt-cartero
 
-Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
+Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this first](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
 ```javascript
 // example gruntfile
@@ -147,7 +148,7 @@ module.exports = function( grunt ) {
 												// processed assets will ultimately be dumped).
 
 				tmplExt : ".tmpl",				// the file extension(s) of your client side template files.
-				mode : "dev"
+				mode : "dev"					// "dev" or "prod"
 			}
 
 			// `dev` target uses all the default options.
@@ -169,7 +170,7 @@ module.exports = function( grunt ) {
 
 The Cartero Grunt Task also takes options that allow you to call arbitrary preprocessing and minification tasks (to compile .scss, uglify JavaScript, etc.), and more. See the [reference section](#reference) for a complete list of options for the Cartero task.
 
-Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. Install the middleware:
+Once you have configured the Cartero Grunt Task, you need to configure the Hook in your web framework. As of this writing there is only a Hook available for Node.js / Express, which is implemented as Express middleware. To install the middleware run:
 
 	npm install cartero-express-hook
 
@@ -215,7 +216,7 @@ When you run either of the following commands from the directory of your gruntfi
 	grunt cartero:dev --watch
 	grunt cartero:prod
 
-The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. In `dev` mode, the Cartero Grunt Task will  watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either case, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
+The Cartero Grunt Task will fire up, process all of your assets, and put the `cartero.json` file used by the Hook in your project folder. The `dev` mode `--watch` flag tells the Cartero Grunt Task to watch all of your assets for changes and reprocess them as needed. In `prod` mode, the task will terminate after minifying and concatenating your assets. In either mode, when you load a page, the three variables `cartero_js`, `cartero_css`, and `cartero_tmpl` with be available to the page's template, and will contain all the raw HTML necessary to load the assets for the page.
 
 ## <a id="reference"></a>Reference
 
@@ -305,17 +306,16 @@ options : {
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
 	// such as compiling scss or coffee. You may include an entry for any task in this array, AS
-	// LONG AS THE TASK IS AVAILABLE AND REGISTERED using `grunt.loadNpmTasks` (just as if you were 
-	// to run the task yourself from your gruntfile). The task will be run on all files with the
-	// `inExt` file extension, and will change processed files to have the `outExt` extension, if
-	// provided. You can also provide an `options` property that will be forwarded to the task.
+	// LONG AS THE TASK IS AVAILABLE AND REGISTERED using `grunt.loadNpmTasks`, just as if you were 
+	// to run the task yourself from your gruntfile.
 	"preprocessingTasks" : [ {
-		name : "coffee",
-		inExt : ".coffee",
-		outExt : ".js",			// optional
-		options : {				// optional
-			sourceMap : true
-		}
+		name : "coffee",		// (required) The name of the task. *The task needs to be loaded.*
+		inExt : ".coffee",		// (required) The task is run on files with this file extension.
+		outExt : ".js",			// (optional) A new file extension to be given to processed files.
+
+		options : {				// (optional) An `options` object to pass on directly to the task.
+			sourceMap : true	// This property can also be a function that returns an object. The
+		}						// function is passed the current srcDir and destDir of the task.
 	}, {
 		name : "sass",
 		inExt : ".scss",
@@ -328,6 +328,7 @@ options : {
 	"minificationTasks" : [ {
 		name : "htmlmin",
 		inExt : ".tmpl",
+		// no `outExt` means that processed files will still have the `.tmpl` extension
 		options : {
 			removeComments : true
 		}
@@ -349,7 +350,7 @@ options : {
 
 ### Properties of bundle.json 
 
-Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, such as dependencies. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.)
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, such as dependencies. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.) By using the `bundleProperties` grunt taks option, you can alternatively specify this meta-data for all bundles in a central location.
 
 ```javascript
 // Sample bundle.json file
@@ -365,8 +366,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// in the bundle, in the order they appear in the array.
 	"filePriority" : [ "backbone.js" ],
 
-	// (default: undefined) A an array of directories that overrides the corresponding  
-	// property in the `library` option of the Cartero GruntTask for this bundle only.
+	// (default: undefined) An array of directories that overrides the corresponding  
+	// property in the `library` option of the Cartero Grunt Task for this bundle only.
 	"directoriesToFlatten" : [ "mixins" ],
 
 	// (default: false) If true, assets in flattened subdirectories are served before
@@ -399,8 +400,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// ".css" or ".js" files that are "dynamically loaded" after the initial page load.
 	"dynamicallyLoadedFiles" : [ "ie-8.css" ],
 
-	// Only used when the `browserify` option in the Cartero Grunk Task is enabled, this
-	// property is an array of JavaScript files that should be executed as soon as they
+	// Only to be used when the `browserify` option in the Cartero Grunk Task is enabled, 
+	// this property is an array of JavaScript files that should be executed as soon as they
 	// are loaded in the client. Files that are not included in this property will not
 	// be executed until they are `require`d by another file.
 	"browserify_executeOnLoad" : [ "backbone.js" ]
@@ -500,15 +501,11 @@ From a high level perspective, the Hook is responsible for populating the `carte
 
 Yes. The name of the concatenated asset files generated in `prod` mode includes an MD5 digest of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Q: Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
-
-Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
-
-#### Q: The "watch" task terminates on JS/CSS errors. Can I keep it running through errors?
+#### Q: The "watch" task terminates on JS/CSS errors. Can I force it to keep running?
 
 Yes. Use the Grunt `--force` flag.
 
-	grunt cartero:dev --watch --force
+	grunt cartero:dev --force --watch
 
 #### Q: I'm getting the error: EMFILE, too many open files
 
@@ -517,6 +514,10 @@ EMFILE means you've reached the OS limit of concurrently open files. There isn't
 Add `ulimit -n [number of files]` to your .bashrc/.zshrc file to increase the soft limit.
 
 If you reach the OS hard limit, you can follow this [StackOverflow answer](http://stackoverflow.com/questions/34588/how-do-i-change-the-number-of-open-files-limit-in-linux/34645#34645) to increase it.
+
+#### Q: Since Cartero combines files in `prod` mode, won't image urls used in my stylesheets break?
+
+Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
 ## Cartero Hook Directory
 
