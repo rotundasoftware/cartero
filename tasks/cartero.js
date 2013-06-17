@@ -199,8 +199,15 @@ module.exports = function(grunt) {
 
 			newDest = File.mapAssetFileName( newDest, assetExtensionMap );
 
-			if( _.contains( extToCopy, File.getFileExtension( filePath ) ) )
-				grunt.file.copy( filePath, newDest );
+			// if the file is deleted, we want the tasks we configured to run to not run on any files.
+			if( action === "deleted" ) {
+				filePath = [];
+				newDest = null;
+			}
+			else {
+				if( _.contains( extToCopy, File.getFileExtension( filePath ) ) )
+					grunt.file.copy( filePath, newDest );
+			}
 
 			_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
