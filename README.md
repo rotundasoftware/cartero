@@ -134,17 +134,17 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				projectDir : __dirname,	     // the root directory of your project. All other paths in 
-										     // these options are relative to this directory.
+				projectDir : __dirname,	     // the root directory of your project. All other paths 
+										     // in these options are relative to this directory.
 				library : {
 					path : "assetLibrary/"   // the relative path to your Asset Library directory.
 				},
 				views : {
-					path : "views/",  	 	 // the directoy that contains your server side templates.
+					path : "views/",  	 	 // the directoy containing your server side templates.
 					viewFileExt : ".jade" 	 // the file extension of your server side templates.
 				}
-				publicDir : "static/",	  	 // your app's "public" or "static" directory (into which
-										  	 // processed assets will ultimately be dumped).
+				publicDir : "static/",	  	 // your app's "public" or "static" directory (into
+										  	 // which processed assets will ultimately be dumped).
 
 				tmplExt : ".tmpl",			 // the file extension(s) of your client side template.
 				mode : "dev"			  	 // "dev" or "prod"
