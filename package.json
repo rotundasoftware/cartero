@@ -36,7 +36,12 @@
     "grunt": "~0.4.1"
   },
   "keywords": [
-    "gruntplugin"
+    "gruntplugin",
+		"asset",
+		"asset manager",
+		"css",
+		"javascript",
+		"html"
   ],
   "dependencies": {
     "underscore": "~1.4.4",
