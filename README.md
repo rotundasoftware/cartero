@@ -470,7 +470,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 		// are named using the relative path of their corresponding template file.
 		"views/peopleList/peopleList.jade" : {
 
-			// `js`, `css`, and `tmpl` are arrays of the relative paths of the assets in this parcel.
+		// `js`, `css`, and `tmpl` are arrays of the relative paths of the assets in this parcel.
 
 			js : [
 				"static/library-assets/JQuery/jquery.js",
