@@ -140,13 +140,13 @@ module.exports = function( grunt ) {
 					path : "assetLibrary/"// the relative path to your Asset Library directory.
 				},
 				views : {
-					path : "views/",	// the directoy that contains your server side view templates.
+					path : "views/",   // the directoy that contains your server side view templates.
 					viewFileExt : ".jade" // the file extension of your server side view templates.
 				}
 				publicDir : "static/",	  // your app's "public" or "static" directory (into which
 										  // processed assets will ultimately be dumped).
 
-				tmplExt : ".tmpl",		  // the file extension(s) of your client side template files.
+				tmplExt : ".tmpl",		// the file extension(s) of your client side template files.
 				mode : "dev"			  // "dev" or "prod"
 			}
 
