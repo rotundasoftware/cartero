@@ -10,10 +10,10 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 	* Any bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports CommonJS via [Browserify](https://github.com/substack/node-browserify)!
+* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules), or even CommonJS!
 * Include [Bower](http://bower.io/) packages as bundles.
 
-Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages. It is also 98% agnostic to web frameworks &ndash; the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express.
+Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages. It also *almost* works with any web framework &ndash; the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
 
 ## Overview
 
@@ -446,7 +446,7 @@ When the `browserify` option in the Cartero Grunk Task is enabled, this directiv
 
 ## FAQ
 
-#### Q: Does Cartero work with Rails, PHP, etc., or just with Node.js / Express?
+#### <a name="hook"></a>Q: Does Cartero work with Rails, PHP, etc., or just with Node.js / Express?
 
 The heart of Cartero is an intelligent Grunt.js task, and can be used with any web framework. However, there is a small piece of logic called the Hook which must be called from your web framework, since it is used when each page is rendered. If you are interested in developing a Cartero Hook for your web framework of choice, keep reading - it's not hard.
 
