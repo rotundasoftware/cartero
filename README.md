@@ -1,28 +1,27 @@
 <p align="center">
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
-Cartero is a client side asset manager, especially suited for organizing, processing, and serving the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-As of the time of this writing Cartero only works with Node.js / Express, but [the very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is  easy to port to any environment.
+Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+
+It's agnostic to frameworks, libraries, programming, stylesheet, and templating languages. Right now Cartero only works with Node.js / Express, but the [very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is easy to port to any environment.
 
 ## Benefits
 
-* Instead of using separate directories for each type of asset, group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*).
-* Specify the exact bundles that are required for each page in the page's template.
-* Easily manage bundle dependencies.
-* All assets that a page requires are automatically injected into the served HTML when the page's template is rendered. No more messing with `<script>` and `<link>` tags!
+* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
+* Assets are automatically injected into the served HTML when the page is rendered. No more messing with `<script>` and `<link>` tags!
+	* Assets that live in the same directory as a page's template are automatically included.
+	* Any Bundle dependencies are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* All assets that live in the same directory as a page's template are automatically included when that page is rendered.
-* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, etc.). If you'd like, even enjoy built in support for client side CommonJS style modules via [Browserify](https://github.com/substack/node-browserify)!
-* Easily run any and all of your favorite preprocessing and minification tasks (scss, coffee, uglify, etc.).
-* Works in harmony with package managers like [Bower](http://bower.io/).
+* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports even CommonJS via [Browserify](https://github.com/substack/node-browserify)!
+* Include [Bower](http://bower.io/) packages as bundles.
 
 ## Overview
 
 ### The Asset Library
 
-Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
+With Cartero, you can keep all your assets in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
