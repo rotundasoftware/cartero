@@ -13,7 +13,7 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 * Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports CommonJS via [Browserify](https://github.com/substack/node-browserify)!
 * Include [Bower](http://bower.io/) packages as bundles.
 
-Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages, and 98% agnostic to web frameworks &ndash; right now Cartero only works with Node.js / Express, but the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment.
+Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages, and 98% agnostic to web frameworks &ndash; the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express.
 
 ## Overview
 
