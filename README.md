@@ -10,7 +10,7 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 	* Any bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports even CommonJS via [Browserify](https://github.com/substack/node-browserify)!
+* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports CommonJS via [Browserify](https://github.com/substack/node-browserify)!
 * Include [Bower](http://bower.io/) packages as bundles.
 
 Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages, and 98% agnostic to web frameworks &ndash; right now Cartero only works with Node.js / Express, but the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment.
@@ -132,20 +132,20 @@ module.exports = function( grunt ) {
 	grunt.initConfig( {
 		cartero : {
 			options : {
-				projectDir : __dirname,			// the root directory of your project. All other paths in 
-												// these options are relative to this directory.
+				projectDir : __dirname,	     // the root directory of your project. All other paths 
+										     // in these options are relative to this directory.
 				library : {
-					path : "assetLibrary/"		// the relative path to your Asset Library directory.
+					path : "assetLibrary/"   // the relative path to your Asset Library directory.
 				},
 				views : {
-					path : "views/",			// the directoy that contains your server side view templates.
-					viewFileExt : ".jade"		// the file extension of your server side view templates.
+					path : "views/",  	 	 // the directoy containing your server side templates.
+					viewFileExt : ".jade" 	 // the file extension of your server side templates.
 				}
-				publicDir : "static/",			// your app's "public" or "static" directory (into which
-												// processed assets will ultimately be dumped).
+				publicDir : "static/",	  	 // your app's "public" or "static" directory (into
+										  	 // which processed assets will ultimately be dumped).
 
-				tmplExt : ".tmpl",				// the file extension(s) of your client side template files.
-				mode : "dev"					// "dev" or "prod"
+				tmplExt : ".tmpl",			 // the file extension(s) of your client side template.
+				mode : "dev"			  	 // "dev" or "prod"
 			}
 
 			// `dev` target uses all the default options.
@@ -161,7 +161,7 @@ module.exports = function( grunt ) {
 	} );
 
 	grunt.loadNpmTasks( "cartero" );
-	grunt.loadNpmTasks( "grunt-contrib-watch" );	// only needed if the `dev` mode `--watch` flag is used
+	grunt.loadNpmTasks( "grunt-contrib-watch" ); // for `--watch` flag
 };
 ```
 
@@ -467,7 +467,7 @@ From a high level perspective, the Hook is responsible for populating the `carte
 		// are named using the relative path of their corresponding template file.
 		"views/peopleList/peopleList.jade" : {
 
-			// `js`, `css`, and `tmpl` are arrays of the relative paths of the assets in this parcel.
+			// `js`, `css`, and `tmpl` are the relative paths of the assets in this parcel.
 
 			js : [
 				"static/library-assets/JQuery/jquery.js",
