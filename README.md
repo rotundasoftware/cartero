@@ -4,18 +4,16 @@
 
 Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-It's agnostic to javascript frameworks, stylesheet and templating languages. Right now Cartero only works with Node.js / Express, but the [very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is easy to port to any environment.
-
-## Benefits
-
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Assets are automatically injected into the served HTML when the page is rendered. No more messing with `<script>` and `<link>` tags!
 	* Assets that live in the same directory as a page's template are automatically included.
-	* Any bundle dependencies are resolved.
+	* Any bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 * Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports even CommonJS via [Browserify](https://github.com/substack/node-browserify)!
 * Include [Bower](http://bower.io/) packages as bundles.
+
+Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages, and 98% agnostic to web frameworks &ndash; right now Cartero only works with Node.js / Express, but the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment.
 
 ## Overview
 
