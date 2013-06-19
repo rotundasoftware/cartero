@@ -4,7 +4,7 @@
 
 Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
-It's agnostic to frameworks, libraries, programming, stylesheet, and templating languages. Right now Cartero only works with Node.js / Express, but the [very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is easy to port to any environment.
+It's agnostic to frameworks, libraries, stylesheet and templating languages. Right now Cartero only works with Node.js / Express, but the [very small amount](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of web framework specific logic is easy to port to any environment.
 
 ## Benefits
 
