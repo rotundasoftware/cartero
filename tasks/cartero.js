@@ -264,7 +264,7 @@ module.exports = function(grunt) {
 		} );
 
 		// When in prod mode, need to replace relative URLs in CSS files with absolute ones because CSS file location
-		// may change due to bundling.
+		// may change due to bundling.  This needs to happen before files are concatentated in buildParcelRegistry in prod mode.
 		if( mode === "prod" ) {
 			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
 		}
@@ -274,10 +274,11 @@ module.exports = function(grunt) {
 
 		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
 
+		// This task should run after everything has been copied/preprocessed into publicDir
+		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+
 		// Builds the parcelRegistry
 		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:" + mode );
-
-		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType" );
 
