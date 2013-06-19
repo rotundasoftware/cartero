@@ -2,7 +2,7 @@
   <img src="http://www.rotundasoftware.com/images/cartero.png"/>
 </p>
 
-Cartero is an intelligent Grunt task that helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
 
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Assets are automatically injected into the served HTML when the page is rendered. No more messing with `<script>` and `<link>` tags!
