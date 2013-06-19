@@ -14,7 +14,7 @@ It's agnostic to javascript frameworks, stylesheet and templating languages. Rig
 	* Any bundle dependencies are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports even CommonJS via [Browserify](https://github.com/substack/node-browserify)!
+* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules). Cartero even supports CommonJS via [Browserify](https://github.com/substack/node-browserify)!
 * Include [Bower](http://bower.io/) packages as bundles.
 
 ## Overview
