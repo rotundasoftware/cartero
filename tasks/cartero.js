@@ -27,6 +27,8 @@ module.exports = function(grunt) {
 	var kCarteroTaskPrefix = "cartero_";
 	var kCarteroJsonFile = "cartero.json";
 
+	var kBundleJsonFile = "bundle.json";
+
 	var kLibraryAssetsDirPrefix = "library-assets";
 	var kViewAssetsDirPrefix = "view-assets";
 
@@ -186,8 +188,8 @@ module.exports = function(grunt) {
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
 		grunt.event.on( "watch", function( action, filePath ) {
-			//if the file is new, rebuild all the bundle stuff (if its a pageFile or bundle.json file, this is already handled by the watch )
-			if( ( action === "added" || action === "deleted" ) && ! isViewFile( filePath ) && ! _s.endsWith( filePath, "bundle.json" ) ) {
+			// If its a new file, deleted file, viewFile, or a bundle.json file, need to rebuild all bundles.
+			if( action === "added" || action === "deleted" || isViewFile( filePath ) || _s.endsWith( filePath, kBundleJsonFile ) ) {
 				rebundle();
 			}
 
@@ -315,7 +317,7 @@ module.exports = function(grunt) {
 
 		watch[ kCarteroTaskPrefix + "_view_file" ] = {
 			files : viewFilePatterns,
-			tasks : [ kCarteroTaskPrefix + "processViewFileChange" ],
+			tasks : [],
 			options : {
 				nospawn : true
 			}
@@ -330,9 +332,9 @@ module.exports = function(grunt) {
 		// Watch changes to bundle.json files
 		watch[ kCarteroTaskPrefix + "_bundle_json" ] = {
 			files : _.map( options.library, function ( dir ) {
-					return dir.path + "/**/bundle.json";
+					return dir.path + "/**/" + kBundleJsonFile;
 				} ),
-			tasks : [ kCarteroTaskPrefix + "processBundleJsonChange" ],
+			tasks : [],
 			options : {
 				nospawn : true
 			}
@@ -544,14 +546,6 @@ module.exports = function(grunt) {
 
 	grunt.registerTask( kCarteroTaskPrefix + "runPostProcessor", "", function() {
 		options.postProcessor( parcelRegistry );
-	} );
-
-	grunt.registerTask( kCarteroTaskPrefix + "processViewFileChange", "", function() {
-		rebundle();
-	} );
-
-	grunt.registerTask( kCarteroTaskPrefix + "processBundleJsonChange", "", function() {
-		rebundle();
 	} );
 
 	// Creates the assetLibrary and appPages destination directories
