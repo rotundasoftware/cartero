@@ -6,14 +6,14 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Assets are automatically injected into the served HTML when the page is rendered. No more messing with `<script>` and `<link>` tags!
-	* Assets that live in the same directory as a page's template are automatically included.
-	* Any bundle dependencies (and inter-bundle dependencies) are resolved.
+	* Assets that live in the same directory as a page's template are automatically included with the page.
+	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-* Use your preferred JavaScript module system (e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules), or even CommonJS!
+* Use your preferred JavaScript module system, e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
 * Include [Bower](http://bower.io/) packages as bundles.
 
-Cartero is agnostic to JavaScript frameworks, stylesheet and templating languages. It also *almost* works with any web framework &ndash; the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
+Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small hook](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
 
 ## Overview
 
