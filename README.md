@@ -12,7 +12,7 @@ Cartero attempts to address all these issues so that we can organize assets in a
 
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Keep assets that relate to a particular view with the view file itself.
-* Assets are automatically injected into the served HTML when the page is rendered. `<script>` and `<link>` tags are generated for you.
+* `<script>` and `<link>` tags are generated for you, so its easy to load all required assets when a page is rendered. 
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
