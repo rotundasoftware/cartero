@@ -1,11 +1,11 @@
 
-<p align="center">
-	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
-</p>
+In the year 2013, why do most of us still organize our web assets like people did in the 90's, grouping all of our assets together by type? Why don’t we leverage God’s gift of the directory a bit more effectively to put assets together that really belong together? For example, instead of having the “person” related assets spread out all over the place, why don’t we just put all of those assets into one directory? It sure would be nice to be able to quickly switch between "person" files just by clicking on another file in the same directory! And what about assets that are used just by one particular page? Why don’t we put those assets in the same directory as the template for that page, since all those files are so closely related? Now you can.
 
 <h1>Cartero</h1>
 
-Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+<p align="center">
+	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
+</p>
 
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Keep assets that relate to a particular view with the view file itself.
