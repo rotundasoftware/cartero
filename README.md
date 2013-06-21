@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="http://www.rotundasoftware.com/images/cartero.png"/>
+  <img src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png"/>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="http://www.rotundasoftware.com/images/cartero/views-login-file-structure.png"/>
 </p>
 
 Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
