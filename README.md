@@ -6,7 +6,7 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 * Keep assets that relate to a particular view with the view file itself.
 
 <p align="center">
-	<img src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png" />
+	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
 </p>
 
 * Assets are automatically injected into the served HTML when the page is rendered. `<script>` and `<link>` tags are generated for you.
