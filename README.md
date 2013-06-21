@@ -1,14 +1,17 @@
-<p align="center">
+<h1>Cartero</h1>
+
+Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
+
+* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
+* Keep assets that relate to a particular view with the view file itself.
+
+<p align="center" valign="top">
   <img src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png"/>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <img src="http://www.rotundasoftware.com/images/cartero/views-login-file-structure.png"/>
 </p>
 
-Cartero helps you organize, compile, optimize, and serve the many JavaScript, stylesheet, and template assets needed in "thick client" web applications built with JavaScript MVC frameworks.
-
-* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
-* Assets are automatically injected into the served HTML when the page is rendered. No more messing with `<script>` and `<link>` tags!
-	* Assets that live in the same directory as a page's template are automatically included with the page.
+* Assets are automatically injected into the served HTML when the page is rendered. `<script>` and `<link>` tags are generated for you.
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
