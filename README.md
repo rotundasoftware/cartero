@@ -4,7 +4,7 @@ In the year 2013, why do most of us still organize our web assets like people di
 
 Nice thought, hard to materialize. The problem is that asset management has a lot of moving parts. A complete solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.), minification and concatenation in production mode, and of course, dependency management. Dependency management becomes a real pain in multi-page applications. 
 
-Cartero is an attempt to address all of these issues so that we can organize assets in a way makes more sense for modern web applications.
+Cartero is an attempt to address all of these issues so that we can organize assets in a way makes more sense for the modern web.
 
 <p align="center">
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
