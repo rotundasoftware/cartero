@@ -8,9 +8,11 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 <table border=0>
 <tr><td>
   <img vertical-align="top" src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png"/>
-</td></tr>
-<tr><td>
+  Put related assets together
+</td>
+<td>
   <img vertical-align="top" src="http://www.rotundasoftware.com/images/cartero/views-login-file-structure.png"/>
+  Put page assets with their page
 </td></tr>
 </table>
 
