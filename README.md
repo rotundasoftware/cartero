@@ -2,9 +2,9 @@
 
 In the year 2013, why do most of us still organize our web assets like people did in the 90's, grouping our assets together in big directories by type? Why don’t we leverage God's gift of the directory a bit more effectively to put assets together that really belong together? For example, instead of having the "person" related assets spread out all over the place, why don’t we just put all of those assets into one directory? It sure would be nice to be able to quickly switch between "person" files just by clicking on another file in the same directory! And what about assets that are used just by one particular page? Why don’t we put those assets in the same directory as the template for that page, since all those files are so closely related?
 
-Nice thought, hard to materialize. The problem is that asset management has a lot of moving parts. A complete solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.), minification and concatenation in production mode, and of course, dependency management. Dependency management becomes a real pain in multi-page applications. 
+The problem is that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and, the kicker, dependency management.
 
-Cartero attempts to address all these issues so that we can organize assets in a way makes more sense for the modern web.
+Cartero addresses all these issues so that we can organize assets in a way that makes more sense.
 
 <p align="center">
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
