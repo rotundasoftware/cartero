@@ -10,7 +10,7 @@ Cartero addresses these issues so that we can more effectively organize assets a
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
 </p>
 
-* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
+* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. `person.coffee`, `person.scss`, `person.tmpl`, etc.). Then specify the bundles that each page requires.
 * Keep assets for a particular view in the view's directory to automatically include the assets with the view.
 * All necessary `<script>` and `<link>` tags are generated for you. 
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
