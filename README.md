@@ -5,16 +5,9 @@ Cartero helps you organize, compile, optimize, and serve the many JavaScript, st
 * Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. keep `person.coffee`, `person.scss`, `person.tmpl` together in *one directory*). Then specify the bundles that each page requires.
 * Keep assets that relate to a particular view with the view file itself.
 
-<table border=0>
-<tr><td>
-  <img vertical-align="top" src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png"/><br>
-  Put related assets together
-</td>
-<td>
-  <img vertical-align="top" src="http://www.rotundasoftware.com/images/cartero/views-login-file-structure.png"/><br>
-  Put page assets with their page
-</td></tr>
-</table>
+<p align="center">
+	<img src="http://www.rotundasoftware.com/images/cartero/assets-person-file-structure.png" />
+</p>
 
 * Assets are automatically injected into the served HTML when the page is rendered. `<script>` and `<link>` tags are generated for you.
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
