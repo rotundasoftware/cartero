@@ -4,7 +4,7 @@ In the year 2013, why do we still organize our web assets like it's 1990, groupi
 
 One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and dependency management between "bundles" of assets.
 
-Cartero addresses these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
+Cartero builds on a foundation laid by [Grunt.js](http://gruntjs.com/) to address these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
 
 <p align="center">
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
