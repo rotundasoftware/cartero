@@ -25,7 +25,7 @@ Cartero is JavaScript framework, stylesheet and templating language agnostic. It
 
 ### The Asset Library
 
-With Cartero, you can keep all your assets in your application's **_Asset Library_** (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a `bundle.json` file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
+Some assets are needed all over your application. With Cartero ou keep all of these commonly used assets in your application's **_Asset Library_**. Each subdirectory of your Asset Library defines a **_Bundle_** that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
@@ -48,7 +48,7 @@ assetLibrary/
 		editPersonDialog.tmpl
 ```
 
-Because of the `bundle.json` files (contents inlined), the `EditPersonDialog` bundle depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved.
+Because of the `bundle.json` files (contents inlined), the `EditPersonDialog` bundle depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved. (You may optionally specify all bundle meta-data in a single file, instead of using bundle.json files.)
 
 It is also possible to implicitly declare dependencies by nesting bundles because, by default, child bundles automatically depend on their parent bundles. For example, we can put the `EditPersonDialog` bundle inside the `Dialogs` bundle, like so:
 
@@ -84,13 +84,9 @@ views/
 		login.jade
 		login.coffee
 		login.scss
-	peopleList/
-		peopleList.jade
-		peopleList.coffee
-		peopleList.scss
 ```
 
-When the `login.jade` template is rendered, the `login.coffee` and `login.scss` assets will automatically be injected into the HTML of the page, as will the `peopleList.*` assets when the `peopleList.jade` template is rendered.
+When the `login.jade` template is rendered, the `login.coffee` and `login.scss` assets will automatically be injected into the HTML of the page.
 
 ## How it works
 
