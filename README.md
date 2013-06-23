@@ -19,7 +19,7 @@ Cartero addresses these issues so that we can more effectively organize assets a
 * Use your preferred JavaScript module system, e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
 * Include [Bower](http://bower.io/) packages as bundles.
 
-Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small "hook"](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any environment, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
+Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small "hook"](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any web framework, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
 
 ## Overview
 
