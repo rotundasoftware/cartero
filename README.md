@@ -4,13 +4,13 @@ In the year 2013, why do we still organize our web assets like it's 1990, groupi
 
 One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and dependency management between "bundles" of assets.
 
-Cartero builds the rise of [Grunt.js](http://gruntjs.com/) and modularized package managers like Bower to address these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
+Cartero builds the rise of [Grunt.js](http://gruntjs.com/) and modular package managers like [Bower](http://bower.io/) to address these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
 
 <p align="center">
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
 </p>
 
-* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and images (e.g. `person.coffee`, `person.scss`, `person.tmpl`, etc.). Then specify the bundles that each page requires.
+* Store your assets in "bundles" of related JavaScript files, stylesheets, templates, and even images (e.g. `person.coffee`, `person.scss`, `person.tmpl`, etc.). Then specify the bundles that each page requires.
 * Keep assets for a particular view in the view's directory to automatically include the assets with the view.
 * All necessary `<script>` and `<link>` tags are generated for you. 
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
