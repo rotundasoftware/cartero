@@ -16,7 +16,7 @@ Cartero builds the rise of [Grunt.js](http://gruntjs.com/) and modular package m
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-	* Large can be kept as seperate concatinated files for optimal loading and caching.
+		* Large bundles can optionally be kept seperate for optimal loading and caching.
 * Use your preferred JavaScript module system, e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
 * Include [Bower](http://bower.io/) packages as bundles.
 
