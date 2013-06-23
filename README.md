@@ -16,8 +16,8 @@ Cartero builds the rise of [Grunt.js](http://gruntjs.com/) and modular package m
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
+	* Large can be kept as seperate concatinated files for optimal loading and caching.
 * Use your preferred JavaScript module system, e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
-* Flag large bundles of assets to be kept as seperate concatinated files for optimal page loads and caching.
 * Include [Bower](http://bower.io/) packages as bundles.
 
 Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small "hook"](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any web framework, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
