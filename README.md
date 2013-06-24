@@ -40,7 +40,7 @@ When the `login.jade` template is rendered, the compiled `login.coffee` and `log
 
 ### The Asset Library
 
-Some assets are needed by many different pages and / or are supplied by third parties. Keep all of these common assets in one or more **_Asset Libraries_**, grouped into directories, called **_Bundles_**, that may contain JavaScript files, stylesheets, templates, and even images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
+Some assets are needed by many different pages and / or are supplied by third parties. Keep all of these common assets in one or more **_Asset Libraries_**, grouped into subdirectories, called **_Bundles_**, that may contain JavaScript files, stylesheets, templates, and even images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
@@ -54,7 +54,7 @@ assetLibrary/
 		person.tmpl
 ```
 
-Here, the Person bundle might depend on the Backbone bundle, which in turn depends on the JQuery bundle. Dependencies can be specified in `bundle.json` files that live in bundle directories themselves, or in an external bundle meta-data file. When a page requires a bundle, dependencies are automatically resolved. Setup your dependencies, require some bundles, and each page loads with exactly the assets that it needs, and no others.
+Here, the Person bundle might depend on the Backbone bundle, which in turn depends on the JQuery bundle. Dependencies can be specified in `bundle.json` files that live in bundle directories themselves, or in an external bundle meta-data file. When a page requires a bundle, dependencies are automatically resolved. Setup your dependencies, require your bundles, and each page loads with the exact set of assets that it needs.
 
 ## How it works
 
