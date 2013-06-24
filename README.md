@@ -14,7 +14,7 @@ Cartero works on top of [Grunt.js](http://gruntjs.com/) and together with packag
 
 * Keep assets for a particular page with that page's template to automatically serve them with the page.
 * Store your common or third party assets in "bundles" of related JavaScript files, stylesheets, templates, and even images. Then just specify the bundles that each page requires.
-* All necessary `<script>` and `<link>` tags are generated for you. Each page gets only the assets it needs.
+* All necessary `<script>` and `<link>` tags are generated for you.
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
