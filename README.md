@@ -72,7 +72,7 @@ There is also a very small but important piece of logic for serving up assets an
 
 `cartero_tmpl` - the raw, concatenated contents of all the required client side template files.
 
-You may then output the contents of those variables in the appropriate places in your template just like any other template variable. For example, if you are using Jade templates, your page structure might look something like this:
+You may then output the contents of those variables in the appropriate places in your template just like any other template variable. For example, if you are using Jade templates, your page structure might look like this:
 
 ```jade
 // page layout
