@@ -1,8 +1,10 @@
 <h1>Cartero</h1>
 
+<h1>Cartero</h1>
+
 In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big separate directories by their type? Instead, why don't we leverage directories a bit more effectively and put, for example, assets that are just used by one particular page in the same directory as that page's template? It sure would be nice to be able to quickly switch between those closely related files! And what about modular assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place?
 
-One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation, but just in production mode, and dependency management bewteen "bundles" of assets.
+One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation, but just in production mode, and dependency management between "bundles" of assets.
 
 Cartero works on top of [Grunt.js](http://gruntjs.com/) and together with package managers like [Bower](http://bower.io/), addressing these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
 
@@ -12,9 +14,8 @@ Cartero works on top of [Grunt.js](http://gruntjs.com/) and together with packag
 
 * Keep assets for a particular page with that page's template to automatically serve them with the page.
 * Store your common or third party assets in "bundles" of related JavaScript files, stylesheets, templates, and even images. Then just specify the bundles that each page requires.
-* All necessary `<script>` and `<link>` tags are generated for you. 
+* All necessary `<script>` and `<link>` tags are generated for you. Each page gets only the assets it needs.
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
-	* Pages can "extend" on the assets required by another page.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
 		* Large asset bundles can optionally be kept separate for optimal loading and caching.
@@ -25,60 +26,9 @@ Cartero is JavaScript framework, stylesheet and templating language agnostic. It
 
 ## Overview
 
-### The Asset Library
-
-Some assets are needed all over your application or supplied by third parties. With Cartero you can keep all of these common assets in your application's **_Asset Library_**, organized logically in directories, called **_Bundles_**, that may contain JavaScript files, stylesheets, templates, and even images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
-
-```
-assetLibrary/
-	JQuery/
-		jquery.js
-	JQueryUI/
-		bundle.json = { dependencies : [ "JQuery" ] }
-		jquery-ui.js
-		jquery-ui.css
-	Backbone/
-		bundle.json = { dependencies : [ "JQuery" ] }
-		backbone.js
-	Dialogs/
-		bundle.json = { dependencies : [ "Backbone", "JQueryUI" ] }
-		dialogManager.coffee
-	EditPersonDialog/
-		bundle.json = { dependencies : [ "Dialogs" ] }
-		editPersonDialog.coffee
-		editPersonDialog.scss
-		editPersonDialog.tmpl
-```
-
-Because of the `bundle.json` files (contents inlined), the `EditPersonDialog` bundle depends on the `Dialogs` bundle, and indirectly depends on the other three bundles. When a page requires a bundle, dependencies are automatically resolved. (You may optionally specify all bundle meta-data in a single file, instead of using bundle.json files.)
-
-It is also possible to implicitly declare dependencies by nesting bundles because, by default, child bundles automatically depend on their parent bundles. For example, we can put the `EditPersonDialog` bundle inside the `Dialogs` bundle, like so:
-
-```
-assetLibrary/
-	JQuery/
-		jquery.js
-	JQueryUI/
-		bundle.json = { dependencies : [ "JQuery" ] }
-		jquery-ui.js
-		jquery-ui.css
-	Backbone/
-		bundle.json = { dependencies : [ "JQuery" ] }
-		backbone.js
-	Dialogs/
-		bundle.json = { dependencies : [ "Backbone", "JQueryUI" ] }
-		dialogManager.coffee
-		EditPersonDialog/
-			editPersonDialog.coffee
-			editPersonDialog.scss
-			editPersonDialog.tmpl
-```
-
-Now the bundle named `Dialogs/EditPersonDialog` depends on on the `Dialogs` bundle (and indirectly depends on the other three bundles) by virtue of the directory structure.
-
 ### Page specific assets
 
-In addition to the assets in bundles that are required by a page, the assets that live in the same directory as a page's server side template will automatically be included when it is rendered. For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
+Often times assets are just used by one particular page. With Cartero you just keep those assets in the same directory as the page's template, and they will be automatically be included when it is rendered. No more messing with `<script>` and `<link>` tags! For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
 
 ```
 views/
@@ -88,7 +38,25 @@ views/
 		login.scss
 ```
 
-When the `login.jade` template is rendered, the `login.coffee` and `login.scss` assets will automatically be injected into the HTML of the page.
+When the `login.jade` template is rendered, the compiled `login.coffee` and `login.scss` assets will automatically be included. Pages can also "extend" on the assets required by another page.
+
+### The Asset Library
+
+Some assets are needed many different places in your application and / or are supplied by third parties. With Cartero you can keep all of these common assets in one or more **_Asset Libraries_**, grouped into directories, called **_Bundles_**, that may contain JavaScript files, stylesheets, templates, and even images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
+
+```
+assetLibrary/
+	JQuery/
+		jquery.js
+	Backbone/
+		backbone.js
+	Person/
+		person.coffee
+		person.scss
+		person.tmpl
+```
+
+Here, the Person bundle might depend on the Backbone bundle, which in turn depends on the JQuery bundle. Dependencies can be specified in `bundle.json` files that live in bundle directories themselves, or in an external bundle meta-data file. When a page requires a bundle, dependencies are automatically resolved.
 
 ## How it works
 
