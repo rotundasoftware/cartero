@@ -1,23 +1,24 @@
 <h1>Cartero</h1>
 
-In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories by their type? Instead, why don’t we leverage directories a bit more effectively to put assets together that really belong together? For example, instead of having the "person" related assets spread out all over the place  (personModel.js, personView.js, person.css, etc.), why don’t we just put all of those assets into one directory? It sure would be nice to quickly switch between "person" files just by clicking on another file in the same directory! And what about assets that are used just by one particular page? Why don’t we put those assets in the same directory as the template for that page, since all those files are so closely related?
+In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big separate directories by their type? Instead, why don't we leverage directories a bit more effectively and put, for example, assets that are just used by one particular page in the same directory as that page's template? It sure would be nice to be able to quickly switch between those closely related files! And what about modular assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "Person" directory, instead of spreading them out all over the place?
 
-One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and dependency management between "bundles" of assets.
+One of the obstacles has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation just in production mode, and dependency management on an asset "bundle" level.
 
-Cartero builds the rise of [Grunt.js](http://gruntjs.com/) and modular package managers like [Bower](http://bower.io/) to address these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
+Cartero works on top of [Grunt.js](http://gruntjs.com/) and together with package managers like [Bower](http://bower.io/), addressing these issues so that we can more effectively organize assets, optimize their delivery, and scale up applications.
 
 <p align="center">
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
 </p>
 
-* Store your assets in "bundles" of related JavaScript files, stylesheets, templates, and even images (e.g. `person.coffee`, `person.scss`, `person.tmpl`, etc.). Then specify the bundles that each page requires.
-* Keep assets for a particular view in the view's directory to automatically include the assets with the view.
+* Keep assets for a particular page with the page's template to automatically serve them with the page.
+* Store your common or third party assets in "bundles" of related JavaScript files, stylesheets, templates, and even images. Then specify the bundles that each page requires.
 * All necessary `<script>` and `<link>` tags are generated for you. 
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
+	* Pages can "extend" on the assets required by another page.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
 	* In production mode, served assets are preprocessed, minified and concatenated.
-		* Large bundles can optionally be kept seperate for optimal loading and caching.
-* Use your preferred JavaScript module system, e.g. RequireJS, [Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
+		* Large asset bundles can optionally be kept separate for optimal loading and caching.
+* Use your preferred JavaScript module system, e.g. RequireJS, [Backbone Marionette](https://github.com/marionettejs/backbone.marionette) Modules, or even CommonJS!
 * Include [Bower](http://bower.io/) packages as bundles.
 
 Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small "hook"](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any web framework, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
