@@ -68,14 +68,6 @@ module.exports = function(grunt) {
 	// Files that are browserified and need to be run upon loading.
 	var browserifyExecuteOnLoadFiles = [];
 
-	// Convenience function that is used by the watch tasks when cartero metadata changes and the pageMap and bundleMap need to be rebuilt.
-	function rebundle() {
-		grunt.task.run( kCarteroTaskPrefix + "buildBundleRegistry:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
-		grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
-	}
-
 	// Processes a CSS file looking for url().  Replaces relative paths with absolute ones ( to the staticDir ).
 	function makeUrlsAbsoluteInCssFile( fileName, callback ) {
 		fs.readFile( fileName, function( err, data ) {
@@ -113,9 +105,9 @@ module.exports = function(grunt) {
 	}
 
 	// returns true if the given fileName is in a `views` directory
-	function fileIsInViewDirectory( fileName ) {
+	function fileIsInPublicViewDirectory( fileName ) {
 		var result = _.find( options.views, function( dirOptions ) {
-			return _s.startsWith( fileName, dirOptions.path );
+			return _s.startsWith( fileName, dirOptions.destDir );
 		} );
 
 		return ! _.isUndefined( result );
@@ -127,10 +119,14 @@ module.exports = function(grunt) {
 
 		var browserifyFiles = _.map( libraryAndViewDirs, function( dirOptions ) {
 			return {
-				cwd : dirOptions.path,
+				cwd : dirOptions.destDir,
 				src : [ "**/*.js" ],
 				dest : dirOptions.destDir,
-				expand : true
+				expand : true,
+				filter : function( filePath ) {
+
+					return ! _.isUndefined( File.getFromRegistryByPath( filePath ) );
+				}
 			};
 		} );
 
@@ -171,7 +167,7 @@ module.exports = function(grunt) {
 			if( doWatch && options.watch ) {
 				watch[ kCarteroTaskPrefix + taskName + "_" + taskTarget ] = {
 					files : [ dir.path + "/**/*" + taskConfig.inExt ],
-					tasks : [ taskName + ":" + taskTarget ],
+					tasks : [],
 					options : {
 						nospawn : true
 					}
@@ -188,47 +184,74 @@ module.exports = function(grunt) {
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
 		grunt.event.on( "watch", function( action, filePath ) {
+
+			var needToRebundle = action === "added" || action === "deleted" || isViewFile( filePath ) || _s.endsWith( filePath, kBundleJsonFile );
 			// If its a new file, deleted file, viewFile, or a bundle.json file, need to rebuild all bundles.
-			if( action === "added" || action === "deleted" || isViewFile( filePath ) || _s.endsWith( filePath, kBundleJsonFile ) ) {
-				rebundle();
-			}
-
-			var dirOptions = _.find( libraryAndViewDirs, function( dirOptions ) {
-				return filePath.indexOf( dirOptions.path ) === 0;
-			} );
-
-			var newDest = filePath.replace( dirOptions.path, dirOptions.destDir );
-
-			newDest = File.mapAssetFileName( newDest, assetExtensionMap );
-
-			// if the file is deleted, we want the tasks we configured to run to not run on any files.
-			if( action === "deleted" ) {
-				filePath = [];
-				newDest = null;
+			if( needToRebundle ) {
+				File.clearRegistry();
+				buildBundleRegistry();
+				buildParcelRegistry();
+				copyBundlesAndParcels();
+				mapAssetFileNamesInBundles( assetExtensionMap );
+				_.each( options.preprocessingTasks, function( preprocessingTask ) {
+					configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, true );
+				} );
+				_.each( options.preprocessingTasks, function( preprocessingTask ) {
+					grunt.task.run( preprocessingTask.name );
+				} );
+				configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
+				if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
+				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+				grunt.task.run( kCarteroTaskPrefix + "populateFilesToServe:dev" );
+				grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
+				grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
 			}
 			else {
-				if( _.contains( extToCopy, File.getFileExtension( filePath ) ) )
-					grunt.file.copy( filePath, newDest );
-			}
+				var srcPath;
+				var newDest;
 
-			_.each( options.preprocessingTasks, function( preprocessingTask ) {
+				var dirOptions = _.find( libraryAndViewDirs, function( dirOptions ) {
+					return filePath.indexOf( dirOptions.path ) === 0;
+				} );
 
-				var taskName = preprocessingTask.name;
+				var file = File.getFromRegistry( filePath );
 
-				// If the changed file's extension matches the task, set the file.
-				if( _s.endsWith( filePath, preprocessingTask.inExt ) ) {
-					grunt.config( [ taskName, kCarteroTaskPrefix, "src" ], filePath );
-					grunt.config( [ taskName, kCarteroTaskPrefix, "dest" ], newDest );
+				if( ! _.isUndefined( file ) ) {
+					file.copy( dirOptions.path, dirOptions.destDir, true );
 				}
-			} );
-
-			if( browserify ) {
-				if( _s.endsWith( filePath, ".js" ) ) {
-					grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
-						src : filePath,
-						dest : newDest
-					} ] );
+				else {
+					srcPath = [];
+					newDest = null;
 				}
+
+				srcPath = file.path;
+				newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
+
+				_.each( options.preprocessingTasks, function( preprocessingTask ) {
+
+					var taskName = preprocessingTask.name;
+
+					// If the changed file's extension matches the task, set the file.
+					if( _s.endsWith( filePath, preprocessingTask.inExt ) ) {
+						grunt.config( [ taskName, kCarteroTaskPrefix + dirOptions.path, "src" ], srcPath );
+						grunt.config( [ taskName, kCarteroTaskPrefix  + dirOptions.path, "dest" ], newDest );
+						grunt.task.run( taskName + ":" + kCarteroTaskPrefix  + dirOptions.path );
+					}
+
+				} );
+
+				if( options.browserify ) {
+					if( _s.endsWith( file.path, ".js" ) ) {
+						grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
+							src : newDest,
+							dest : newDest
+						} ] );
+						grunt.task.run( kCarteroTaskPrefix + "browserify" );
+					}
+				}
+
+				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+
 			}
 		} );
 	}
@@ -247,7 +270,7 @@ module.exports = function(grunt) {
 			files : _.map( libraryAndViewDirs, function ( dir ) {
 				return dir.path + "/**/*" + ext;
 			} ),
-			tasks : tasksToRun,
+			tasks : [],
 			options : {
 				nospawn : true
 			}
@@ -257,6 +280,14 @@ module.exports = function(grunt) {
 	}
 
 	function queueTasksToRun( mode, preprocessingTasks, minificationTasks, postProcessor ) {
+
+
+		// Builds the bundle registry
+		grunt.task.run( kCarteroTaskPrefix + "buildBundleRegistry:" + mode );
+
+		// Builds the parcelRegistry
+		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:" + mode );
+
 		grunt.task.run( kCarteroTaskPrefix + "clean" );
 		grunt.task.run( kCarteroTaskPrefix + "prepare" );
 		grunt.task.run( kCarteroTaskPrefix + "copy" );
@@ -265,22 +296,20 @@ module.exports = function(grunt) {
 			grunt.task.run( preprocessingTask.name );
 		} );
 
+		grunt.task.run( kCarteroTaskPrefix + "mapAssetFileNamesInBundles" );
+
 		// When in prod mode, need to replace relative URLs in CSS files with absolute ones because CSS file location
 		// may change due to bundling.  This needs to happen before files are concatentated in buildParcelRegistry in prod mode.
 		if( mode === "prod" ) {
 			grunt.task.run( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile" );
 		}
 
-		// Builds the bundle registry
-		grunt.task.run( kCarteroTaskPrefix + "buildBundleRegistry:" + mode );
-
 		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
 
 		// This task should run after everything has been copied/preprocessed into publicDir
 		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
-		// Builds the parcelRegistry
-		grunt.task.run( kCarteroTaskPrefix + "buildParcelRegistry:" + mode );
+		grunt.task.run( kCarteroTaskPrefix + "populateFilesToServe:" + mode );
 
 		grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType" );
 
@@ -429,7 +458,77 @@ module.exports = function(grunt) {
 		return options;
 	}
 
+	function buildBundleRegistry() {
+		try {
+			bundleRegistry = Bundle.createRegistry( options.library, options.mode );
+		}
+		catch( e ) {
+			var errMsg = "Error while resolving bundles: " + e.stack;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
+	}
+
+	function copyBundlesAndParcels() {
+		_.each( bundleRegistry, function( bundle ) {
+			bundle.copy();
+		} );
+
+		_.each( parcelRegistry, function( parcel ) {
+			parcel.copy();
+		} );
+	}
+
+	function buildParcelRegistry() {
+		try {
+			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, options.mode );
+		}
+		catch( e ) {
+			var errMsg = "Error while resolving pages: " + e.stack;
+			if( mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
+	}
+
+	function populateFilesToServe() {
+		try {
+			Parcel.populateFilesToServe( parcelRegistry, options.mode );
+		}
+		catch( e ) {
+			var errMsg = "Error while resolving pages: " + e.stack;
+			if( options.mode === "dev" )
+				grunt.fail.warn( errMsg );
+			else
+				grunt.fail.fatal( errMsg );
+		}
+	}
+
+	function mapAssetFileName( file, assetExtensionMap ) {
+		file.path = File.mapAssetFileName( file.path, assetExtensionMap );
+	}
+
+	function mapAssetFileNamesInBundles( assetExtensionMap ) {
+		_.each( bundleRegistry, function( bundle ) {
+			_.each( bundle.files, function( file ) {
+				mapAssetFileName( file, assetExtensionMap );
+			} );
+		} );
+
+		_.each( parcelRegistry, function( parcel ) {
+			_.each( parcel.files, function( file ) {
+				mapAssetFileName( file, assetExtensionMap );
+			} );
+		} );
+
+		File.rebuildRegistries();
+	}
+
 	grunt.registerMultiTask( "cartero", "Cartero asset manager.", function() {
+		debugger;
 		options = this.options();
 
 		validateConfigOptions( options );
@@ -446,14 +545,14 @@ module.exports = function(grunt) {
 			assetExtensionMap[ preprocessingTask.inExt ] = preprocessingTask.outExt;
 		} );
 
-		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), processedAssetExts ) );
+		File.setAssetExtensions( _.union( _.keys( assetExtensionMap ), processedAssetExts, kValidImageExts ) );
 		File.setTmplExtensions( options.tmplExt );
 
 		// For each supplied preprocessingTask, set up the task configuration:
 		// - files : All files of the given inExt in all `views` and `library` directories
 		// - options : Pass through options supplied in the processingTask
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
-			configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, false );
+			configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, true );
 		} );
 
 		// For each supplied minificationTask, set up the task configuration
@@ -465,9 +564,10 @@ module.exports = function(grunt) {
 		configureCarteroTask( "prepare", { libraryAndViewDirs : libraryAndViewDirs } );
 		configureCarteroTask( "copy", { libraryAndViewDirs : libraryAndViewDirs, extToCopy : extToCopy } );
 
-		configureCarteroTask( "buildBundleRegistry", { assetExtensionMap : assetExtensionMap } );
+		//configureCarteroTask( "buildBundleRegistry", { assetExtensionMap : assetExtensionMap } );
 
-		configureCarteroTask( "buildParcelRegistry", { assetExtensionMap : assetExtensionMap } );
+		//configureCarteroTask( "buildParcelRegistry", { assetExtensionMap : assetExtensionMap } );
+		configureCarteroTask( "mapAssetFileNamesInBundles", { assetExtensionMap : assetExtensionMap } );
 
 		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
 
@@ -484,38 +584,18 @@ module.exports = function(grunt) {
 			configureWatchBundleJson( options );
 		}
 
-		var cleanableAssetExt = processedAssetExts;
+		var cleanableAssetExt = _.union( processedAssetExts, _.pluck( options.preprocessingTasks, "inExt" ) );
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
 
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
-		console.log( grunt.config().watch );
-
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "copy", "", function() {
-		var taskConfig = this.options();
-		var filesToCopy = [];
-
-		_.each( taskConfig.libraryAndViewDirs, function ( dirOptions ) {
-
-			filesToCopy = _.union( filesToCopy, grunt.file.expandMapping(
-				_.map( taskConfig.extToCopy, function( extension ) {
-					return "**/*" + extension;
-				} ),
-				dirOptions.destDir,
-				{
-					cwd : dirOptions.path
-				}
-			) );
-		} );
-
-		_.each( filesToCopy, function( fileSrcDest ) {
-			grunt.file.copy( fileSrcDest.src, fileSrcDest.dest );
-		} );
+		copyBundlesAndParcels();
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "replaceRelativeUrlsInCssFile", "", function() {
@@ -563,34 +643,20 @@ module.exports = function(grunt) {
 		} );
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "buildBundleRegistry", "Build bundle registry.", function( mode ) {
-		var opts = this.options();
-
-		try {
-			bundleRegistry = Bundle.createRegistry( options.library, mode, opts.assetExtensionMap );
-		}
-		catch( e ) {
-			var errMsg = "Error while resolving bundles: " + e.stack;
-			if( mode === "dev" )
-				grunt.fail.warn( errMsg );
-			else
-				grunt.fail.fatal( errMsg );
-		}
+	grunt.registerTask( kCarteroTaskPrefix + "buildBundleRegistry", "Build bundle registry.", function() {
+		buildBundleRegistry();
 	} );
 
-	grunt.registerTask( kCarteroTaskPrefix + "buildParcelRegistry", "Build parcel registry", function( mode ) {
-		var opts = this.options();
+	grunt.registerTask( kCarteroTaskPrefix + "buildParcelRegistry", "Build parcel registry", function() {
+		buildParcelRegistry();
+	} );
 
-		try {
-			parcelRegistry = Parcel.createRegistry( options.views, bundleRegistry, mode, opts.assetExtensionMap );
-		}
-		catch( e ) {
-			var errMsg = "Error while resolving pages: " + e.stack;
-			if( mode === "dev" )
-				grunt.fail.warn( errMsg );
-			else
-				grunt.fail.fatal( errMsg );
-		}
+	grunt.registerTask( kCarteroTaskPrefix + "mapAssetFileNamesInBundles", "", function() {
+		mapAssetFileNamesInBundles( this.options().assetExtensionMap );
+	} );
+
+	grunt.registerTask( kCarteroTaskPrefix + "populateFilesToServe", "Populates the files to serve", function( mode ) {
+		populateFilesToServe();
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "separateFilesToServeByType", "", function() {
@@ -608,8 +674,11 @@ module.exports = function(grunt) {
 			referencedFiles = _.union( referencedFiles, parcel.js, parcel.css, parcel.tmpl );
 		} );
 
+
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			referencedFiles = _.union( referencedFiles, bundle.dynamicallyLoadedFiles );
+			referencedFiles = _.union( referencedFiles, _.filter( bundle.files, function( file ) {
+				return file.isDynamicallyLoaded;
+			} ) );
 		} );
 
 		var filesToClean = grunt.file.expand( {
@@ -700,12 +769,20 @@ module.exports = function(grunt) {
 	grunt.registerMultiTask( kCarteroTaskPrefix + "browserify", "", function() {
 		var browserifyExecuteOnLoadFiles = [];
 
+		var filesToBundle = [];
+
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles, bundle.browserify_executeOnLoad );
+			browserifyExecuteOnLoadFiles = _.union( browserifyExecuteOnLoadFiles,
+				_.pluck(
+					_.filter( bundle.files, function( file ) {
+						return file.isBrowserify_executeOnLoad;
+					} ),
+					"path" )
+				);
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
-			if( fileIsInViewDirectory( path.relative( options.projectDir, filePath ) ) )
+			if( fileIsInPublicViewDirectory( path.relative( options.projectDir, filePath ) ) )
 				return fileSrc.indexOf( kBrowserifyExecuteOnLoad ) != -1;
 			else
 				return _.contains( browserifyExecuteOnLoadFiles, path.relative( options.projectDir, filePath ) );
@@ -728,37 +805,93 @@ module.exports = function(grunt) {
 			}
 			catch( e ) {
 				var errMsg =  "Failed to parse file " + filePath + ": " + e ;
-				if( options.mode === "dev")
-					grunt.fail.warn( errMsg );
-				else
-					grunt.fail.fatal( errMsg );
-				cb( e );
+				grunt.fail.warn( errMsg );
+				cb();
 				return;
 			}
 
+			var resolvedRequiredFiles = [];
+
+			var hasBadRequire = false;
+			var badRequire;
+
 			_.each( requiredFiles, function( relativeRequire ) {
-				var resolvedRequire = resolve.sync( relativeRequire, { basedir: filePath.replace(/\/[^\/]*$/, "" ) /*, paths : paths*/ } );
+				var resolvedRequire = "";
+				var fileDir = filePath.substring( 0, filePath.lastIndexOf( "/" ) );
+				if( ! /^\w/.test( relativeRequire ) ) {
+					resolvedRequire = path.resolve( fileDir, relativeRequire );
+				}
+				else {
+					var firstDirInBundleName = relativeRequire.substring( 0, relativeRequire.indexOf( "/" ) );
+
+					if( fs.existsSync( path.join( options.publicDir, kLibraryAssetsDirPrefix + "-" + firstDirInBundleName ) ) ) {
+						resolvedRequire = path.join( options.projectDir, options.publicDir, kLibraryAssetsDirPrefix + "-" + firstDirInBundleName, relativeRequire.substring( relativeRequire.indexOf( "/" ) + 1 ) );
+					}
+					else {
+						resolvedRequire = path.join( options.projectDir, options.publicDir, kLibraryAssetsDirPrefix, relativeRequire );
+					}
+
+					if( fs.existsSync( resolvedRequire ) ) {
+						var stat = fs.statSync( resolvedRequire );
+
+						if( stat.isDirectory() ) {
+
+							var bundle = _.find( _.values( bundleRegistry ), function( bundleMetadata ) {
+								return path.relative( options.projectDir, resolvedRequire) === bundleMetadata.directory;
+							} );
+
+							if( _.isUndefined( bundle ) ) {
+								console.log( "COULD NOT FIND BUNDLE FOR RESOLVED REQUIRE: " + resolvedRequire );
+							}
+
+							//if( fs.existsSync( path.join( resolvedRequire, "package.json" ) ) ) {
+							if( ! _.isUndefined( bundle.packageJson ) ) {
+								var pkgJSON = bundle.packageJson;
+
+								if( ! _.isUndefined( pkgJSON.main ) ) {
+									resolvedRequire = path.join( resolvedRequire, pkgJSON.main );
+								}
+								else {
+									resolvedRequire = path.join( resolvedRequire, "index.js" );
+								}
+							}
+							else {
+								resolvedRequire = path.join( resolvedRequire, "index.js" );
+							}
+						}
+					}
+
+					resolvedRequire = resolvedRequire.replace( /.js$/,"" ) + ".js";
+		
+					if( ! fs.existsSync( resolvedRequire ) ) {
+						hasBadRequire = true;
+						badRequire = resolvedRequire;
+					}
+				}
+
+				resolvedRequiredFiles.push( resolvedRequire );
+				fileContents = fileContents.replace(  new RegExp( "[\"']" + relativeRequire + "[\"']", "g" ),  "\"" + resolvedRequire + "\"" );
+
 				b.external( resolvedRequire );
 			} );
 
-			b.bundle( { filter : function( fileName ) {
-					return _.contains( requiredFiles, fileName );
-				}
-			},
-			function( err, src ) {
-				if( err ) {
-					var errMsg =  "Error while browserifying " + filePath + " : " +  err;
-					if( options.mode === "dev" )
-						grunt.fail.warn( errMsg );
-					else
-						grunt.fail.fatal( errMsg );
-				}
-				else {
-					fs.writeFileSync( filePathDest, src.toString() );
-				}
+			if( hasBadRequire ) {
+				console.log( "the following require doesn't exist and would cause browserify to fail, so not browserifying " + filePath + ": " + badRequire );
+				return cb();
+			}
 
-				cb( err );
+
+			fs.writeFileSync( filePath, fileContents );
+
+			filesToBundle.push( {
+				browserify : b,
+				filePath : filePath,
+				filePathDest : filePathDest,
+				requiredFiles : resolvedRequiredFiles
 			} );
+
+
+			cb();
 		}
 
 		var done = this.async();
@@ -770,8 +903,34 @@ module.exports = function(grunt) {
 				processFile( realPath , file.dest, callback );
 			},
 			function( err ) {
-				//user notified of errors (if any) while each file is bundled
-				done();
+				if( err !== null ) {
+					var errMsg = "An error occured while building browserify bundle information: " + err;
+					grunt.fail.warn( errMsg );
+				}
+
+				async.eachSeries(
+					filesToBundle,
+					function( fileBundleInfo, callback ) {
+
+						fileBundleInfo.browserify.bundle( { filter : function( fileName ) {
+								return _.contains( fileBundleInfo.requiredFiles, fileName );
+							}
+						},
+						function( err, src ) {
+							if( err ) {
+								var errMsg =  "Error while browserifying " + fileBundleInfo.filePath + " : " +  err;
+								grunt.fail.warn( errMsg );
+							}
+							else {
+								fs.writeFileSync( fileBundleInfo.filePathDest, src.toString() );
+							}
+							callback();
+						} );
+					},
+					function( err ) {
+						done();
+					}
+				);
 			}
 		);
 	} );
