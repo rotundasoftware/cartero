@@ -1,6 +1,6 @@
 <h1>Cartero</h1>
 
-In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories separated by their type? Instead, why don't we leverage directories a bit more effectively to put files together that really belong together? For example, why don't we put JavaScript and style assets that are just used by one particular page in the same directory as that page's template? And what about related assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place? It sure would be nice to be able to quickly switch between those files! 
+In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories separated by their type? Instead, why don't we leverage directories a bit more effectively to put files together that really belong together? For example, why don't we put JavaScript and stylesheet assets that are just used by one particular page in the same directory as that page's template? And what about related assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place? It sure would be nice to be able to quickly switch between those files! 
 
 One of the obstacles, besides resistance to change, has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and dependency management.
 
@@ -36,7 +36,7 @@ views/
 		login.scss
 ```
 
-When the `login.jade` template is rendered, the compiled `login.coffee` and `login.scss` assets will automatically be included. Pages can also "extend" on the assets required by another page.
+When the `login.jade` template is rendered, the compiled `login.coffee` and `login.scss` assets will automatically be included. A page can also "extend" on the assets required by another page.
 
 ### The Asset Library
 
