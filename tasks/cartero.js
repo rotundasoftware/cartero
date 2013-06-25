@@ -674,11 +674,10 @@ module.exports = function(grunt) {
 			referencedFiles = _.union( referencedFiles, parcel.js, parcel.css, parcel.tmpl );
 		} );
 
-
 		_.each( _.values( bundleRegistry ), function( bundle ) {
-			referencedFiles = _.union( referencedFiles, _.filter( bundle.files, function( file ) {
+			referencedFiles = _.union( referencedFiles, _.pluck( _.filter( bundle.files, function( file ) {
 				return file.isDynamicallyLoaded;
-			} ) );
+			} ), "path" ) );
 		} );
 
 		var filesToClean = grunt.file.expand( {
