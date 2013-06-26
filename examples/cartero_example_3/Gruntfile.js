@@ -20,8 +20,8 @@ module.exports = function( grunt ) {
 				views : [
 					{
 						path : "views",
-						filesToIgnore : /_.*/,
-						directoriesToIgnore : /__.*/,
+						filesToIgnore : /^_.*/,
+						directoriesToIgnore : /^__.*/,
 						viewFileExt : ".swig"
 					}
 				],
