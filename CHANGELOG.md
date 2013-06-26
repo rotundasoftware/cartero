@@ -6,6 +6,7 @@
 * Add sourceFilePaths to files in filesToServe to keep track of which files were concatenated.
 * Bug Fixes:
   * Run replaceCarteroDirTokens task before buildParcelRegistry so ##cartero_dir tokens are replaced with file's location before concatenation.
+	* Support directoriesToIgnore in bundle.json
 
 ### v0.1.0
 
