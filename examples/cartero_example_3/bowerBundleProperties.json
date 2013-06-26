@@ -4,8 +4,7 @@
 		"directoriesToFlatten" : [ "docs", "examples", "test" ]
 	},
 	"Bower/jquery-ui" : {
-		"whitelistedFiles" : [ "ui/jquery-ui.js", "themes/ui-lightness/jquery-ui.css" ],
-		"dependencies" : [ "Bower/jquery" ]
+		"whitelistedFiles" : [ "ui/jquery-ui.js", "themes/ui-lightness/jquery-ui.css" ]
 	},
 	"Bower/backbone" : {
 		"whitelistedFiles" : [ "backbone.js" ],
