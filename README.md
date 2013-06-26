@@ -492,7 +492,7 @@ Yes and No. They would break, but Cartero automatically scans your `.css` files 
 
 If you develop a Hook for your web framework, please let us know and we'll add it to the directory.
 
-##Changelog
+##Change Log
 
 See the [CHANGELOG.md](CHANGELOG.md) file.
 ## About
