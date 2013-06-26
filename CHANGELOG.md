@@ -1,4 +1,4 @@
-# Change log
+# Change Log
 
 ### v0.1.1
 
