@@ -464,7 +464,7 @@ module.exports = function(grunt) {
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving bundles: " + e.stack;
-			if( mode === "dev" )
+			if( options.mode === "dev" )
 				grunt.fail.warn( errMsg );
 			else
 				grunt.fail.fatal( errMsg );
@@ -487,7 +487,7 @@ module.exports = function(grunt) {
 		}
 		catch( e ) {
 			var errMsg = "Error while resolving pages: " + e.stack;
-			if( mode === "dev" )
+			if( options.mode === "dev" )
 				grunt.fail.warn( errMsg );
 			else
 				grunt.fail.fatal( errMsg );
