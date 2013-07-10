@@ -63,7 +63,7 @@ components/
 		...
 ```
 
-Bower dependencies are automatically resolved, so when the `app/editPersonDialog` bundle is required by a page, the `jquery-ui` and `jquery`  bundles will also be included automatically. Note that since Bower packages generally contain extra asset files like unit tests, you also need to tell Cartero which files from each Bower package should be used with the `whitelistedFiles` options (explained below).
+Bower dependencies are automatically resolved, so when the `app/editPersonDialog` bundle is required by a page, the `components/jquery-ui` and `components/jquery` bundles will also be included automatically. Note that since Bower packages generally contain extra files like unit tests, you also need to tell Cartero which assets from each package should be used with the `whitelistedFiles` options (explained below).
 
 ### Page specific assets
 
