@@ -67,7 +67,7 @@ Bower dependencies are automatically resolved, so when the `app/editPersonDialog
 
 ### Page specific assets
 
-Often times assets are just used by one particular page. Just keep those assets in the same directory as the page's template, and they will be automatically be included when it is rendered. No more messing with `<script>` and `<link>` tags! For example, say your page templates live in a directory named `views`, as is typical for most web frameworks.
+Often times assets are just used by one particular page. Just keep those assets in the same directory as the page's template, and they will be automatically be included when it is rendered. No more messing with `<script>` and `<link>` tags! For example, say your page templates live in a directory named `views`:
 
 ```
 views/
