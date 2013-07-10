@@ -227,18 +227,6 @@ options : {
 		// (required) The relative path to the directory containing asset bundles.
 		path : "assetLibrary/",
 
-		// (default: true) When true, parent bundles are automatically added as a
-		// dependency to their children. For example, the `dialogs/editPersonDialog`
-		// bundle would automatically depend on the `Dialogs` bundle, with no need
-		// to explicitly declare the dependency.
-		childrenDependOnParents : true,
-
-		// (default: /^_.*/) Files contained in directories with names matching this regular
-		// expression will be treated as part of the parent directory. This feature 
-		// enables you to use directories within a bundle for organizational purposes,
-		// when otherwise they would be considered their own bundles.
-		directoriesToFlatten : /^_.*/,
-
 		// (default: undefined) If you can't, or would rather not, define your bundle
 		// properties in `bundle.json` files that live in each bundle's directory, you can
 		// define your bundle properties using this option. For instance, if you are using
@@ -252,9 +240,21 @@ options : {
 		// may supply this property to give this directory a unique "namespace". For
 		// example, if your Asset Library is composed of Bower's "components" directory 
 		// and your own "assetLibrary" directory, you might give the "components" directory
-		// the "Bower" namespace. Bundles in that directory would then be referenced by 
-		// pre-pending `Bower/` to their name.
-		namespace : "App"
+		// the "components" namespace. Bundles in that directory would then be referenced by 
+		// pre-pending `components/` to their name.
+		namespace : "app"
+
+		// (default: /^_.*/) Files contained in directories with names matching this regular
+		// expression will be treated as part of the parent directory. This feature 
+		// enables you to use directories within a bundle for organizational purposes,
+		// when otherwise they would be considered their own bundles.
+		directoriesToFlatten : /^_.*/,
+
+		// (default: true) When true, parent bundles are automatically added as a
+		// dependency to their children. For example, the `dialogs/editPersonDialog`
+		// bundle would automatically depend on the `Dialogs` bundle, with no need
+		// to explicitly declare the dependency.
+		childrenDependOnParents : true,
 	},
 
 	// (required) An object that specifies your views directory and related options.
