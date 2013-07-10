@@ -43,7 +43,7 @@ Here, the `editPersonDialog` bundle depends on the `dialogs` bundle because of i
 
 #### Using Cartero with Bower
 
-To use Cartero with Bower, add the Bower `components` directory as an additional Asset Library. Consider the following directory structure:
+To use Cartero with Bower, add the Bower `components` directory as an additional Asset Library directory:
 
 ```
 app/
