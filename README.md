@@ -55,7 +55,6 @@ app/
         editPersonDialog.coffee
         editPersonDialog.scss
         editPersonDialog.tmpl
-
 components/
 	jquery-ui
         bower.json = { "dependencies": { "jquery": "~> 1.10.1" }, ... }
@@ -64,7 +63,7 @@ components/
 		...
 ```
 
-Since Bower dependencies are automatically resolved, when the `editPersonDialog` bundle is required by a page, the `jquery-ui` and `jquery`  bundles will also be included automatically. Note that also need to tell Cartero which files from each Bower package should be used, which you can do with the `whitelistedFiles` options (explained below), since often times Bower packages contain extra asset files like unit tests.
+Bower dependencies are automatically resolved, so when the `editPersonDialog` bundle is required by a page, the `jquery-ui` and `jquery`  bundles will also be included automatically. Note that since Bower packages generally contain extra asset files like unit tests, you also need to tell Cartero which files from each Bower package should be used with the `whitelistedFiles` options (explained below).
 
 ### Page specific assets
 
