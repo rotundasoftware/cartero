@@ -26,7 +26,7 @@ Cartero is JavaScript framework, stylesheet and templating language agnostic. It
 
 ### The Asset Library
 
-Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's Asset Library (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a Bundle that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a bundle.json file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
+Keep all your assets, regardless of type, in your application's Asset Library (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a Bundle that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a bundle.json file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
 
 ```
 assetLibrary/
