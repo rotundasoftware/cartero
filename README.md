@@ -1,6 +1,6 @@
 <h1>Cartero</h1>
 
-In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories separated by their type? Instead, why don't we leverage directories a bit more effectively to put files together that really belong together? For example, why don't we put JavaScript and stylesheet assets that are just used by one particular page in the same directory as that page's template? And what about related assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place? It sure would be nice to be able to quickly switch between those files! 
+In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories separated by their type? Instead, why don't we leverage directories more effectively to put files together that really belong together? For example, why don't we put JavaScript and stylesheet assets that are just used by one particular page in the same directory as that page's template? And what about closely related assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place? It sure would be nice to be able to quickly switch between those files! 
 
 One of the obstacles, besides resistance to change, has been that asset management has a lot of moving parts. A complete general solution needs to address preprocessing (i.e. compiling .scss, .coffee, etc.) for arbitrary asset types, minification and concatenation in production mode, and dependency management.
 
@@ -10,8 +10,8 @@ Cartero works on top of [Grunt.js](http://gruntjs.com/) and optionally together 
 	<img src="http://www.rotundasoftware.com/images/cartero/combo-directory-structure.png" />
 </p>
 
+* Group your assets into "bundles" of related JavaScript files, stylesheets, templates, and even images. Then just specify the bundles that each page requires.
 * Keep assets for a particular page with that page's template to automatically serve them with the page.
-* Store your common or third party assets in "bundles" of related JavaScript files, stylesheets, templates, and even images. Then just specify the bundles that each page requires.
 * All necessary `<script>` and `<link>` tags are generated for you.
 	* Bundle dependencies (and inter-bundle dependencies) are resolved.
 	* In development mode, served assets are preprocessed, but not minified or concatenated.
@@ -23,6 +23,48 @@ Cartero works on top of [Grunt.js](http://gruntjs.com/) and optionally together 
 Cartero is JavaScript framework, stylesheet and templating language agnostic. It also *almost* works with any web framework &ndash; the [very small "hook"](https://github.com/rotundasoftware/cartero-express-hook/blob/master/middleware.js) of runtime logic is easy to port to any web framework, but is currently only available for Node.js / Express. Instructions for writing a Hook for another framework <a href="#hook">are below</a>.
 
 ## Overview
+
+### The Asset Library
+
+Get ready for a slight paradigm shift from the traditional js / css / template directory structure. With Cartero, you can keep all your assets, regardless of type, in your application's Asset Library (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a Bundle that may contain JavaScript files, stylesheets, templates, and images. Additionally, each bundle may contain a bundle.json file, which contains meta-data about that bundle, such as any dependencies on other bundles. Take the following example library:
+
+```
+assetLibrary/
+    dialogs/
+        dialogManager.coffee
+    editPersonDialog/
+        bundle.json = { dependencies : [ "dialogs" ] }
+        editPersonDialog.coffee
+        editPersonDialog.scss
+        editPersonDialog.tmpl
+```
+
+Here, the `editPersonDialog` bundle depends on the `dialogs` bundle because of its `bundle.json` file (contents inlined). Dependencies can be specified either in `bundle.json` files that live in bundle directories themselves, in an external bundle meta-data file, or implicitly through the directory structure (see  the `childrenDependOnParents` option).
+
+#### Using Cartero with Bower
+
+To use Cartero with Bower, add the Bower `components` directory as an additional Asset Library. Consider the following directory structure:
+
+```
+app/
+    dialogs/
+        bundle.json = { dependencies : [ "components/jquery-ui" ] }    	
+        dialogManager.coffee
+    editPersonDialog/
+        bundle.json = { dependencies : [ "app/Dialogs" ] }
+        editPersonDialog.coffee
+        editPersonDialog.scss
+        editPersonDialog.tmpl
+
+components/
+	jquery-ui
+        bower.json = { "dependencies": { "jquery": "~> 1.10.1" }, ... }
+		...
+	jquery
+		...
+```
+
+Since Bower dependencies are automatically resolved, when the `editPersonDialog` bundle is required by a page, the `jquery-ui` and `jquery`  bundles will also be included automatically. Note that also need to tell Cartero which files from each Bower package should be used, which you can do with the `whitelistedFiles` options (explained below), since often times Bower packages contain extra asset files like unit tests.
 
 ### Page specific assets
 
@@ -37,24 +79,6 @@ views/
 ```
 
 When the `login.jade` template is rendered, the compiled `login.coffee` and `login.scss` assets will automatically be included. A page can also "extend" on the assets required by another page.
-
-### The Asset Library
-
-Some assets are needed by many different pages and / or are supplied by third parties. Keep all of these common assets in one or more **_Asset Libraries_**, grouped into subdirectories, called **_Bundles_**, that may contain JavaScript files, stylesheets, templates, and even images. Additionally, each bundle may have meta-data such as any dependencies on other bundles. Take the following example library:
-
-```
-assetLibrary/
-	JQuery/
-		jquery.js
-	Backbone/
-		backbone.js
-	Person/
-		person.coffee
-		person.scss
-		person.tmpl
-```
-
-Here, the Person bundle might depend on the Backbone bundle, which in turn depends on the JQuery bundle. Dependencies can be specified in `bundle.json` files that live in bundle directories themselves, or in an external bundle meta-data file. When a page requires a bundle, dependencies are automatically resolved. Setup your dependencies, require your bundles, and each page loads with the exact set of assets that it needs.
 
 ## How it works
 
@@ -327,6 +351,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 
 	// (default: undefined) If supplied, ONLY assets listed in this array will be
 	// included when this bundle is required. If not supplied, all assets are included.
+	// This option is very useful when using Cartero with Bower to exclude files like
+	// unit tests that should not be included in the bundle.
 	"whitelistedFiles" : [ "backbone.js" ],
 
 	// (default: undefined) Files in this array will be served before any other files
@@ -382,7 +408,7 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 This Directive is used in server side templates to specify which bundles they require. Bundles are referred to by their name, which is the full path of their folder, relative to the Asset Library directory in which they reside. If the Asset Library directory has a `namespace` property, that namespace should be pre-pended to the bundle name. Generally you will want to enclose the Directive in a "comment" block of whatever template language you are using, as shown here (.erb syntax).
 
 ```erb
-<%# ##cartero_requires "App/Dialogs/EditPersonDialog" %>
+<%# ##cartero_requires "app/dialogs/editPersonDialog" %>
 <%# All dependencies are automatically resolved and included %>
 ```
 
@@ -440,20 +466,20 @@ From a high level perspective, the Hook is responsible for populating the `carte
 			// `js`, `css`, and `tmpl` are the relative paths of the assets in this parcel.
 
 			js : [
-				"static/library-assets/JQuery/jquery.js",
-				"static/library-assets/JQueryUI/jquery-ui.js",
+				"static/library-assets/jquery/jquery.js",
+				"static/library-assets/jquery-ui/jquery-ui.js",
 				// ...
 				"static/view-assets/peopleList/peopleList.js"
 			],
 
 			css : [
-				"static/library-assets/JQueryUI/jquery-ui.css",
+				"static/library-assets/jquery-ui/jquery-ui.css",
 				// ...
 				"static/view-assets/peopleList/peopleList.css"
 			],
 
 			tmpl : [
-				"static/library-assets/Dialogs/EditPersonDialog/editPersonDialog.tmpl"
+				"static/library-assets/dialogs/editPersonDialog/editPersonDialog.tmpl"
 			]
 		},
 
