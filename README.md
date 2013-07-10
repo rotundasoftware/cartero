@@ -51,7 +51,7 @@ app/
         bundle.json = { dependencies : [ "components/jquery-ui" ] }    	
         dialogManager.coffee
     editPersonDialog/
-        bundle.json = { dependencies : [ "app/Dialogs" ] }
+        bundle.json = { dependencies : [ "app/dialogs" ] }
         editPersonDialog.coffee
         editPersonDialog.scss
         editPersonDialog.tmpl
@@ -187,7 +187,7 @@ Now you are ready to go. To let Cartero know which asset bundles are required by
 ```jade
 // peopleList.jade
 
-// ##cartero_requires "Dialogs/EditPersonDialog"
+// ##cartero_requires "dialogs/editPersonDialog"
 
 doctype 5
 html(lang="en")
@@ -228,7 +228,7 @@ options : {
 		path : "assetLibrary/",
 
 		// (default: true) When true, parent bundles are automatically added as a
-		// dependency to their children. For example, the `Dialogs/EditPersonDialog`
+		// dependency to their children. For example, the `dialogs/editPersonDialog`
 		// bundle would automatically depend on the `Dialogs` bundle, with no need
 		// to explicitly declare the dependency.
 		childrenDependOnParents : true,
