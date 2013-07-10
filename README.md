@@ -39,7 +39,7 @@ assetLibrary/
         editPersonDialog.tmpl
 ```
 
-Here, the `editPersonDialog` bundle depends on the `dialogs` bundle because of its `bundle.json` file (contents inlined). Dependencies and other bundle meta-data can be specified either in `bundle.json` files that live in bundle directories themselves, in an external bundle meta-data file, or implicitly through the directory structure (see  the `childrenDependOnParents` option).
+Here, the `editPersonDialog` bundle depends on the `dialogs` bundle because of its `bundle.json` file (contents inlined). Dependencies (and other bundle meta-data) can be specified either in `bundle.json` files that live in bundle directories themselves, in an external bundle meta-data file, or implicitly through the directory structure (see  the `childrenDependOnParents` option).
 
 #### Using Cartero with Bower
 
