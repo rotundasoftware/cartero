@@ -258,17 +258,19 @@ module.exports = function(grunt) {
 
 	function configureWatchTaskForJsCssTmpl( libraryAndViewDirs, ext, validCarteroDirExt ) {
 		var watch = grunt.config( "watch" ) || {};
-		var tasksToRun =  [];
-
-		if( options.browserify && ext === ".js" )
-			tasksToRun.push( kCarteroTaskPrefix + "browserify" );
-
-		if( _.contains( validCarteroDirExt, ext ) )
-			tasksToRun.push( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		watch[ kCarteroTaskPrefix + ext ] = {
-			files : _.map( libraryAndViewDirs, function ( dir ) {
-				return dir.path + "/**/*" + ext;
+			files : _.map(
+						// filter out any extensions that are already watched because they are a viewFile
+						_.filter( libraryAndViewDirs, function( dir ) {
+							if( ! _.isUndefined( dir.viewFileExt ) ) {
+								return ! _.contains( dir.viewFileExt, ext );
+							}
+							else {
+								return true;
+							}
+						} ), function ( dir ) {
+							return dir.path + "/**/*" + ext;
 			} ),
 			tasks : [],
 			options : {
@@ -528,7 +530,6 @@ module.exports = function(grunt) {
 	}
 
 	grunt.registerMultiTask( "cartero", "Cartero asset manager.", function() {
-		debugger;
 		options = this.options();
 
 		validateConfigOptions( options );
@@ -590,6 +591,8 @@ module.exports = function(grunt) {
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
+
+		console.log( grunt.config( "watch" ) );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
 	} );
