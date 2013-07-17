@@ -8,7 +8,9 @@ module.exports = function( grunt ) {
 				tmplExt : [ ".tmpl" ],
 				library : [
 					{
-						path : "library"
+						path : "library",
+						directoriesToFlatten : /^_.*/,
+						childrenDependOnParents : true
 					}
 				],
 				views : [

@@ -48,8 +48,8 @@ module.exports = function(grunt) {
 
 	// Default values for the library task option.
 	var kLibraryDirDefaults = {
-		childrenDependOnParents : true,
-		directoriesToFlatten : /^_.*/
+		childrenDependOnParents : false,
+		directoriesToFlatten : /.*/
 	};
 
 	// Global default values
@@ -184,7 +184,6 @@ module.exports = function(grunt) {
 
 	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
 		grunt.event.on( "watch", function( action, filePath ) {
-
 			var needToRebundle = action === "added" || action === "deleted" || isViewFile( filePath ) || _s.endsWith( filePath, kBundleJsonFile );
 			// If its a new file, deleted file, viewFile, or a bundle.json file, need to rebuild all bundles.
 			if( needToRebundle ) {
@@ -214,18 +213,19 @@ module.exports = function(grunt) {
 					return filePath.indexOf( dirOptions.path ) === 0;
 				} );
 
+				console.log( "filePath: " + filePath );
 				var file = File.getFromRegistry( filePath );
+				console.log( file );
 
 				if( ! _.isUndefined( file ) ) {
 					file.copy( dirOptions.path, dirOptions.destDir, true );
+					srcPath = file.path;
+					newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
 				}
 				else {
 					srcPath = [];
 					newDest = null;
 				}
-
-				srcPath = file.path;
-				newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
 
 				_.each( options.preprocessingTasks, function( preprocessingTask ) {
 
@@ -241,7 +241,7 @@ module.exports = function(grunt) {
 				} );
 
 				if( options.browserify ) {
-					if( _s.endsWith( file.path, ".js" ) ) {
+					if( _.isString( srcPath ) && _s.endsWith( srcPath, ".js" ) ) {
 						grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
 							src : newDest,
 							dest : newDest
@@ -784,8 +784,13 @@ module.exports = function(grunt) {
 		} );
 
 		function isAutorunFile( filePath, fileSrc ) {
-			if( fileIsInPublicViewDirectory( path.relative( options.projectDir, filePath ) ) )
-				return fileSrc.indexOf( kBrowserifyExecuteOnLoad ) != -1;
+			if( fileIsInPublicViewDirectory( path.relative( options.projectDir, filePath ) ) ) {
+				// Need to check the original file in case the ##cartero_browserify_executeOnLoad directive
+				// was removed because comments were stripped during processing or for some other reason.
+				var file = File.getFromRegistryByPath( path.relative( options.projectDir, filePath ) );
+				var fileContents = fs.readFileSync( file.src ).toString();
+				return fileContents.indexOf( kBrowserifyExecuteOnLoad ) != -1;
+			}
 			else
 				return _.contains( browserifyExecuteOnLoadFiles, path.relative( options.projectDir, filePath ) );
 		}
