@@ -239,7 +239,7 @@ module.exports = function(grunt) {
 				} );
 
 				if( options.browserify ) {
-					if( _.isString( srcPath ) && _s.endsWith( srcPath, ".js" ) ) {
+					if( newDest !== null && _s.endsWith( newDest, ".js" ) ) {
 						grunt.config( [ kCarteroTaskPrefix + "browserify", "default", "files" ], [ {
 							src : newDest,
 							dest : newDest
