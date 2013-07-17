@@ -213,9 +213,7 @@ module.exports = function(grunt) {
 					return filePath.indexOf( dirOptions.path ) === 0;
 				} );
 
-				console.log( "filePath: " + filePath );
 				var file = File.getFromRegistry( filePath );
-				console.log( file );
 
 				if( ! _.isUndefined( file ) ) {
 					file.copy( dirOptions.path, dirOptions.destDir, true );
@@ -591,8 +589,6 @@ module.exports = function(grunt) {
 		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
-
-		console.log( grunt.config( "watch" ) );
 
 		queueTasksToRun( options.mode, options.preprocessingTasks, options.minificationTasks, options.postProcessor );
 	} );
