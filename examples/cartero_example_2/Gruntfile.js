@@ -6,7 +6,8 @@ module.exports = function( grunt ) {
 				library : {
 					path : "App/node_modules",
 					directoriesToFlatten : /^_.*/,
-					childrenDependOnParents : true
+					childrenDependOnParents : true,
+					allowNestedBundles : true
 				},
 				views : {
 					path : "App/WebServer/AppPages",

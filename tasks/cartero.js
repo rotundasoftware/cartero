@@ -41,13 +41,12 @@ module.exports = function(grunt) {
 
 	// Default values for the views task option.
 	var kViewsDirDefaults = {
-		filesToIgnore : /^_.*/,
-		directoriesToIgnore : /^__.*/,
 		directoriesToFlatten : /^_.*/
 	};
 
 	// Default values for the library task option.
 	var kLibraryDirDefaults = {
+		allowNestedBundles : false,
 		childrenDependOnParents : false,
 		directoriesToFlatten : /.*/
 	};

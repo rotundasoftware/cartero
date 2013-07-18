@@ -10,7 +10,8 @@ module.exports = function( grunt ) {
 					{
 						path : "library",
 						directoriesToFlatten : /^_.*/,
-						childrenDependOnParents : true
+						childrenDependOnParents : true,
+						allowNestedBundles : true
 					}
 				],
 				views : [
