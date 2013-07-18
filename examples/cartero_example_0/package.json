@@ -15,7 +15,7 @@
     "jade": "*",
     "grunt-contrib-sass": "~0.3.0",
     "grunt-contrib-watch": "~0.3.1",
-    "cartero": "~0.1.0",
+    "cartero": "~0.2.0",
     "cartero-express-hook": "~0.1.0"
   },
   "devDependencies": {}
