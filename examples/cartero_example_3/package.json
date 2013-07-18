@@ -17,7 +17,7 @@
     "grunt-contrib-coffee": "~0.7.0",
     "grunt-contrib-stylus": "~0.5.0",
     "grunt-contrib-watch": "~0.3.1",
-    "cartero": "~0.1.0",
+    "cartero": "~0.2.0",
     "cartero-express-hook": "~0.1.0",
     "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-htmlmin": "~0.1.3",

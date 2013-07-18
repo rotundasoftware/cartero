@@ -8,13 +8,12 @@ module.exports = function( grunt ) {
 					{
 						path : "library",
 						namespace : "Main",
-						directoriesToFlatten : /^_.*/,
-						childrenDependOnParents : true,
 						bundleProperties : grunt.file.readJSON( "libraryBundleProperties.json" )
 					},
 					{
 						path : "components",
 						namespace : "Bower",
+						allowNestedBundles : false,
 						bundleProperties : grunt.file.readJSON( "bowerBundleProperties.json" )
 					}
 				],

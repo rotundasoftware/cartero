@@ -46,9 +46,9 @@ module.exports = function(grunt) {
 
 	// Default values for the library task option.
 	var kLibraryDirDefaults = {
-		allowNestedBundles : false,
-		childrenDependOnParents : false,
-		directoriesToFlatten : /.*/
+		allowNestedBundles : true,
+		childrenDependOnParents : true,
+		directoriesToFlatten : /^_.*/
 	};
 
 	// Global default values

@@ -1,7 +1,7 @@
 # Change log
 
-### v0.1.2
-* Add `allowNestedBundles` property in `library` directory configuration and default to `false`.
+### v0.2.0
+* Add `allowNestedBundles` property in `library` directory configuration and default to `true`.
 * Remove default value for `filesToIgnore` in `views` directory configuration.
 * Make the browserify feature work without relying on the library directory being a node_modules folder.
 * Allow ##cartero_requires directive value to span multiple lines.
