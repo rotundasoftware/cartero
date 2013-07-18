@@ -116,7 +116,7 @@ First, install Cartero via npm:
 
 	npm install cartero
 
-Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this first](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
+Now configure the Cartero Grunt Task in your application's gruntfile. (If you haven't used Grunt before, [read this first](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
 ```javascript
 // example gruntfile
@@ -133,13 +133,13 @@ module.exports = function( grunt ) {
 				views : {
 					path : "views/",  	 	 // the directoy containing your server side templates.
 					viewFileExt : ".jade" 	 // the file extension of your server side templates.
-				}
+				},
 				publicDir : "static/",	  	 // your app's "public" or "static" directory (into
 										  	 // which processed assets will ultimately be dumped).
 
 				tmplExt : ".tmpl",			 // the file extension(s) of your client side template.
 				mode : "dev"			  	 // "dev" or "prod"
-			}
+			},
 
 			// `dev` target uses all the default options.
 			dev : {},			
@@ -340,7 +340,7 @@ options : {
 
 ### Properties of bundle.json 
 
-Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, such as dependencies. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.) By using the `bundleProperties` grunt taks option, you can alternatively specify this meta-data for all bundles in a central location.
+Each of your bundles may contain a `bundle.json` file that specifies meta-data about the bundle, such as dependencies. (Note: An actual bundle.json file, since it is simple JSON, can not contain JavaScript comments, as does the example.) By using the `bundleProperties` grunt task option, you can alternatively specify this meta-data for all bundles in a central location.
 
 ```javascript
 // Sample bundle.json file
@@ -437,7 +437,7 @@ It can be used in any type of asset processed by Cartero, including client side 
 
 #### ##cartero_browserify_executeOnLoad
 
-When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files to specify that they should be automatically executed when they are loaded. You will definitely want to include this directive in your "main" JavaScript files for each page, since otherwise they would never be executed!
+When the `browserify` option in the Cartero Grunt Task is enabled, this directive is used in JavaScript files to specify that they should be automatically executed when they are loaded. You will definitely want to include this directive in your "main" JavaScript files for each page, since otherwise they would never be executed!
 
 ## FAQ
 
