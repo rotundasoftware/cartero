@@ -1,17 +1,23 @@
 {
 	"Bower/jquery" : {
-		"whitelistedFiles" : [ "jquery.js" ],
-		"directoriesToFlatten" : [ "docs", "examples", "test" ]
+		"whitelistedFiles" : [ "jquery.js" ]
 	},
 	"Bower/jquery-ui" : {
-		"whitelistedFiles" : [ "ui/jquery-ui.js", "themes/ui-lightness/jquery-ui.css" ]
+		"whitelistedFiles" : [
+			"ui/jquery-ui.js",
+			"themes/ui-lightness/jquery-ui.css",
+			"themes/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png",
+			"themes/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png",
+			"themes/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png",
+			"themes/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png",
+			"themes/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png"
+		]
 	},
 	"Bower/backbone" : {
 		"whitelistedFiles" : [ "backbone.js" ],
 		"dependencies" :[ "Bower/underscore" ]
 	},
 	"Bower/underscore" : {
-		"whitelistedFiles" : [ "underscore.js" ],
-		"directoriesToFlatten" : [ "docs", "test" ]
+		"whitelistedFiles" : [ "underscore.js" ]
 	}
 }
