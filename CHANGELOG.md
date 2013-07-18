@@ -1,11 +1,13 @@
 # Change log
 
 ### v0.1.2
-* Make the browserify feature work without relying on the library dir being a node_modules folder.
+* Add `allowNestedBundles` property in `library` directory configuration and default to `false`.
+* Remove default value for `filesToIgnore` in `views` directory configuration.
+* Make the browserify feature work without relying on the library directory being a node_modules folder.
 * Allow ##cartero_requires directive value to span multiple lines.
+* Support browserifying `.coffee` files.
 * Bug Fixes:
 	* Check for ##cartero_browserify_executeOnLoad in original file in case it was removed due to a processing step.
-	* Improve logging/reporting when a non-existant bundle is listed as a dependency.
 	* Fix order in which ##cartero_extends files are sourced.
 
 ### v0.1.1
