@@ -4,10 +4,7 @@ module.exports = function( grunt ) {
 		cartero : {
 			options : {
 				library : {
-					path : "App/node_modules",
-					directoriesToFlatten : /^_.*/,
-					childrenDependOnParents : true,
-					allowNestedBundles : true
+					path : "App/node_modules"
 				},
 				views : {
 					path : "App/WebServer/AppPages",
