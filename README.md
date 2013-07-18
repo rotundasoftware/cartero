@@ -26,7 +26,7 @@ Cartero is JavaScript framework, stylesheet and templating language agnostic. It
 
 ### The Asset Library
 
-Keep all your assets, regardless of type, in your application's Asset Library (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a Bundle that may contain JavaScript files, stylesheets, templates, and even images.
+Keep all your assets, regardless of type, in your application's Asset Library (except for assets that are just used by a particular page, which can be stored with that page's template - see below). Each subdirectory of your Asset Library defines a Bundle that may contain JavaScript files, stylesheets, templates, and images.
 
 ```
 assetLibrary/
@@ -85,7 +85,7 @@ First, install Cartero via npm:
 
 	npm install cartero
 
-Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this first](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
+Now configure the Cartero Grunt Task in your applcation's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
 
 ```javascript
 // example gruntfile
