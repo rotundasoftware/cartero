@@ -96,9 +96,7 @@ module.exports = function( grunt ) {
 			options : {
 				projectDir : __dirname,	     // the root directory of your project. All other paths 
 										     // in these options are relative to this directory.
-				library : {
-					path : "assetLibrary/"   // the relative path to your Asset Library directory.
-				},
+
 				views : {
 					path : "views/",  	 	 // the directoy containing your server side templates.
 					viewFileExt : ".jade" 	 // the file extension of your server side templates.
@@ -106,7 +104,6 @@ module.exports = function( grunt ) {
 				publicDir : "static/",	  	 // your app's "public" or "static" directory (into
 										  	 // which processed assets will ultimately be dumped).
 
-				tmplExt : ".tmpl",			 // the file extension(s) of your client side template.
 				mode : "dev"			  	 // "dev" or "prod"
 			},
 
@@ -195,7 +192,45 @@ options : {
 	// OF THESE OPTIONS SHOULD BE RELATIVE TO THIS DIRECTORY.
 	"projectDir" : __dirname,
 
-	// (required) An object that specifies your Asset Library directory and related options. 
+	// (required) The "public" directory of your application, that is, the directory that
+	// is served by your web server. In Node.js / Express applications this is generally the
+	// "static" directory. Cartero will automatically create directories within `publicDir` 
+	// into which processed assets will be dumped, named (by default) `library-assets` and 
+	// `view-assets`, containing assets that pertain to bundles and page views, respectively.
+	"publicDir" : "static/",
+
+	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
+	// b) assets are not concatenated, and c) if the `--watch` flag is set, after finishing, the
+	// Cartero Grunt Task will watch all of your assets for changes and reprocess them as needed.
+	"mode" : "dev",
+
+	// (required) An object that specifies your views directory and related options.
+	// As with the `library` option, you may supply an array of objects, instead
+	// of just one object, if you have multiple directories that contain views.
+	"views" : {
+		// (required) The path to the directory containing your server side view templates.
+		path : "views/",
+
+		// (required) The file extension of your server side template files (e.g. ".nunjucks"
+		// ".erb", ".twig", etc.). Files that match this extension are scanned for the
+		// ##cartero_requires directive (see below discussion of directives for more info).
+		viewFileExt : ".jade",
+
+		// Files or directories with names matching these regular expressions will be
+		// completely ignored by Cartero. By default no files are ignored.
+		filesToIgnore : /^__.*/,			// (default: undefined)
+		directoriesToIgnore : /^__.*/,		// (default: undefined)
+
+		// (default: /^_.*/) Assets in flattened directories are served with a server side 
+		// template when it is rendered, just as if they lived in the template's directory. The
+		// default value of /^_.*/ will flatten all directories that begin with an underscore.
+		directoriesToFlatten : /^_.*/,
+
+		// (default: undefined) Analogous to its counterpart in the `library` option.
+		namespace : "app"
+	}
+	
+	// (default: undefined) An object that specifies your Asset Library directory and related options. 
 	// You may also supply an array of objects, instead of just one object, if you have multiple
 	// directories that contain bundles. For example, if you are using Bower, you will likely
 	// want to include both the Bower "components" directory and an application specific 
@@ -241,43 +276,9 @@ options : {
 		childrenDependOnParents : true
 	},
 
-	// (required) An object that specifies your views directory and related options.
-	// As with the `library` option, you may supply an array of objects, instead
-	// of just one object, if you have multiple directories that contain views.
-	"views" : {
-		// (required) The path to the directory containing your server side view templates.
-		path : "views/",
-
-		// (required) The file extension of your server side template files (e.g. ".nunjucks"
-		// ".erb", ".twig", etc.). Files that match this extension are scanned for the
-		// ##cartero_requires directive (see below discussion of directives for more info).
-		viewFileExt : ".jade",
-
-		// Files or directories with names matching these regular expressions will be
-		// completely ignored by Cartero. By default no files are ignored.
-		filesToIgnore : /^__.*/,			// (default: undefined)
-		directoriesToIgnore : /^__.*/,		// (default: undefined)
-
-		// (default: /^_.*/) Assets in flattened directories are served with a server side 
-		// template when it is rendered, just as if they lived in the template's directory. The
-		// default value of /^_.*/ will flatten all directories that begin with an underscore.
-		directoriesToFlatten : /^_.*/,
-
-		// (default: undefined) Analogous to its counterpart in the `library` option.
-		namespace : "app"
-	}
-
-	// (required) The "public" directory of your application, that is, the directory that
-	// is served by your web server. In Node.js / Express applications this is generally the
-	// "static" directory. Cartero will automatically create directories within `publicDir` 
-	// into which processed assets will be dumped, named (by default) `library-assets` and 
-	// `view-assets`, containing assets that pertain to bundles and page views, respectively.
-	"publicDir" : "static/",
-
-	// (required) Either "dev" or "prod". In "dev" mode a) the `minificationTasks` are not run
-	// b) assets are not concatenated, and c) if the `--watch` flag is set, after finishing, the
-	// Cartero Grunt Task will watch all of your assets for changes and reprocess them as needed.
-	"mode" : "dev",
+	// (default: undefined) The file extension(s) of your client-side templates. These will be inlined
+	// in the html at the location of the `cartero_tmpl` variable.
+	"tmplExt" : ".tmpl",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
 	// such as compiling scss or coffee. You may include an entry for any task in this array, AS
