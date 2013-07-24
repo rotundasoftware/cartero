@@ -182,7 +182,7 @@ module.exports = function(grunt) {
 		}
 	}
 
-	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap ) {
+	function registerWatchTaskListener( libraryAndViewDirs, browserify, extToCopy, assetExtensionMap, validCarteroDirExt ) {
 		grunt.event.on( "watch", function( action, filePath ) {
 			var needToRebundle = action === "added" || action === "deleted" || isViewFile( filePath ) || _s.endsWith( filePath, kBundleJsonFile );
 			// If its a new file, deleted file, viewFile, or a bundle.json file, need to rebuild all bundles.
@@ -200,6 +200,7 @@ module.exports = function(grunt) {
 				} );
 				configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 				if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
+				configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 				grunt.task.run( kCarteroTaskPrefix + "populateFilesToServe:dev" );
 				grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
@@ -248,8 +249,10 @@ module.exports = function(grunt) {
 					}
 				}
 
-				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
-
+				if( validCarteroDirExt.indexOf( path.extname( newDest ) ) ) {
+					configureCarteroTask( "replaceCarteroDirTokens", { fileName : newDest } );
+					grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+				}
 			}
 		} );
 	}
@@ -587,7 +590,7 @@ module.exports = function(grunt) {
 		var cleanableAssetExt = _.union( processedAssetExts, _.pluck( options.preprocessingTasks, "inExt" ) );
 		configureCarteroTask( "cleanup", { cleanableAssetExt : cleanableAssetExt, publicDir : options.publicDir } );
 
-		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap );
+		registerWatchTaskListener( libraryAndViewDirs, options.browserify, extToCopy, assetExtensionMap, validCarteroDirExt );
 
 		configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 
@@ -714,7 +717,7 @@ module.exports = function(grunt) {
 	} );
 
 	grunt.registerTask( kCarteroTaskPrefix + "replaceCarteroDirTokens", "", function() {
-		var options = this.options();
+		var taskOptions = this.options();
 
 		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
 
@@ -738,31 +741,45 @@ module.exports = function(grunt) {
 		}
 
 		function isValidCarteroDirFile( fileName ) {
-			return _.contains( options.validCarteroDirExt, File.getFileExtension( fileName ) );
+			return _.contains( taskOptions.validCarteroDirExt, File.getFileExtension( fileName ) );
 		}
 
 		var done = this.async();
-		var assetFiles = [];
-		var finder = findit.find( options.publicDir );
 
-		finder.on( "file", function( file, stat ) {
-			if( isValidCarteroDirFile( file ) ) assetFiles.push( file );
-		} );
-
-		finder.on( "end", function() {
-			async.each(
-				assetFiles,
-				function( fileName, callback ) {
-					replaceStringInFile( fileName, /##cartero_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ), callback );
-				},
+		if( ! _.isUndefined( taskOptions.fileName ) ) {
+			replaceStringInFile( taskOptions.fileName,
+				/##cartero_dir/g,
+				taskOptions.fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ),
 				function( err ) {
 					if( err ) {
 						grunt.fail.warn( "Error while replacing ##cartero_dir tokens: " + err  );
 					}
 					done();
-				}
-			);
-		} );
+				});
+		}
+		else {
+			var assetFiles = [];
+			var finder = findit.find( options.publicDir );
+
+			finder.on( "file", function( file, stat ) {
+				if( isValidCarteroDirFile( file ) ) assetFiles.push( file );
+			} );
+
+			finder.on( "end", function() {
+				async.each(
+					assetFiles,
+					function( fileName, callback ) {
+						replaceStringInFile( fileName, /##cartero_dir/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ), callback );
+					},
+					function( err ) {
+						if( err ) {
+							grunt.fail.warn( "Error while replacing ##cartero_dir tokens: " + err  );
+						}
+						done();
+					}
+				);
+			} );
+		}
 	} );
 
 	grunt.registerMultiTask( kCarteroTaskPrefix + "browserify", "", function() {
