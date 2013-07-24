@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 	var kLibraryAssetsDirPrefix = "library-assets";
 	var kViewAssetsDirPrefix = "view-assets";
 
-	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "library", "views", "tmplExt" ];
+	var kRequiredConfigOptions = [ "mode", "projectDir", "publicDir", "views" ];
 	var kRequiredLibraryConfigOptions = [ "path" ];
 	var kRequiredViewsConfigOptions = [ "path", "viewFileExt" ];
 
@@ -53,7 +53,8 @@ module.exports = function(grunt) {
 
 	// Global default values
 	var kOptionsDefaults = {
-		browserify : false
+		browserify : false,
+		tmplExt : []
 	};
 
 	var kValidImageExts = [ ".jpg", ".png", ".gif", ".bmp", ".jpeg" ];
@@ -412,6 +413,7 @@ module.exports = function(grunt) {
 	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
+		options.library = options.library || [];
 
 		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
 

@@ -1,0 +1,14 @@
+{
+	"publicDir": "static",
+	"parcels": {
+		"views/index.jade": {
+			"js": [
+				"static/view-assets/index.js"
+			],
+			"css": [
+				"static/view-assets/index.css"
+			],
+			"tmpl": []
+		}
+	}
+}
