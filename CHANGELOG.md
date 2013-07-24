@@ -1,5 +1,8 @@
 # Change log
 
+### v0.2.1
+* Make `library` and `tmplExt` grunt properties optional.
+
 ### v0.2.0
 * Add `allowNestedBundles` property in `library` directory configuration and default to `true`.
 * Remove default value for `filesToIgnore` in `views` directory configuration.
