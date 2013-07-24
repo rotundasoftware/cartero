@@ -85,7 +85,7 @@ First, install Cartero via npm:
 
 	npm install cartero
 
-Now configure the Cartero Grunt Task in your application's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration that is required to run the Cartero Grunt Task (all options shown are required):
+Now configure the Cartero Grunt Task in your application's gruntfile. (If you haven't used Grunt before, [read this](http://gruntjs.com/getting-started).) Here is the minimal configuration required to run the Cartero Grunt Task (all options shown are required):
 
 ```javascript
 // example gruntfile
@@ -96,14 +96,14 @@ module.exports = function( grunt ) {
 			options : {
 				projectDir : __dirname,	     // the root directory of your project. All other paths 
 										     // in these options are relative to this directory.
-
 				views : {
 					path : "views/",  	 	 // the directoy containing your server side templates.
 					viewFileExt : ".jade" 	 // the file extension of your server side templates.
 				},
+
 				publicDir : "static/",	  	 // your app's "public" or "static" directory (into
 										  	 // which processed assets will ultimately be dumped).
-
+				
 				mode : "dev"			  	 // "dev" or "prod"
 			},
 
@@ -230,11 +230,11 @@ options : {
 		namespace : "app"
 	}
 	
-	// (default: undefined) An object that specifies your Asset Library directory and related options. 
-	// You may also supply an array of objects, instead of just one object, if you have multiple
-	// directories that contain bundles. For example, if you are using Bower, you will likely
-	// want to include both the Bower "components" directory and an application specific 
-	// directory in your Asset Library, so the library option would be an array of two objects.
+	// (default: undefined) An object that specifies your Asset Library directory and 
+	// related options. You may also supply an array of objects, instead of just one object, 
+	// if you have multiple directories that contain bundles. For example, if you are using Bower, 
+	// you will likely want to include both the Bower "components" directory and an application  
+	// specific directory in your Asset Library, so the library option would be an array of two objects.
 	"library" : {
 		// (required) The relative path to the directory containing asset bundles.
 		path : "assetLibrary/",
@@ -276,8 +276,8 @@ options : {
 		childrenDependOnParents : true
 	},
 
-	// (default: undefined) The file extension(s) of your client-side templates. These will be inlined
-	// in the html at the location of the `cartero_tmpl` variable.
+	// (default: undefined) The file extension(s) of your client-side templates. 
+	// These will be inlined in the html at the location of the `cartero_tmpl` variable.
 	"tmplExt" : ".tmpl",
 
 	// (default: undefined) An array of "preprocessing tasks" to be performed on your assets,
