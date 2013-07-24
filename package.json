@@ -1,7 +1,7 @@
 {
   "name": "cartero",
   "description": "An asset manager for modern web apps.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": {
     "name": "Rotunda Software",
     "email": "support@rotundasoftware.com"
