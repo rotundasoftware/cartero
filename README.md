@@ -55,33 +55,11 @@ views/
 
 When the `login.jade` template is rendered, the compiled `login.coffee` and `login.scss` assets will automatically be included. A page can also "extend" on the assets required by another page.
 
-### Using Cartero with Bower
-
-The Bower `components` directory can also be used as an Asset Library, for example:
-
-```
-app/
-    dialogs/
-        bundle.json = { dependencies : [ "components/jquery-ui" ] }    	
-        dialogManager.coffee
-    editPersonDialog/
-        bundle.json = { dependencies : [ "app/dialogs" ] }
-        editPersonDialog.coffee
-        editPersonDialog.scss
-        editPersonDialog.tmpl
-components/
-	jquery-ui
-        bower.json = { "dependencies": { "jquery": "~> 1.10.1" }, ... }
-		...
-	jquery
-		...
-```
-
-Bower dependencies are automatically resolved, so when the `app/editPersonDialog` bundle is required by a page, the `components/jquery-ui` and `components/jquery` bundles will also be included automatically. Note that since Bower packages generally contain extra files like unit tests, you also need to tell Cartero which assets from each Bower package should be used with the `whitelistedFiles` option. Also, you'll want to set the `allowNestedBundles` flag to `false` for the `components` directory, since the Bower namespace is flat.
-
 ## Getting started
 
-First, install Cartero via npm:
+Colin Wren's awesome <a href="https://vimeo.com/71364424">Intro to Cartero</a> screencast walks through setting up Cartero for a simple Express application. As shown in the screencast, you'll want to:
+
+Install Cartero via npm:
 
 	npm install cartero
 
@@ -424,6 +402,30 @@ It can be used in any type of asset processed by Cartero, including client side 
 #### ##cartero_browserify_executeOnLoad
 
 When the `browserify` option in the Cartero Grunk Task is enabled, this directive is used in JavaScript files to specify that they should be automatically executed when they are loaded. You will definitely want to include this directive in your "main" JavaScript files for each page, since otherwise they would never be executed!
+
+### Using Cartero with Bower
+
+The Bower `components` directory can also be used as an Asset Library, for example:
+
+```
+app/
+    dialogs/
+        bundle.json = { dependencies : [ "components/jquery-ui" ] }    	
+        dialogManager.coffee
+    editPersonDialog/
+        bundle.json = { dependencies : [ "app/dialogs" ] }
+        editPersonDialog.coffee
+        editPersonDialog.scss
+        editPersonDialog.tmpl
+components/
+	jquery-ui
+        bower.json = { "dependencies": { "jquery": "~> 1.10.1" }, ... }
+		...
+	jquery
+		...
+```
+
+Bower dependencies are automatically resolved, so when the `app/editPersonDialog` bundle is required by a page, the `components/jquery-ui` and `components/jquery` bundles will also be included automatically. Note that since Bower packages generally contain extra files like unit tests, you also need to tell Cartero which assets from each Bower package should be used with the `whitelistedFiles` option. Also, you'll want to set the `allowNestedBundles` flag to `false` for the `components` directory, since the Bower namespace is flat.
 
 ## FAQ
 
