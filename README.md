@@ -57,9 +57,7 @@ When the `login.jade` template is rendered, the compiled `login.coffee` and `log
 
 ## Getting started
 
-Colin Wren's awesome <a href="https://vimeo.com/71364424">Intro to Cartero</a> screencast walks through setting up Cartero for a simple Express application. As shown in the screencast, you'll want to:
-
-Install Cartero via npm:
+<a href="https://github.com/colinwren">Colin Wren's</a> awesome <a href="https://vimeo.com/71364424">Intro to Cartero</a> screencast walks through setting up Cartero for a simple Express application. As shown in the screencast, you'll first want to install Cartero via npm:
 
 	npm install cartero
 
