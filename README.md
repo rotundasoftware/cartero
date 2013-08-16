@@ -1,4 +1,5 @@
 <h1>Cartero</h1>
+<a href="http://vimeo.com/71364424"><img align="right" height="115" hspace="8" vspace="8" src="http://rotundasoftware.github.io/cartero/screencast.png"></a>
 
 In the year 2013, why do we still organize our web assets like it's 1990, grouping them together in big directories separated by their type? Instead, why don't we leverage directories more effectively to put files together that really belong together? For example, why don't we put JavaScript and stylesheet assets that are just used by one particular page in the same directory as that page's template? And what about closely related assets like personModel.js, personView.js, person.css, etc.? Why don't we keep those together in a single "person" directory, instead of spreading them out all over the place? It sure would be nice to be able to quickly switch between "person" files just by clicking on another file in the same directory! And it sure would be nice to "require" all the "person" assets just by referencing the "person" directory, instead of each individual asset!
 
