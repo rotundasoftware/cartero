@@ -1,7 +1,7 @@
-# Change log
+# Change Log
 
 ### v0.2.1
-* Make `library` and `tmplExt` grunt properties optional.
+* Make `library` and `tmplExt` configuration properties optional.
 
 ### v0.2.0
 * Add `allowNestedBundles` property in `library` directory configuration and default to `true`.
@@ -19,6 +19,7 @@
 * Add sourceFilePaths to files in filesToServe to keep track of which files were concatenated.
 * Bug Fixes:
   * Run replaceCarteroDirTokens task before buildParcelRegistry so ##cartero_dir tokens are replaced with file's location before concatenation.
+	* Support directoriesToIgnore in bundle.json
 
 ### v0.1.0
 
