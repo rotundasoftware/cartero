@@ -835,6 +835,7 @@ module.exports = function(grunt) {
 
 			var hasBadRequire = false;
 			var badRequire;
+			var badResolvedRequire;
 
 			_.each( requiredFiles, function( relativeRequire ) {
 				var resolvedRequire = "";
@@ -862,7 +863,7 @@ module.exports = function(grunt) {
 							} );
 
 							if( _.isUndefined( bundle ) ) {
-								console.log( "COULD NOT FIND BUNDLE FOR RESOLVED REQUIRE: " + resolvedRequire );
+								console.log( "Could not find bundle for resolved 'require': " + resolvedRequire );
 							}
 
 							//if( fs.existsSync( path.join( resolvedRequire, "package.json" ) ) ) {
@@ -886,7 +887,8 @@ module.exports = function(grunt) {
 		
 					if( ! fs.existsSync( resolvedRequire ) ) {
 						hasBadRequire = true;
-						badRequire = resolvedRequire;
+						badRequire = relativeRequire;
+						badResolvedRequire = resolvedRequire;
 					}
 				}
 
@@ -897,10 +899,10 @@ module.exports = function(grunt) {
 			} );
 
 			if( hasBadRequire ) {
-				console.log( "the following require doesn't exist and would cause browserify to fail, so not browserifying " + filePath + ": " + badRequire );
-				return cb();
+				console.log( "The 'require' path '" + badRequire + "' (resolved to '" + badResolvedRequire + "') in file '" + File.getFromRegistryByPath( filePathDest ).src + "' doesn't exist. Not browserifying this file since it would fail." );
+				cb();
+				return;
 			}
-
 
 			fs.writeFileSync( filePath, fileContents );
 
