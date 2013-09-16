@@ -1,5 +1,8 @@
 # Change Log
 
+### v0.2.2
+* Add support for `remoteFiles` (such as CDN files) in bundle.json.
+
 ### v0.2.1
 * Make `library` and `tmplExt` configuration properties optional.
 
