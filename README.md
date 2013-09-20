@@ -342,6 +342,10 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	// kept "as separate as possible" - trust us, we did think it through.
 	"keepSeparate" : true,
 
+	// (default: undefined) An array of remote file URLs. These files are always
+	// kept separate from their bundles.  The URLs are added as-is to cartero.json.  
+ 	"remoteFiles" : [ "http://code.jquery.com/jquery-1.10.1.min.js" ],
+	
 	// (default: undefined) An array of files that will only be served in `dev` mode, and
 	// that will be ignored in `prod` mode.
 	"devModeOnlyFiles" : [ "mixins/backbone.subviews-debug.js" ],
