@@ -343,7 +343,8 @@ Each of your bundles may contain a `bundle.json` file that specifies meta-data a
 	"keepSeparate" : true,
 
 	// (default: undefined) An array of remote file URLs. These files are always
-	// kept separate from their bundles.  The URLs are added as-is to cartero.json.  
+	// kept separate from their bundles. The URLs are added as-is to cartero.json.  
+	// This option can be used to include assets from CDNs.
  	"remoteFiles" : [ "http://code.jquery.com/jquery-1.10.1.min.js" ],
 	
 	// (default: undefined) An array of files that will only be served in `dev` mode, and
