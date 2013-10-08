@@ -294,6 +294,7 @@ module.exports = function(grunt) {
 		grunt.task.run( kCarteroTaskPrefix + "clean" );
 		grunt.task.run( kCarteroTaskPrefix + "prepare" );
 		grunt.task.run( kCarteroTaskPrefix + "copy" );
+		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
 			grunt.task.run( preprocessingTask.name );
@@ -308,9 +309,6 @@ module.exports = function(grunt) {
 		}
 
 		if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
-
-		// This task should run after everything has been copied/preprocessed into publicDir
-		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		grunt.task.run( kCarteroTaskPrefix + "populateFilesToServe:" + mode );
 
@@ -574,7 +572,7 @@ module.exports = function(grunt) {
 
 		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
 
-		var validCarteroDirExt = processedAssetExts;
+		var validCarteroDirExt = processedAssetExts.concat( [ ".scss", ".sass", ".coffee" ] );
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
