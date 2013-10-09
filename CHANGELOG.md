@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.2.4
+* Replace ##cartero_dir tokens in files before preprocessing
+	* Replace ##cartero_dir tokens in .scss and .sass files as well
+
 ### v0.2.2
 * Add support for `remoteFiles` (such as CDN files) in bundle.json.
 
