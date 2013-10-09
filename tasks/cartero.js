@@ -192,6 +192,8 @@ module.exports = function(grunt) {
 				buildParcelRegistry();
 				copyBundlesAndParcels();
 				mapAssetFileNamesInBundles( assetExtensionMap );
+				configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
+				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 				_.each( options.preprocessingTasks, function( preprocessingTask ) {
 					configureUserDefinedTask( libraryAndViewDirs, preprocessingTask, true, true );
 				} );
@@ -200,8 +202,6 @@ module.exports = function(grunt) {
 				} );
 				configureCarteroBrowserifyTask( libraryAndViewDirs, options.projectDir );
 				if( options.browserify ) grunt.task.run( kCarteroTaskPrefix + "browserify" );
-				configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
-				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 				grunt.task.run( kCarteroTaskPrefix + "populateFilesToServe:dev" );
 				grunt.task.run( kCarteroTaskPrefix + "separateFilesToServeByType:dev" );
 				grunt.task.run( kCarteroTaskPrefix + "saveCarteroJson" );
@@ -219,11 +219,22 @@ module.exports = function(grunt) {
 				if( ! _.isUndefined( file ) ) {
 					file.copy( dirOptions.path, dirOptions.destDir, true );
 					srcPath = file.path;
-					newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
+					
 				}
 				else {
 					srcPath = [];
 					newDest = null;
+				}
+
+				if( validCarteroDirExt.indexOf( path.extname( newDest ) ) ) {
+					configureCarteroTask( "replaceCarteroDirTokens", { fileName : file.path } );
+					grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+				}
+
+				// mapping the asset file name needs to be done after ##cartero_dir token replacement
+				// since the files have not been copied but not processed (still have their old extension)
+				if( ! _.isUndefined( file ) ) {
+					newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
 				}
 
 				_.each( options.preprocessingTasks, function( preprocessingTask ) {
@@ -247,11 +258,6 @@ module.exports = function(grunt) {
 						} ] );
 						grunt.task.run( kCarteroTaskPrefix + "browserify" );
 					}
-				}
-
-				if( validCarteroDirExt.indexOf( path.extname( newDest ) ) ) {
-					configureCarteroTask( "replaceCarteroDirTokens", { fileName : newDest } );
-					grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 				}
 			}
 		} );
