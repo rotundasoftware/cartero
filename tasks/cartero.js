@@ -219,22 +219,21 @@ module.exports = function(grunt) {
 				if( ! _.isUndefined( file ) ) {
 					file.copy( dirOptions.path, dirOptions.destDir, true );
 					srcPath = file.path;
-					
+
+					if( _.contains( validCarteroDirExt, path.extname( srcPath ) ) ) {
+						configureCarteroTask( "replaceCarteroDirTokens", { fileName : srcPath } );
+						grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
+					}
+
+					// mapping the asset file name needs to be done after ##cartero_dir token replacement
+					// since the files have been copied but not processed (still have their old extension)
+					if( ! _.isUndefined( file ) ) {
+						newDest = file.path = File.mapAssetFileName( srcPath, assetExtensionMap );
+					}
 				}
 				else {
 					srcPath = [];
 					newDest = null;
-				}
-
-				if( validCarteroDirExt.indexOf( path.extname( newDest ) ) ) {
-					configureCarteroTask( "replaceCarteroDirTokens", { fileName : file.path } );
-					grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
-				}
-
-				// mapping the asset file name needs to be done after ##cartero_dir token replacement
-				// since the files have not been copied but not processed (still have their old extension)
-				if( ! _.isUndefined( file ) ) {
-					newDest = file.path = File.mapAssetFileName( file.path, assetExtensionMap );
 				}
 
 				_.each( options.preprocessingTasks, function( preprocessingTask ) {
