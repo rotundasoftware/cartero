@@ -577,7 +577,7 @@ module.exports = function(grunt) {
 
 		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
 
-		var validCarteroDirExt = processedAssetExts.concat( [ ".scss", ".sass", ".coffee" ] );
+		var validCarteroDirExt = processedAssetExts.concat( _.pluck( options.preprocessingTasks, "inExt" ) );
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
