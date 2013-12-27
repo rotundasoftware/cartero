@@ -81,7 +81,7 @@ module.exports = function(grunt) {
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
-					return "url(" + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
+					return "url("+ "/" + options.publicUrl.replace(/\/$/,"").replace(/^\//,"") + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
 				}
 				else {
 					return match;
