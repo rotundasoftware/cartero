@@ -512,6 +512,11 @@ If you develop a Hook for your web framework, please let us know and we'll add i
 ##Change Log
 
 See the [CHANGELOG.md](CHANGELOG.md) file.
+
+##Contributing
+
+Contibutions are welcome!  Please open pull requests against the [dev branch](https://github.com/rotundasoftware/cartero/tree/dev).
+
 ## About
 
 By [Oleg Seletsky](https://github.com/go-oleg) and [David Beck](https://twitter.com/davegbeck).
