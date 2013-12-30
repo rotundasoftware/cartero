@@ -81,7 +81,7 @@ module.exports = function(grunt) {
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
-					return "url("+ "/" + options.publicUrl.replace(/\/$/,"").replace(/^\//,"") + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
+					return "url("+ "/" + options.publicUrl + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
 				}
 				else {
 					return match;
@@ -192,6 +192,7 @@ module.exports = function(grunt) {
 				buildParcelRegistry();
 				copyBundlesAndParcels();
 				mapAssetFileNamesInBundles( assetExtensionMap );
+				// replaceCarteroDirUrlTokens MUST run before replaceCarteroDirTokens
 				configureCarteroTask( "replaceCarteroDirUrlTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir, publicUrl : options.publicUrl } );
 				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirUrlTokens" );
 				configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
@@ -424,6 +425,8 @@ module.exports = function(grunt) {
 	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
+		// trim leading and trailing / of publicUrl
+		options.publicUrl = _s.trim( options.publicUrl, "/" );
 		options.library = options.library || [];
 
 		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
@@ -733,7 +736,7 @@ module.exports = function(grunt) {
 		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
 
 			// append publicUrl to replaceString
-			replaceString = options.publicUrl.replace(/\/$/,"") + "/" + replaceString;
+			replaceString = options.publicUrl + "/" + replaceString;
 			async.waterfall( [
 				function( callback ) {
 					fs.readFile( fileName, function( err, data) {
