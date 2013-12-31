@@ -81,7 +81,7 @@ module.exports = function(grunt) {
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
-					return "url("+ "/" + options.publicUrl + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
+					return "url(" + options.publicUrl + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
 				}
 				else {
 					return match;
@@ -425,8 +425,8 @@ module.exports = function(grunt) {
 	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
-		// trim leading and trailing / of publicUrl
-		options.publicUrl = _s.trim( options.publicUrl, "/" );
+		// we make sure that PublicUrl always start with /, even if it is undefined
+		options.publicUrl = _.isUndefined( options.publicUrl ) ? "/" : "/" + _s.trim( options.publicUrl, "/" );
 		options.library = options.library || [];
 
 		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
