@@ -1,5 +1,8 @@
 # Change Log
 
+### v0.2.4
+* add `publicUrl` config option
+
 ### v0.2.3
 * ##cartero_dir replacement changes
 	* Replace ##cartero_dir tokens in files before preprocessing.
