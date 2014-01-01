@@ -425,8 +425,8 @@ module.exports = function(grunt) {
 	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
-		// we make sure that PublicUrl always start with /, even if it is undefined
-		options.publicUrl = _.isUndefined( options.publicUrl ) ? "/" : "/" + _s.trim( options.publicUrl, "/" );
+		// we make sure that publicUrl starts with a slash unless its undefined or an empty string, in which case make it the empty string
+		options.publicUrl = _.isUndefined( options.publicUrl ) || options.publicUrl === "" ? "" : "/" + _s.trim( options.publicUrl, "/" );
 		options.library = options.library || [];
 
 		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
