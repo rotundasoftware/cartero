@@ -81,7 +81,7 @@ module.exports = function(grunt) {
 
 				// sanity check: make sure url() contains a file path
 				if( fs.existsSync( pathRelativeToProjectDir ) ) {
-					return "url(" + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
+					return "url(" + options.publicUrl + "/" + path.relative( options.publicDir, pathRelativeToProjectDir ) + ")";
 				}
 				else {
 					return match;
@@ -192,6 +192,9 @@ module.exports = function(grunt) {
 				buildParcelRegistry();
 				copyBundlesAndParcels();
 				mapAssetFileNamesInBundles( assetExtensionMap );
+				// replaceCarteroDirUrlTokens MUST run before replaceCarteroDirTokens
+				configureCarteroTask( "replaceCarteroDirUrlTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir, publicUrl : options.publicUrl } );
+				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirUrlTokens" );
 				configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 				grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 				_.each( options.preprocessingTasks, function( preprocessingTask ) {
@@ -221,6 +224,8 @@ module.exports = function(grunt) {
 					srcPath = file.path;
 
 					if( _.contains( validCarteroDirExt, path.extname( srcPath ) ) ) {
+						configureCarteroTask( "replaceCarteroDirUrlTokens", { fileName : srcPath } );
+						grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirUrlTokens" );
 						configureCarteroTask( "replaceCarteroDirTokens", { fileName : srcPath } );
 						grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 					}
@@ -299,6 +304,7 @@ module.exports = function(grunt) {
 		grunt.task.run( kCarteroTaskPrefix + "clean" );
 		grunt.task.run( kCarteroTaskPrefix + "prepare" );
 		grunt.task.run( kCarteroTaskPrefix + "copy" );
+		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirUrlTokens" );
 		grunt.task.run( kCarteroTaskPrefix + "replaceCarteroDirTokens" );
 
 		_.each( options.preprocessingTasks, function( preprocessingTask ) {
@@ -419,6 +425,8 @@ module.exports = function(grunt) {
 	function applyDefaultsAndNormalize( options ) {
 		options.projectDir = _s.rtrim( options.projectDir, "/" );
 		options.publicDir = _s.rtrim( options.publicDir, "/" );
+		// we make sure that PublicUrl always start with /, even if it is undefined
+		options.publicUrl = _.isUndefined( options.publicUrl ) ? "/" : "/" + _s.trim( options.publicUrl, "/" );
 		options.library = options.library || [];
 
 		options.watch = ! _.isUndefined( grunt.option( "watch" ) );
@@ -578,6 +586,7 @@ module.exports = function(grunt) {
 		configureCarteroTask( "replaceRelativeUrlsInCssFile", { libraryAndViewDirs : libraryAndViewDirs } );
 
 		var validCarteroDirExt = processedAssetExts.concat( _.pluck( options.preprocessingTasks, "inExt" ) );
+		configureCarteroTask( "replaceCarteroDirUrlTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir, publicUrl : options.publicUrl } );
 		configureCarteroTask( "replaceCarteroDirTokens", { validCarteroDirExt : validCarteroDirExt, publicDir : options.publicDir } );
 
 		// Loop through the assets that don't require preprocessing and create/configure the target
@@ -714,10 +723,82 @@ module.exports = function(grunt) {
 		var carteroJson = {};
 
 		carteroJson.publicDir = options.publicDir;
+		carteroJson.publicUrl = options.publicUrl;
 		carteroJson.parcels = parcelDataToSave;
 
 		fs.writeFileSync( path.join( options.projectDir, kCarteroJsonFile ), JSON.stringify( carteroJson, null, "\t" ) );
 	} );
+
+//cartero_dir_url
+	grunt.registerTask( kCarteroTaskPrefix + "replaceCarteroDirUrlTokens", "", function() {
+		var taskOptions = this.options();
+
+		function replaceStringInFile( fileName, matchString, replaceString, callback ) {
+
+			// append publicUrl to replaceString
+			replaceString = options.publicUrl + "/" + replaceString;
+			async.waterfall( [
+				function( callback ) {
+					fs.readFile( fileName, function( err, data) {
+						var fileContents = data.toString().replace( matchString, replaceString );
+						callback( err, fileContents );
+					} );
+				},
+				function( fileContents, callback ) {
+					fs.writeFile( fileName, fileContents, callback );
+				}
+			],
+			function( err ) {
+				if( err ) {
+					grunt.fail.warn( "Error while replacing ##cartero_dir_url tokens: " + err  );
+				}
+				callback( err );
+			} );
+		}
+
+		function isValidCarteroDirFile( fileName ) {
+			return _.contains( taskOptions.validCarteroDirExt, File.getFileExtension( fileName ) );
+		}
+
+		var done = this.async();
+
+		if( ! _.isUndefined( taskOptions.fileName ) ) {
+			replaceStringInFile( taskOptions.fileName,
+				/##cartero_dir_url/g,
+				taskOptions.fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ),
+				function( err ) {
+					if( err ) {
+						grunt.fail.warn( "Error while replacing ##cartero_dir_url tokens: " + err  );
+					}
+					done();
+				});
+		}
+		else {
+			var assetFiles = [];
+			var finder = findit.find( options.publicDir );
+
+			finder.on( "file", function( file, stat ) {
+				if( isValidCarteroDirFile( file ) ) assetFiles.push( file );
+			} );
+
+			finder.on( "end", function() {
+				async.each(
+					assetFiles,
+					function( fileName, callback ) {
+						replaceStringInFile( fileName, /##cartero_dir_url/g, fileName.replace( options.publicDir + "/", "").replace(/\/[^\/]*$/, "" ), callback );
+					},
+					function( err ) {
+						if( err ) {
+							grunt.fail.warn( "Error while replacing ##cartero_dir_url tokens: " + err  );
+						}
+						done();
+					}
+				);
+			} );
+		}
+	} );
+
+//end cartero_dir_url
 
 	grunt.registerTask( kCarteroTaskPrefix + "replaceCarteroDirTokens", "", function() {
 		var taskOptions = this.options();
