@@ -1,7 +1,7 @@
 {
   "name": "cartero",
-  "description": "An asset manager for modern web apps.",
-  "version": "0.2.4",
+  "description": "An asset pipeline built on browserify.",
+  "version": "0.5.0",
   "author": {
     "name": "Rotunda Software",
     "email": "support@rotundasoftware.com"
@@ -19,38 +19,21 @@
       "url": "https://github.com/rotundasoftware/cartero/blob/master/LICENSE-MIT"
     }
   ],
-  "main": "Gruntfile.js",
+  "main": "cartero.js",
   "engines": {
     "node": ">= 0.8.0"
   },
-  "scripts": {
-    "test": "grunt test"
-  },
-  "devDependencies": {
-    "grunt-contrib-jshint": "~0.1.1",
-    "grunt-contrib-clean": "~0.4.0",
-    "grunt-contrib-nodeunit": "~0.1.2",
-    "grunt": "~0.4.1"
-  },
-  "peerDependencies": {
-    "grunt": "~0.4.1"
-  },
   "keywords": [
-    "gruntplugin",
 		"asset",
 		"asset manager",
 		"css",
 		"javascript",
-		"html"
+    "browserify",
+    "commonjs"
   ],
   "dependencies": {
     "underscore": "~1.4.4",
-    "underscore.string": "~2.3.1",
-    "findit": "~0.1.2",
-    "path": "~0.4.9",
-    "browserify": "~2.13.2",
-    "detective": "~2.1.1",
-    "resolve": "~0.3.1",
-    "async": "~0.2.8"
+    "parcel-detector": "^0.0.0",
+    "parcel-processor": "^0.0.0",
   }
 }
