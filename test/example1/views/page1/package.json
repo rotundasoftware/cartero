@@ -1,0 +1,4 @@
+{
+	"views" : [ "*.jade" ],
+	"main" : "page1.js"
+}
