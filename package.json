@@ -24,10 +24,10 @@
     "node": ">= 0.8.0"
   },
   "keywords": [
-		"asset",
-		"asset manager",
-		"css",
-		"javascript",
+    "asset",
+    "asset manager",
+    "css",
+    "javascript",
     "browserify",
     "commonjs"
   ],
@@ -35,5 +35,6 @@
     "underscore": "~1.4.4",
     "parcel-detector": "^0.0.0",
     "parcel-processor": "^0.0.0",
+    "browserify": "~3.30.2"
   }
 }

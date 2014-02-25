@@ -5,7 +5,7 @@ var path = require('path');
 
 var browserify = require( 'browserify' );
 var parcelDetector = require( 'parcel-detector' );
-var parcelProcessor = require( 'parcel-detector' );
+var parcelProcessor = require( 'parcel-processor' );
 
 var kViewMapName = "view_map.json";
 
@@ -13,15 +13,15 @@ var mViewMap = {};
 var mParcelManifest = {};
 var mAssetManifest = {};
 
-modules.exports = function( viewDirectoryPath, outputDirecotryPath, cateroOptions, prodMode, done ) {
-	cateroOptions = _.defaults( {}, cateroOptions, {
-		styleTransforms : [],
-		javascriptPost : [],
-		stylePost : [],
-		assetDefaults : {}
+module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOptions, prodMode, done ) {
+	carteroOptions = _.defaults( {}, carteroOptions, {
+		assetTypes : [ "style", "image", "template" ],
+		globalTransforms : {},
+		globalPostprocessors : {},
+		packageAssetDefaults : {}
 	} );
 
-	detect( viewDirectoryPath, function (err, detected) {
+	parcelDetector( viewDirectoryPath, function( err, detected ) {
 		if (err) return done(err);
 
 		var keys = Object.keys(detected);
@@ -61,8 +61,8 @@ modules.exports = function( viewDirectoryPath, outputDirecotryPath, cateroOption
 	function withMains( mains ) {
 		var processorOptions = {
 			dst : outputDirecotryPath,
-			keys : [ 'style', 'images', 'templates' ],
-			defaults : carteroOptions.assetDefaults
+			keys : carteroOptions.assetTypes,
+			defaults : carteroOptions.packageAssetDefaults
 		};
 
 		var pending = mains.length;
@@ -70,6 +70,7 @@ modules.exports = function( viewDirectoryPath, outputDirecotryPath, cateroOption
 			processorEmitter = parcelProcessor( browserify( thisMain ), processorOptions );
 
 			processorEmitter.on( "package", function( packageInfo ) {
+				console.dir( packageInfo );
 				mParcelManifest[ packageInfo.id ] = packageInfo;
 
 				var viewRelativePath = packageInfo.package.view;
@@ -78,13 +79,15 @@ modules.exports = function( viewDirectoryPath, outputDirecotryPath, cateroOption
 			} );
 
 			processorEmitter.on( "map", function( map ) {
+				console.dir( map );
 				_.extend( mAssetManifest, map );
 			} );
 
 			processorEmitter.on( "done", function() {
+				console.dir( "done" );
 				if( --pending === 0 ) {
 					// we've finished processing all parcels. basically home free.
-					
+
 					// just need to write the view_map to the output directory.
 					var viewMapPath = path.join( outputDirecotryPath, kViewMapName );
 
