@@ -1,7 +1,8 @@
 
 var _ = require( 'underscore' );
 var fs = require( 'fs' );
-var path = require('path');
+var glob = require( 'glob' );
+var path = require( 'path' );
 
 var browserify = require( 'browserify' );
 var parcelDetector = require( 'parcel-detector' );
@@ -18,7 +19,11 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 		assetTypes : [ "style", "image", "template" ],
 		globalTransforms : {},
 		globalPostprocessors : {},
-		packageAssetDefaults : {}
+		packageAssetDefaults : {
+			style : null,
+			image : null,
+			template : null
+		}
 	} );
 
 	parcelDetector( viewDirectoryPath, function( err, detected ) {
@@ -70,21 +75,27 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 			processorEmitter = parcelProcessor( browserify( thisMain ), processorOptions );
 
 			processorEmitter.on( "package", function( packageInfo ) {
-				console.dir( packageInfo );
 				mParcelManifest[ packageInfo.id ] = packageInfo;
+				
+				if( ! _.isUndefined( packageInfo.package.view ) ) {
+					var viewRelativePathGlob = packageInfo.package.view;
+					var viewAbsPathGlob = path.resolve( packageInfo.path, viewRelativePathGlob );
 
-				var viewRelativePath = packageInfo.package.view;
-				var viewAbsPath = path.join( packageInfo.path, viewRelativePath );
-				mViewMap[ viewAbsPath ] = packageInfo.id;
+					glob( viewAbsPathGlob, function( err, viewFilePaths ) {
+						_.each( viewFilePaths, function( thisViewFilePath ) {
+							mViewMap[ thisViewFilePath ] = packageInfo.id;
+						} );
+					} );
+				}
 			} );
 
 			processorEmitter.on( "map", function( map ) {
-				console.dir( map );
 				_.extend( mAssetManifest, map );
 			} );
 
 			processorEmitter.on( "done", function() {
-				console.dir( "done" );
+				//console.dir( mParcelManifest );
+
 				if( --pending === 0 ) {
 					// we've finished processing all parcels. basically home free.
 

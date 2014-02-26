@@ -1,5 +1,5 @@
 {
-	"view" : [ "*.jade" ],
+	"view" : "*.jade",
 	"main" : "page1.js",
-	"style" : "page1.css"
+	"style" : "*.css"
 }
