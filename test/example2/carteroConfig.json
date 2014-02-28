@@ -1,0 +1,20 @@
+{
+	"package-extends" : {
+		"jqueryui-browser" : {
+			"style" : "themes/base/jquery-ui.css"
+		}
+	},
+
+	"package-defaults" : {
+		"style" : "*.scss,*.css",
+		"template" : "*.tmpl",
+		"image" : "*.png,*.jpg",
+		"browserify" : {
+			"transform" : [ "browserify-shim" ]
+		},
+		"browserify-shim" : "/Users/david_beck/Documents/git/cartero/test/example2/browserifyShimConfig.js",
+		"transform" : {
+			"script" : [ "cartero-sass" ]
+		}
+	}
+}

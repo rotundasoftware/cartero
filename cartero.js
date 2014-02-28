@@ -16,10 +16,10 @@ var mAssetManifest = {};
 
 module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOptions, prodMode, done ) {
 	carteroOptions = _.defaults( {}, carteroOptions, {
-		assetTypes : [ "style", "image", "template" ],
-		globalTransforms : {},
-		globalPostprocessors : {},
-		packageAssetDefaults : {
+		'asset-types' : [ 'style', 'image', 'template' ],
+		'global-transform' : {},
+		'global-post' : {},
+		'package-defaults' : {
 			style : null,
 			image : null,
 			template : null
@@ -66,15 +66,15 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 	function withMains( mains ) {
 		var processorOptions = {
 			dst : outputDirecotryPath,
-			keys : carteroOptions.assetTypes,
-			defaults : carteroOptions.packageAssetDefaults
+			keys : carteroOptions[ 'asset-types' ],
+			defaults : carteroOptions[ 'package-defaults' ]
 		};
 
 		var pending = mains.length;
 		_.each( mains, function( thisMain ) {
 			processorEmitter = parcelProcessor( browserify( thisMain ), processorOptions );
 
-			processorEmitter.on( "package", function( packageInfo ) {
+			processorEmitter.on( 'package', function( packageInfo ) {
 				mParcelManifest[ packageInfo.id ] = packageInfo;
 				
 				if( ! _.isUndefined( packageInfo.package.view ) ) {
@@ -89,11 +89,11 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 				}
 			} );
 
-			processorEmitter.on( "map", function( map ) {
+			processorEmitter.on( 'map', function( map ) {
 				_.extend( mAssetManifest, map );
 			} );
 
-			processorEmitter.on( "done", function() {
+			processorEmitter.on( 'done', function() {
 				//console.dir( mParcelManifest );
 
 				if( --pending === 0 ) {
