@@ -23,7 +23,8 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 			style : null,
 			image : null,
 			template : null
-		}
+		},
+		'package-extends' : {}
 	} );
 
 	parcelDetector( viewDirectoryPath, function( err, detected ) {

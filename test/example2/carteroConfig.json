@@ -1,6 +1,7 @@
 {
 	"package-extends" : {
 		"jqueryui-browser" : {
+			"main" : "ui/jquery-ui.js",
 			"style" : "themes/base/jquery-ui.css"
 		}
 	},
@@ -8,13 +9,10 @@
 	"package-defaults" : {
 		"style" : "*.scss,*.css",
 		"template" : "*.tmpl",
-		"image" : "*.png,*.jpg",
-		"browserify" : {
-			"transform" : [ "browserify-shim" ]
-		},
-		"browserify-shim" : "/Users/david_beck/Documents/git/cartero/test/example2/browserifyShimConfig.js",
-		"transform" : {
-			"script" : [ "cartero-sass" ]
-		}
+		"image" : "*.png,*.jpg"
+	},
+
+	"global-transform" : {
+		"script" : [ { "browserify-shim" : "./browserifyShimConfig.js" } ] // note here we pass in options to browserify-shim
 	}
 }

@@ -64,7 +64,7 @@ In package.json, we have
 		},
 		"browserify-shim" : "/Users/david_beck/Documents/git/cartero/test/example2/browserifyShimConfig.js",
 		"transform" : {
-			"script" : [ "cartero-sass" ]
+			"style" : [ "cartero-sass" ]
 		}
 	}
 }

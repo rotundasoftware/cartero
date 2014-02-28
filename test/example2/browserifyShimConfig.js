@@ -1,4 +1,4 @@
 module.exports = {
-	"jquery" : "./node_modules/jquery/dist/jquery.js",
-	"jqueryui" : { "depends": [ "./node_modules/jquery/dist/jquery.js" ] }
+	"./jquery/dist/jquery.js" : "$",
+	"./jqueryui-browser/ui/jquery-ui.js" : { "depends": [ "./jquery/dist/jquery.js" ] }
 };
