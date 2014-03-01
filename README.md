@@ -58,12 +58,12 @@ In package.json, we have
 
 	"package-defaults" : {
 		"style" : "*.scss",
-		"transforms" : {
+		"transform" : {
 			"style" : [ "sass-css-stream" ]
 		}
 	},
 
-	"post-processor" : {
+	"post-process" : {
 		"script" : [ "uglify-stream" ],
 		"style" : [ "minify-css-stream" ]
 	},

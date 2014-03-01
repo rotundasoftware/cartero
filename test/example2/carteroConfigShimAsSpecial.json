@@ -8,7 +8,7 @@
 
 	"package-defaults" : {
 		"style" : "*.css",
-		"transforms" : {
+		"transform" : {
 			"style" : [ "sass-css-stream" ]
 		}
 	},
