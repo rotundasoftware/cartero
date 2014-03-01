@@ -51,22 +51,24 @@ In package.json, we have
 {
 	"package-extends" : {
 		"jqueryui-browser" : {
+			"main" : "ui/jquery-ui.js",
 			"style" : "themes/base/jquery-ui.css"
 		}
 	},
 
 	"package-defaults" : {
-		"style" : "*.scss,*.css",
-		"template" : "*.tmpl",
-		"image" : "*.png,*.jpg",
-		"browserify" : {
-			"transform" : [ "browserify-shim" ]
-		},
-		"browserify-shim" : "/Users/david_beck/Documents/git/cartero/test/example2/browserifyShimConfig.js",
-		"transform" : {
-			"style" : [ "cartero-sass" ]
+		"style" : "*.scss",
+		"transforms" : {
+			"style" : [ "sass-css-stream" ]
 		}
-	}
+	},
+
+	"post-processor" : {
+		"script" : [ "uglify-stream" ],
+		"style" : [ "minify-css-stream" ]
+	},
+
+	"browserify-shim" : "./browserifyShimConfig.js"
 }
 ```
 

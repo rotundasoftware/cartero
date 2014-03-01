@@ -1,0 +1,17 @@
+{
+	"package-extends" : {
+		"jqueryui-browser" : {
+			"main" : "ui/jquery-ui.js",
+			"style" : "themes/base/jquery-ui.css"
+		}
+	},
+
+	"package-defaults" : {
+		"style" : "*.css",
+		"transforms" : {
+			"style" : [ "sass-css-stream" ]
+		}
+	},
+
+	"browserify-shim" : "./browserifyShimConfig.js"
+}

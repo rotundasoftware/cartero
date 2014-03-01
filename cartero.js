@@ -17,8 +17,6 @@ var mAssetManifest = {};
 module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOptions, prodMode, done ) {
 	carteroOptions = _.defaults( {}, carteroOptions, {
 		'asset-types' : [ 'style', 'image', 'template' ],
-		'global-transform' : {},
-		'global-post' : {},
 		'package-defaults' : {
 			style : null,
 			image : null,
@@ -68,7 +66,8 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 		var processorOptions = {
 			dst : outputDirecotryPath,
 			keys : carteroOptions[ 'asset-types' ],
-			defaults : carteroOptions[ 'package-defaults' ]
+			defaults : carteroOptions[ 'package-defaults' ],
+			globalTransform : carteroOptions[ 'global-transform' ]
 		};
 
 		var pending = mains.length;
