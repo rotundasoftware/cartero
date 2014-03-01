@@ -36,8 +36,9 @@ In package.json, we have
 {
 	"style" : "*.css",
 	"image" : "*.png",
-	"template" : "*.tmpl"
-	"cartero-transform" : {
+	"template" : "*.tmpl",
+
+	"cartero-transforms" : {
 		"style" : [ "sass-css-stream" ],
 		"image" : [ "png-compressor" ],
 		"template" : [ "nunjucks-transform" ]
@@ -58,12 +59,12 @@ In package.json, we have
 	},
 
 	"package-defaults" : { // this could alternatively be parcel-defaults, and then only apply to parcels
-		"style" : "*.scss"
-	},
+		"style" : "*.scss",
 
-	"global-transform" : {
-		"script" : [ { "browserify-shim" : "./browserifyShimConfig.js" } ], // script global transforms are passed through to browserify
-		"style" : [ { "sass-css-stream" : { includePaths : [ "/my/abs/include/path" ] } ]
+		"cartero-transforms" : {
+			"style" : [ { "sass-css-stream" : { includePaths : [ "/my/abs/include/path" ] } ], // transform options are specified using an object.
+			"script" : [ { "browserify-shim" : "/abs/path/to/browserifyShimConfig.js" } ] // script global transforms are passed through to browserify. note this needs to be absolute path
+		}
 	},
 
 	"post-process" : {
