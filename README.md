@@ -83,16 +83,3 @@ In package.json, we have
 ## License
 
 MIT
-
-would be cool to let people apply transforms to their own packages. but this is not realistic, because.
-	1. there is no agreed upon tranform format
-
-
-cartero is more global 
-
-
-because there is no tranform consensus, need to namespace transforms under cartero.
-
-OR, we just 
-
-apply these transforms to all MY modules.
