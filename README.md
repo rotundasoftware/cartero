@@ -35,12 +35,12 @@ In package.json, we have
 ```
 {
 	"style" : "*.css",
-	"image" : "*.png,*.jpg",
+	"image" : "*.png",
 	"template" : "*.tmpl"
-	"transform" : {
-		"style" : "sass-transform",
-		"image" : "png-compressor-transform",
-		"template" : "nunjucks-transform"
+	"cartero-transform" : {
+		"style" : [ "sass-css-stream" ],
+		"image" : [ "png-compressor" ],
+		"template" : [ "nunjucks-transform" ]
 	}
 }
 ```
@@ -49,6 +49,7 @@ In package.json, we have
 
 ```
 {
+	// needed to override / amend package.json in 3rd party libraries that don't behave well.
 	"package-extends" : {
 		"jqueryui-browser" : {
 			"main" : "ui/jquery-ui.js",
@@ -56,19 +57,19 @@ In package.json, we have
 		}
 	},
 
-	"package-defaults" : {
-		"style" : "*.scss",
-		"transform" : {
-			"style" : [ "sass-css-stream" ]
-		}
+	"package-defaults" : { // this could alternatively be parcel-defaults, and then only apply to parcels
+		"style" : "*.scss"
+	},
+
+	"global-transform" : {
+		"script" : [ { "browserify-shim" : "./browserifyShimConfig.js" } ], // script global transforms are passed through to browserify
+		"style" : [ { "sass-css-stream" : { includePaths : [ "/my/abs/include/path" ] } ]
 	},
 
 	"post-process" : {
 		"script" : [ "uglify-stream" ],
 		"style" : [ "minify-css-stream" ]
-	},
-
-	"browserify-shim" : "./browserifyShimConfig.js"
+	}
 }
 ```
 
@@ -82,3 +83,15 @@ In package.json, we have
 
 MIT
 
+would be cool to let people apply transforms to their own packages. but this is not realistic, because.
+	1. there is no agreed upon tranform format
+
+
+cartero is more global 
+
+
+because there is no tranform consensus, need to namespace transforms under cartero.
+
+OR, we just 
+
+apply these transforms to all MY modules.
