@@ -3,6 +3,7 @@ var _ = require( 'underscore' );
 var fs = require( 'fs' );
 var glob = require( 'glob' );
 var path = require( 'path' );
+var rimraf = require( "rimraf" );
 
 var browserify = require( 'browserify' );
 var parcelDetector = require( 'parcel-detector' );
@@ -14,7 +15,7 @@ var mViewMap = {};
 var mParcelManifest = {};
 var mAssetManifest = {};
 
-module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOptions, prodMode, done ) {
+module.exports = function( viewDirectoryPath, outputDirectoryPath, carteroOptions, prodMode, done ) {
 	carteroOptions = _.defaults( {}, carteroOptions, {
 		'asset-types' : [ 'style', 'image', 'template' ],
 		'package-defaults' : {
@@ -24,6 +25,9 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 		},
 		'package-extends' : {}
 	} );
+
+	// clear the output directory before proceeding (sync for now...)
+	rimraf.sync( outputDirectoryPath );
 
 	parcelDetector( viewDirectoryPath, function( err, detected ) {
 		if (err) return done(err);
@@ -64,7 +68,7 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 
 	function withMains( mains ) {
 		var processorOptions = {
-			dst : outputDirecotryPath,
+			dst : outputDirectoryPath,
 			keys : carteroOptions[ 'asset-types' ],
 			defaults : carteroOptions[ 'package-defaults' ],
 			globalTransform : carteroOptions[ 'global-transform' ]
@@ -100,7 +104,7 @@ module.exports = function( viewDirectoryPath, outputDirecotryPath, carteroOption
 					// we've finished processing all parcels. basically home free.
 
 					// just need to write the view_map to the output directory.
-					var viewMapPath = path.join( outputDirecotryPath, kViewMapName );
+					var viewMapPath = path.join( outputDirectoryPath, kViewMapName );
 
 					fs.writeFile( viewMapPath, JSON.stringify( mViewMap, null, 4 ), function( err ) {
 						if( err ) return done( err );
