@@ -1,2 +1,2 @@
-$ = require( "jqueryui" );
+require( "jqueryui-browser" );
 

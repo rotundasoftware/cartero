@@ -8,12 +8,5 @@
 
 	"package-defaults" : {
 		"style" : "*.css"
-	},
-
-	"global-transform" : {
-		"script" : [ { "browserify-shim" : "./browserifyShimConfig.js" } ] // note here we pass in options to browserify-shim
 	}
 }
-
-// what if browserify-shim relied on package stuff for a given package.
-// but shit there might not even be a package 

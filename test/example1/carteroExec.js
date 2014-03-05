@@ -7,6 +7,8 @@ var kStaticDirPath = path.join( __dirname, 'static' );
 var kCarteroOptions = {
 };
 
-cartero( kViewsDirPath, path.join( kStaticDirPath, 'assets' ), kCarteroOptions, false, function() {
+cartero( kViewsDirPath, path.join( kStaticDirPath, 'assets' ), kCarteroOptions, false, function( err ) {
+	if( err ) throw err;
+	
 	console.log( 'done' );
 } );

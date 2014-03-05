@@ -6,6 +6,8 @@ var kStaticDirPath = path.join( __dirname, 'static' );
 
 var kCarteroOptions = require( './carteroConfig.json' );
 
-cartero( kViewsDirPath, path.join( kStaticDirPath, 'assets' ), kCarteroOptions, false, function() {
+cartero( kViewsDirPath, path.join( kStaticDirPath, 'assets' ), kCarteroOptions, true, function( err ) {
+	if( err ) throw err;
+
 	console.log( 'done' );
 } );

@@ -4,18 +4,18 @@ var fs = require( 'fs' );
 var glob = require( 'glob' );
 var path = require( 'path' );
 var rimraf = require( "rimraf" );
+var async = require( "async" );
 
-var browserify = require( 'browserify' );
 var parcelDetector = require( 'parcel-detector' );
 var parcelProcessor = require( 'parcel-processor' );
 
 var kViewMapName = "view_map.json";
 
 var mViewMap = {};
-var mParcelManifest = {};
+var mPackageManifest = {};
 var mAssetManifest = {};
 
-module.exports = function( viewDirectoryPath, outputDirectoryPath, carteroOptions, prodMode, done ) {
+module.exports = function( viewDirectoryPath, outputDirectoryPath, carteroOptions, devMode, callback ) {
 	carteroOptions = _.defaults( {}, carteroOptions, {
 		'asset-types' : [ 'style', 'image', 'template' ],
 		'package-defaults' : {
@@ -26,11 +26,13 @@ module.exports = function( viewDirectoryPath, outputDirectoryPath, carteroOption
 		'package-extends' : {}
 	} );
 
+	if( _.isUndefined( devMode ) ) devMode = false;
+
 	// clear the output directory before proceeding (sync for now...)
 	rimraf.sync( outputDirectoryPath );
 
 	parcelDetector( viewDirectoryPath, function( err, detected ) {
-		if (err) return done(err);
+		if (err) return callback( err );
 
 		var keys = Object.keys(detected);
 		var pending = keys.length;
@@ -71,47 +73,27 @@ module.exports = function( viewDirectoryPath, outputDirectoryPath, carteroOption
 			dst : outputDirectoryPath,
 			keys : carteroOptions[ 'asset-types' ],
 			defaults : carteroOptions[ 'package-defaults' ],
-			globalTransform : carteroOptions[ 'global-transform' ]
+			concatinateCss : ! devMode
 		};
 
-		var pending = mains.length;
-		_.each( mains, function( thisMain ) {
-			processorEmitter = parcelProcessor( browserify( thisMain ), processorOptions );
+		async.each( mains, function( thisMain, nextMain ) {
+			parcelProcessor( thisMain, processorOptions, function( err, packageRegistry, parcelId ) {
+				if( err ) return nextMain( err );
 
-			processorEmitter.on( 'package', function( packageInfo ) {
-				mParcelManifest[ packageInfo.id ] = packageInfo;
-				
-				if( ! _.isUndefined( packageInfo.package.view ) ) {
-					var viewRelativePathGlob = packageInfo.package.view;
-					var viewAbsPathGlob = path.resolve( packageInfo.path, viewRelativePathGlob );
+				_.defaults( mPackageManifest, packageRegistry );
+				mViewMap[ packageRegistry[ parcelId ].view ] = parcelId;
 
-					glob( viewAbsPathGlob, function( err, viewFilePaths ) {
-						_.each( viewFilePaths, function( thisViewFilePath ) {
-							mViewMap[ thisViewFilePath ] = packageInfo.id;
-						} );
-					} );
-				}
+				nextMain();
 			} );
+		}, function( err ) {
+			if( err ) return callback( err );
 
-			processorEmitter.on( 'map', function( map ) {
-				_.extend( mAssetManifest, map );
-			} );
+			var viewMapPath = path.join( outputDirectoryPath, kViewMapName );
 
-			processorEmitter.on( 'done', function() {
-				//console.dir( mParcelManifest );
+			fs.writeFile( viewMapPath, JSON.stringify( mViewMap, null, 4 ), function( err ) {
+				if( err ) return callback( err );
 
-				if( --pending === 0 ) {
-					// we've finished processing all parcels. basically home free.
-
-					// just need to write the view_map to the output directory.
-					var viewMapPath = path.join( outputDirectoryPath, kViewMapName );
-
-					fs.writeFile( viewMapPath, JSON.stringify( mViewMap, null, 4 ), function( err ) {
-						if( err ) return done( err );
-
-						done();
-					} );
-				}
+				callback();
 			} );
 		} );
 	}

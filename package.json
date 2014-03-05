@@ -35,8 +35,8 @@
     "underscore": "~1.4.4",
     "parcel-detector": "^0.0.0",
     "parcel-processor": "^0.0.0",
-    "browserify": "~3.30.2",
     "glob": "~3.2.8",
-    "rimraf": "~2.2.6"
+    "rimraf": "~2.2.6",
+    "async": "~0.2.10"
   }
 }

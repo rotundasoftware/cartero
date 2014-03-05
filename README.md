@@ -63,7 +63,7 @@ In package.json, we have
 
 		"cartero-transforms" : {
 			"style" : [ { "sass-css-stream" : { includePaths : [ "/my/abs/include/path" ] } ], // transform options are specified using an object.
-			"script" : [ { "browserify-shim" : "/abs/path/to/browserifyShimConfig.js" } ] // script global transforms are passed through to browserify. note this needs to be absolute path
+			"script" : [ { "browserify-shim" : "/abs/path/to/browserifyShimConfig.js" } ] // script transforms are passed through to browserify. note this needs to be absolute path
 		}
 	},
 
