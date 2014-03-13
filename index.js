@@ -3,15 +3,15 @@ var _ = require( 'underscore' );
 var fs = require( 'fs' );
 var glob = require( 'glob' );
 var path = require( 'path' );
-var rimraf = require( "rimraf" );
-var async = require( "async" );
-var os = require('os');
+var rimraf = require( 'rimraf' );
+var async = require( 'async' );
+var os = require( 'os' );
 var tmpdir = (os.tmpdir || os.tmpDir)();
 var EventEmitter = require( 'events' ).EventEmitter;
 var inherits = require( 'inherits' );
-var crypto = require('crypto');
+var crypto = require( 'crypto' );
 var mkdirp = require( 'mkdirp' );
-var concat = require('concat-stream');
+var concat = require( 'concat-stream' );
 
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
@@ -35,7 +35,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 	options = _.defaults( {}, options, {
 		assetTypes : [ 'style', 'template' ],
 		assetTypesToConcatinate : [ 'style', 'template' ],
-		watch : false,
+		devMode : false,
 		postProcessors : [],
 
 		packageTransform : undefined
@@ -47,7 +47,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 	_.extend( this, _.pick( options,
 		'assetTypes',
 		'assetTypesToConcatinate',
-		'watch',
+		'devMode',
 		'postProcessors',
 		'packageTransform'
 	) );
@@ -76,26 +76,27 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 				var parcelifyOptions = {
 					bundles : tempBundlesByMain[ thisMain ],
-					watch : options.watch,
-					packageTransform : options.packageTransform,
+					watch : options.devMode,
+					browserifyBundleOptions : {
+						pacakgeFilter : options.packageTransform,
+						debug : options.devMode
+					},
 					existingPackages : _this.packageManifest
 				};
 
 				parcelify( thisMain, parcelifyOptions, function( err, thisParcel ) {
-					var viewPathHash = crypto.createHash( 'sha1' ).update( thisParcel.view ).digest( 'hex' );
-					_this.viewMap[ viewPathHash ] = thisParcel.id;
+					var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
+					_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
 
-					thisParcel.on( 'packageCreated', function( newPackage ) {
-						if( _this.packageManifest[ newPackage.id ] )
-							return _this.emit( 'error', new Error( 'Package id ' + _this.packageManifest[ newPackage.id ] + ' already in package manifest. Each package should only be created once.' ) );
+					thisParcel.on( 'package', function( newPackage ) {
+						var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatinate );
 
-						_this.packageManifest[ newPackage.id ] = newPackage;
-
-						var assetTypesToWriteToDisk = _.without( assetTypes, options.assetTypesToConcatinate );
 						newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), true, function() {
-							// we don't do anything here.. potential race condition if we are counting on assets being written
-							// at some later point in time. we have no way of telling at them moment when all the assets
+							// note there is a potential race condition if we are counting on assets being written
+							// at some later point in time. we do not keep track at moment when all the assets
 							// are done being written (although this would not be hard to implement)
+
+							_this.emit( 'package', newPackage );
 						} );
 					} );
 
