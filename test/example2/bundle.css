@@ -1184,3 +1184,6 @@ body .ui-tooltip {
 	filter: Alpha(Opacity=30)/*{opacityFilterShadow}*/;
 	border-radius: 8px/*{cornerRadiusShadow}*/;
 }
+body {
+	color : black;
+}

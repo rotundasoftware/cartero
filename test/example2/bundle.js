@@ -14989,6 +14989,7 @@ $.widget( "ui.tooltip", {
 
 },{}],2:[function(require,module,exports){
 require( "jqueryui-browser" );
+console.log( 'hellooo dave' );
 
 
 },{"jqueryui-browser":1}]},{},[2])

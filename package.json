@@ -19,7 +19,6 @@
       "url": "https://github.com/rotundasoftware/cartero/blob/master/LICENSE-MIT"
     }
   ],
-  "main": "cartero.js",
   "engines": {
     "node": ">= 0.8.0"
   },
@@ -31,12 +30,18 @@
     "browserify",
     "commonjs"
   ],
+  "devDependencies": {
+    "tape": "~2.3.2"
+  },
   "dependencies": {
     "underscore": "~1.4.4",
-    "parcel-detector": "^0.0.0",
-    "parcel-processor": "^0.0.0",
+    "parcel-detector": "~0.0.0",
+    "parcelify": "~0.0.0",
+    "inherits": "~2.0.1",
     "glob": "~3.2.8",
     "rimraf": "~2.2.6",
-    "async": "~0.2.10"
+    "async": "~0.2.10",
+    "mkdirp": "~0.3.5",
+    "concat-stream": "~1.4.4"
   }
 }
