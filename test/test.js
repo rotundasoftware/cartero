@@ -4,57 +4,61 @@ var path = require( 'path' );
 var test = require( 'tape' );
 var fs = require( 'fs' );
 var crypto = require( 'crypto' );
+var _ = require( 'underscore' );
 
-test( 'page1', function( t ) {
-	t.plan( 4 );
+// test( 'page1', function( t ) {
+// 	t.plan( 4 );
 
-	var viewDirPath = path.join( __dirname, 'example1/views' );
-	var dstDir = path.join( __dirname, 'example1/static/assets' );
-	var packageId, viewRelativePathHash;
+// 	var viewDirPath = path.join( __dirname, 'example1/views' );
+// 	var dstDir = path.join( __dirname, 'example1/static/assets' );
+// 	var packageId, viewRelativePathHash;
 
-	var c = cartero( viewDirPath, dstDir, {}, false );
+// 	var c = cartero( viewDirPath, dstDir, {} );
 
-	c.on( 'package', function( newPackage ) {
-		packageId = newPackage.id;
-		viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
-	} );
+// 	c.on( 'packageCreated', function( newPackage, isMain ) {
+// 		if( isMain ) {
+// 			packageId = newPackage.id;
+// 			viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
+// 		}
+// 	} );
 
-	c.on( 'done', function() {
-		t.deepEqual(
-			fs.readdirSync( dstDir ).sort(),
-			[ packageId, 'view_map.json' ]
-		);
+// 	c.on( 'done', function() {
+// 		t.deepEqual(
+// 			fs.readdirSync( dstDir ).sort(),
+// 			[ packageId, 'view_map.json' ]
+// 		);
 
-		t.deepEqual( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + packageId +'\"\n}' );
+// 		t.deepEqual( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + packageId +'\"\n}' );
 	
-		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, packageId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_7cf8a25be8aa1b450d5cae5c33ce7c11318b0c3f.css', 'page1_bundle_9754e268aa7f9a43534c9986fdb3888a68071605.js' ]
-		);
+// 		t.deepEqual(
+// 			fs.readdirSync( path.join( dstDir, packageId ) ).sort(),
+// 			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_d4d3df760297139ea6f4ec7b2296537fe86efe67.js' ]
+// 		);
 
-		t.deepEqual( fs.readFileSync( path.join( dstDir, packageId, 'page1_bundle_7cf8a25be8aa1b450d5cae5c33ce7c11318b0c3f.css' ), 'utf8' ),
-			'body {\n\tcolor: #00FF00;\n}' );
-	} );
-} );
+// 		t.deepEqual( fs.readFileSync( path.join( dstDir, packageId, 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css' ), 'utf8' ),
+// 			'body {\n\tcolor : blue;\n}body {\n\tcolor : red;\n}body {\n\tcolor: #00FF00;\n}' );
+// 	} );
+// } );
 
 test( 'page2', function( t ) {
-	t.plan( 4 );
+	t.plan( 3 );
 
 	var viewDirPath = path.join( __dirname, 'example2/views' );
 	var dstDir = path.join( __dirname, 'example2/static/assets' );
-	var packageId, viewRelativePathHash;
-	var browserifyShimConfig = require( './example2/browserifyShimConfig' );
+	var parcelId, viewRelativePathHash;
 
 	var options = {
 		packageTransform : function( pkg ) {
 			_.defaults( pkg, {
 				'style' : '*.css',
-				'browserify-shim' : browserifyShimConfig
+				'browserify' : {
+					'transform' : [ 'browserify-shim' ]
+				}
 			} );
 
 			switch( pkg.name ) {
 				case 'jqueryui-browser':
-					pkg.main = './ui/jquery-ui.js';
+					pkg.main = 'ui/jquery-ui.js';
 					pkg.style = [ './themes/base/jquery-ui.css' ];
 					break;
 			}
@@ -63,27 +67,26 @@ test( 'page2', function( t ) {
 		}
 	};
 
-	var c = cartero( viewDirPath, dstDir, options, false );
+	var c = cartero( viewDirPath, dstDir, options );
 
-	c.on( 'package', function( newPackage ) {
-		packageId = newPackage.id;
-		viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
+	c.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.isParcel ) {
+			parcelId = newPackage.id;
+			viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
+		}
 	} );
 
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( dstDir ).sort(),
-			[ packageId, 'view_map.json' ]
+			[ parcelId, 'view_map.json' ]
 		);
 
-		t.deepEqual( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + packageId + '\"\n}' );
+		t.deepEqual( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + parcelId + '\"\n}' );
 	
 		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, packageId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_4f6f65733a9cc9d0a834e03189afc59b2d769ff5.css', 'page1_bundle_f63fdc9b8dde040c6f06bd739d1f0b2b26fa7000.js' ]
+			fs.readdirSync( path.join( dstDir, parcelId ) ).sort(),
+			[ 'assets.json', 'page1_bundle_064a5a429df0fffa17bb17089edcc71d62381f93.css', 'page1_bundle_74ce1438ec3bf6617184fabd02cef6771fc355aa.js' ]
 		);
-
-		t.deepEqual( fs.readFileSync( path.join( dstDir, packageId, 'page1_bundle_4f6f65733a9cc9d0a834e03189afc59b2d769ff5.css' ), 'utf8' ),
-			'body {\n\tbackground : blue;\n}' );
 	} );
 } );

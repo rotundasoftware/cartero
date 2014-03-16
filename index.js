@@ -18,11 +18,8 @@ var parcelify = require( 'parcelify' );
 
 var kViewMapName = "view_map.json";
 var kAssetsJsonName = "assets.json";
+var kAssetTypes = [ 'style', 'image' ];
 
-// in dev mode, we always want to leave css separate
-// in prod mode, we always want to concatinate css
-// in dev mode, we MAY want to keep templates seperate
-// in prod mode, we MAY want to keep templates separate
 module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
@@ -33,8 +30,6 @@ function Cartero( viewDirPath, dstDir, options ) {
 	var _this = this;
 
 	options = _.defaults( {}, options, {
-		assetTypes : [ 'style', 'template' ],
-		assetTypesToConcatinate : [ 'style', 'template' ],
 		devMode : false,
 		postProcessors : [],
 
@@ -45,8 +40,6 @@ function Cartero( viewDirPath, dstDir, options ) {
 	this.dstDir = dstDir;
 
 	_.extend( this, _.pick( options,
-		'assetTypes',
-		'assetTypesToConcatinate',
 		'devMode',
 		'postProcessors',
 		'packageTransform'
@@ -54,15 +47,15 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 	this.viewMap = {};
 	this.packageManifest = {};
+	this.assetTypes = kAssetTypes;
 
 	var tempBundlesByMain = {};
+	var assetTypesToConcatinate = options.devMode ? [] : [ 'style' ];
 
 	// clear the output directory before proceeding (sync for now...)
 	rimraf.sync( dstDir );
 	fs.mkdir( dstDir, function( err ) {
 		if( err ) return _this.emit( 'error', err );
-
-		var assetTypes = options.assetTypes;
 
 		_this.findMainPaths( function( err, jsMains ) {
 			if( err ) return _this.emit( 'error', err );
@@ -70,59 +63,62 @@ function Cartero( viewDirPath, dstDir, options ) {
 			async.each( jsMains, function( thisMain, nextMain ) {
 				tempBundlesByMain[ thisMain ] = {
 					script : _this.getTempBundlePath( 'js' ),
-					style : _.contains( options.assetTypesToConcatinate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
-					template : _.contains( options.assetTypesToConcatinate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
+					style : _.contains( assetTypesToConcatinate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
+					//template : _.contains( options.assetTypesToConcatinate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
 				};
 
 				var parcelifyOptions = {
 					bundles : tempBundlesByMain[ thisMain ],
 					watch : options.devMode,
 					browserifyBundleOptions : {
-						pacakgeFilter : options.packageTransform,
+						packageFilter : options.packageTransform,
 						debug : options.devMode
 					},
 					existingPackages : _this.packageManifest
 				};
 
-				parcelify( thisMain, parcelifyOptions, function( err, thisParcel ) {
-					var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
-					_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
+				var p = parcelify( thisMain, parcelifyOptions );
+				var thisParcel;
 
-					thisParcel.on( 'package', function( newPackage ) {
-						var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatinate );
+				p.on( 'packageCreated', function( newPackage, isMain ) {
+					if( isMain ) thisParcel = newPackage;
 
-						newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), true, function() {
-							// note there is a potential race condition if we are counting on assets being written
-							// at some later point in time. we do not keep track at moment when all the assets
-							// are done being written (although this would not be hard to implement)
+					var assetTypesToWriteToDisk = _.difference( this.assetTypes, assetTypesToConcatinate );
 
-							_this.emit( 'package', newPackage );
-						} );
+					newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), true, function() {
+						// note there is a potential race condition if we are counting on assets being written
+						// at some later point in time. we do not keep track at moment when all the assets
+						// are done being written (although this would not be hard to implement)
+
+						_this.emit( 'packageCreated', newPackage, isMain );
 					} );
+				} );
 
-					thisParcel.on( 'done', function() {
-						_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], function( err, finalBundles ) {
+				p.on( 'done', function() {
+					_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], function( err, finalBundles ) {
+						if( err ) return _this.emit( 'error', err );
+
+						_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, finalBundles, function( err ) {
 							if( err ) return _this.emit( 'error', err );
 
-							_this.writeAssetsJsonForParcel( thisParcel, options.assetTypesToConcatinate, finalBundles, function( err ) {
-								if( err ) return _this.emit( 'error', err );
+							var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
+							_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
 
-								nextMain();
+							nextMain();
+						} );
+					} );
+				} );
+
+				if( options.watch )
+					p.on( 'assetUpdated', function( eventType, asset ) {
+						this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+							if( err ) return _this.emit( 'error', err );
+
+							if( _.contains( assetTypesToWriteToDisk, asset.type ) ) asset.writeToDisk( null, true, function() {
+								// ... done
 							} );
 						} );
 					} );
-
-					if( options.watch )
-						thisParcel.on( 'assetUpdated', function( eventType, asset ) {
-							this.writeAssetsJsonForParcel( thisParcel, function( err ) {
-								if( err ) return _this.emit( 'error', err );
-
-								if( _.contains( assetTypesToWriteToDisk, asset.type ) ) asset.writeToDisk( null, true, function() {
-									// ... done
-								} );
-							} );
-						} );
-				} );
 			}, function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
@@ -223,7 +219,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConca
 		'script' : [ path.relative( _this.dstDir, bundles.script ) ]
 	};
 
-	this.assetTypes.forEach( function( thisAssetType ) {
+	[ 'script', 'style' ].forEach( function( thisAssetType ) {
 		var concatinateThisAssetType = _.contains( assetTypesToConcatinate, thisAssetType );
 
 		var filesOfThisType;
@@ -252,4 +248,4 @@ Cartero.prototype.getPackageOutputDirectory = function( thePackage ) {
 
 Cartero.prototype.getTempBundlePath = function( fileExtension ) {
 	return path.join( tmpdir, 'cartoro_bundle_' + Math.random() + Math.random() ) + '.' + fileExtension;
-}
+};
