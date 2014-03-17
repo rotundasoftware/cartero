@@ -30,7 +30,8 @@ function Cartero( viewDirPath, dstDir, options ) {
 	var _this = this;
 
 	options = _.defaults( {}, options, {
-		devMode : false,
+		concatinateCss : true,
+		debug : false,
 		watch : false,
 		postProcessors : [],
 
@@ -44,7 +45,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 	this.assetTypes = kAssetTypes;
 
 	var tempBundlesByMain = {};
-	var assetTypesToConcatinate = options.devMode ? [] : [ 'style' ];
+	var assetTypesToConcatinate = options.concatinateCss ? [] : [ 'style' ];
 
 	// clear the output directory before proceeding (sync for now...)
 	rimraf.sync( dstDir );
@@ -68,7 +69,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 					watch : options.watch,
 					browserifyBundleOptions : {
 						packageFilter : options.packageFilter,
-						debug : options.devMode
+						debug : options.debug
 					},
 					existingPackages : _this.packageManifest
 				};

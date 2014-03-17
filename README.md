@@ -43,7 +43,7 @@ The `package.json` for each package enumerates the style and image assets in the
 }
 ```
 
-Additionally, packages located in the `views` directory may contain a `view` key that specifies a server side view template in that package. Such packages are called __parcels__. For instance, `page1` is a parcel because it is in the `views` directory and `page1/package.json` contains:
+Additionally, packages located in the `views` directory may contain a `view` key that specifies a server side view template in that package. Such packages are called __parcels__. For instance, `page1` is a parcel because it is in the `views` directory and `page1/package.json` contains a `view` key:
 
 ```
 {
@@ -52,7 +52,7 @@ Additionally, packages located in the `views` directory may contain a `view` key
 }
 ```
 
-At build time, Cartero runs through every parcel, computing the list of assets that is needed by each by inspecting the browserify dependency graph. The assets, transformed and concatinated / minified as appropriate, are dropped into your static directory, along with an inventory of what assets are needed by what parcels. At run time, your application uses the cartero hook to find the assets associated with a given view when that view is rendered. The result is that each view gets the assets it needs in the form it needs them in.
+At build time, Cartero runs through every parcel, computing the assets each parcel needs by piggy backing on the browserify dependency graph. The assets, transformed and concatinated / minified as appropriate, are dropped into your static directory, along with an inventory of what assets are needed by what parcels. At run time, when a given view is rendered, your application asks the cartero hook for the assets associated with that view and the exact html needed to load them, which can then simply be dropped into the view's `head` section. The result is that each view gets exactly the assets it needs in the form it needs them in.
 
 
 ## Usage
@@ -65,18 +65,19 @@ $ cartero views static/assets
 ## Command line options
 
 ```
--packageFilter, -pf		Path of JavaScript file that exports a function that transforms package.json
+--packageFilter, -pf	Path of JavaScript file that exports a function that transforms package.json
 						files before they are used. The function should be of the signature 
 						function( pkgJson, dirPath ) and return the parsed, transformed package.json.
 						This feature can be used to add default values to package.json files or
 						extend the package.json of third party modules without modifying them directly.
 
---dev, -d       		Dev mode - keep css files separate, don't apply post processors, and enable
-						source maps on browserify bundles.
+--keepSeperate, -s      Keep css files separate, instead of concatinating them
+
+--debug, -d   	    	Enable javascript source maps (passed through to browserify)
 
 --watch, -w      		Watch mode - watch for changes and update output as appropriate.
 
---postProcessors, -p	The name of a post process module to apply to assets in prod mode (e.g. uglify js, minify css, compress images).
+--postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglify js, compress images).
 
 --help, -h       		Show this message
 
