@@ -93,12 +93,12 @@ test( 'page2', function( t ) {
 
 
 test( 'page3', function( t ) {
-	t.plan( 4 );
+	t.plan( 5 );
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var dstDir = path.join( __dirname, 'example3/static/assets' );
 	var viewMap = {};
-	var parcelIds = [];
+	var packageIds = [];
 	var parcelIdsByView = {};
 
 	var c = cartero( viewDirPath, dstDir, {} );
@@ -107,15 +107,16 @@ test( 'page3', function( t ) {
 		if( newPackage.isParcel ) {
 			parcelId = newPackage.id;
 			viewMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' ) ] = parcelId;
-			parcelIds.push( parcelId );
 			parcelIdsByView[ path.basename( newPackage.view ) ] = parcelId;
 		}
+
+		packageIds.push( newPackage.id );
 	} );
 
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( dstDir ).sort(),
-			parcelIds.sort().concat( [ 'view_map.json' ] )
+			packageIds.sort().concat( [ 'view_map.json' ] )
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ) ), viewMap );
@@ -128,6 +129,11 @@ test( 'page3', function( t ) {
 		t.deepEqual(
 			fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page2.jade' ] ) ).sort(),
 			[ 'assets.json', 'page2_bundle_182694e4a327db0056cfead31f2396287b7d4544.css', 'page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js' ]
+		);
+
+		t.deepEqual(
+			fs.readdirSync( path.join( dstDir, '9d82ba90fa7a400360054671ea26bfc03a7338bf' ) ).sort(),
+			[ 'robot.png' ]
 		);
 	} );
 } );

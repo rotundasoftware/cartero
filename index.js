@@ -60,6 +60,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 					script : _this.getTempBundlePath( 'js' ),
 					style : _.contains( assetTypesToConcatinate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
 					//template : _.contains( options.assetTypesToConcatinate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
+					image : null
 				};
 
 				var parcelifyOptions = {
@@ -78,7 +79,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 				p.on( 'packageCreated', function( newPackage, isMain ) {
 					if( isMain ) thisParcel = newPackage;
 
-					var assetTypesToWriteToDisk = _.difference( this.assetTypes, assetTypesToConcatinate );
+					var assetTypesToWriteToDisk = _.difference( _this.assetTypes, assetTypesToConcatinate );
 
 					newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), true, function() {
 						// note there is a potential race condition if we are counting on assets being written

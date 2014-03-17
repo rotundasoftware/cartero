@@ -1,5 +1,6 @@
 {
 	"name" : "common-js",
 	"main" : "common.js",
-	"style" : "*.css"
+	"style" : "*.css",
+	"image" : "*.png"
 }
