@@ -31,20 +31,14 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 	options = _.defaults( {}, options, {
 		devMode : false,
+		watch : false,
 		postProcessors : [],
 
-		packageTransform : undefined
+		packageFilter : undefined
 	} );
 
 	this.viewDirPath = viewDirPath;
 	this.dstDir = dstDir;
-
-	_.extend( this, _.pick( options,
-		'devMode',
-		'postProcessors',
-		'packageTransform'
-	) );
-
 	this.viewMap = {};
 	this.packageManifest = {};
 	this.assetTypes = kAssetTypes;
@@ -60,6 +54,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 		_this.findMainPaths( function( err, jsMains ) {
 			if( err ) return _this.emit( 'error', err );
 
+
 			async.each( jsMains, function( thisMain, nextMain ) {
 				tempBundlesByMain[ thisMain ] = {
 					script : _this.getTempBundlePath( 'js' ),
@@ -69,9 +64,9 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 				var parcelifyOptions = {
 					bundles : tempBundlesByMain[ thisMain ],
-					watch : options.devMode,
+					watch : options.watch,
 					browserifyBundleOptions : {
-						packageFilter : options.packageTransform,
+						packageFilter : options.packageFilter,
 						debug : options.devMode
 					},
 					existingPackages : _this.packageManifest
@@ -219,6 +214,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConca
 		'script' : [ path.relative( _this.dstDir, bundles.script ) ]
 	};
 
+	// we assume script and style assets are the only ones we need to put in assets.json, ever.
 	[ 'script', 'style' ].forEach( function( thisAssetType ) {
 		var concatinateThisAssetType = _.contains( assetTypesToConcatinate, thisAssetType );
 

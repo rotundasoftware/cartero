@@ -1,77 +1,85 @@
 
 
-An asset pipeline built on [browserify](http://browserify.org/). 
+An asset pipeline based on commonjs and built on [browserify](http://browserify.org/). 
 
 ## Benefits
 
-* Use commonjs requires to get your javascript, css, and other assets where you need them to be, in the form you need them to be in.
-* Include css, image, and template assets in npm modules and then serve them directly to your rendered pages.
-* Sane directory structure - keep assets used by a particular view template in the same folder as the view.
+* Get your javascript, css, and other assets where you need them to be, in the form you need them to be in.
+* Include css and images in npm modules and then serve them directly to your rendered pages.
+* Keep assets used by a particular view template in the same folder as the view.
 * Easily serve only the assets that are required by each page in multi-page applications.
 
-Example:
+## How dat work?
+
+Cartero let's you organize your application so that the assets that pertain to a particular view are kept in the same folder as the view's template, and assets needed by multiple views can be kept in a `node_modules` directory and pulled in using `require( 'my-module' )`. For example, consider the following directory structure:
 
 ```
-views
-└── page1
-    ├── package.json
-    ├── page1.css
-    ├── page1.jade
-    └── page1.js
+├── node_modules
+│   └── my-module
+│       ├── index.js
+│       ├── icon.png
+│       ├── package.json
+│       └── style.scss
+└── views
+    ├── page1
+    │   ├── package.json
+    │   ├── page1.jade
+    │   ├── style.css
+    │   └── index.js
+    └── page2
+        ├── package.json
+        ├── style.css
+        ├── page2.jade
+        └── index.js
 ```
 
-In package.json, we have
+The `package.json` for each package enumerates the style and image assets in the package. For instance, `my-module/package.json`:
+
+```
+{
+	"style" : "*.scss",
+	"image" : "*.png",
+	"transforms" : [ "scss-css-stream" ]
+}
+```
+
+Additionally, packages located in the `views` directory may contain a `view` key that specifies a server side view template in that package. Such packages are called __parcels__. For instance, `page1` is a parcel because it is in the `views` directory and `page1/package.json` contains:
 
 ```
 {
 	"view" : "page1.jade",
-	"main" : "page1.js",
-	"style" : "page1.css"
+	"style" : "*.css"
 }
 ```
 
-## package.json
+At build time, Cartero runs through every parcel, computing the list of assets that is needed by each by inspecting the browserify dependency graph. The assets, transformed and concatinated / minified as appropriate, are dropped into your static directory, along with an inventory of what assets are needed by what parcels. At run time, your application uses the cartero hook to find the assets associated with a given view when that view is rendered. The result is that each view gets the assets it needs in the form it needs them in.
+
+
+## Usage
 
 ```
-{
-	"style" : "*.css",
-	"image" : "*.png",
-	"template" : "*.tmpl",
-
-	"cartero-transforms" : {
-		"style" : [ "sass-css-stream" ],
-		"image" : [ "png-compressor" ],
-		"template" : [ "nunjucks-transform" ]
-	}
-}
+$ npm install -g cartero
+$ cartero views static/assets
 ```
 
-## carteroConfig.json
+## Command line options
 
 ```
-{
-	// needed to override / amend package.json in 3rd party libraries that don't behave well.
-	"package-extends" : {
-		"jqueryui-browser" : {
-			"main" : "ui/jquery-ui.js",
-			"style" : "themes/base/jquery-ui.css"
-		}
-	},
+-packageFilter, -pf		Path of JavaScript file that exports a function that transforms package.json
+						files before they are used. The function should be of the signature 
+						function( pkgJson, dirPath ) and return the parsed, transformed package.json.
+						This feature can be used to add default values to package.json files or
+						extend the package.json of third party modules without modifying them directly.
 
-	"package-defaults" : { // this could alternatively be parcel-defaults, and then only apply to parcels
-		"style" : "*.scss",
+--dev, -d       		Dev mode - keep css files separate, don't apply post processors, and enable
+						source maps on browserify bundles.
 
-		"cartero-transforms" : {
-			"style" : [ { "sass-css-stream" : { includePaths : [ "/my/abs/include/path" ] } ], // transform options are specified using an object.
-			"script" : [ { "browserify-shim" : "/abs/path/to/browserifyShimConfig.js" } ] // script transforms are passed through to browserify. note this needs to be absolute path
-		}
-	},
+--watch, -w      		Watch mode - watch for changes and update output as appropriate.
 
-	"post-process" : {
-		"script" : [ "uglify-stream" ],
-		"style" : [ "minify-css-stream" ]
-	}
-}
+--postProcessors, -p	The name of a post process module to apply to assets in prod mode (e.g. uglify js, minify css, compress images).
+
+--help, -h       		Show this message
+
 ```
 
 ## Contributers

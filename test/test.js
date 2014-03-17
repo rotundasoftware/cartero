@@ -48,7 +48,7 @@ test( 'page2', function( t ) {
 	var parcelId, viewRelativePathHash;
 
 	var options = {
-		packageTransform : function( pkg ) {
+		packageFilter : function( pkg ) {
 			_.defaults( pkg, {
 				'style' : '*.css',
 				'browserify' : {
@@ -93,12 +93,13 @@ test( 'page2', function( t ) {
 
 
 test( 'page3', function( t ) {
-	t.plan( 3 );
+	t.plan( 4 );
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var dstDir = path.join( __dirname, 'example3/static/assets' );
 	var viewMap = {};
-	var parcelIds = []
+	var parcelIds = [];
+	var parcelIdsByView = {};
 
 	var c = cartero( viewDirPath, dstDir, {} );
 
@@ -107,6 +108,7 @@ test( 'page3', function( t ) {
 			parcelId = newPackage.id;
 			viewMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' ) ] = parcelId;
 			parcelIds.push( parcelId );
+			parcelIdsByView[ path.basename( newPackage.view ) ] = parcelId;
 		}
 	} );
 
@@ -119,8 +121,13 @@ test( 'page3', function( t ) {
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ) ), viewMap );
 	
 		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, parcelId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_a269fc7e5a40354e1fed10cf049f9821eab85bbd.js', 'page1_bundle_da3d062d2f431a76824e044a5f153520dad4c697.css' ]
+			fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page1.jade' ] ) ).sort(),
+			[ 'assets.json', 'page1_bundle_14d030e0e64ea9a1fced71e9da118cb29caa6676.js', 'page1_bundle_da3d062d2f431a76824e044a5f153520dad4c697.css' ]
+		);
+
+		t.deepEqual(
+			fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page2.jade' ] ) ).sort(),
+			[ 'assets.json', 'page2_bundle_182694e4a327db0056cfead31f2396287b7d4544.css', 'page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js' ]
 		);
 	} );
 } );
