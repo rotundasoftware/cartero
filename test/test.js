@@ -76,6 +76,12 @@ test( 'page2', function( t ) {
 		}
 	} );
 
+	var bundles = {};
+
+	c.on( 'bundle', function( newBundle, bundleType ) {
+		bundles[ bundleType ] = newBundle;
+	} );
+
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( dstDir ).sort(),
@@ -83,10 +89,11 @@ test( 'page2', function( t ) {
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + parcelId + '\"\n}' );
-	
+
+		var bundleDir = path.join( dstDir, parcelId );
 		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, parcelId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_11bb516a23b579161b330874cff9bb89a3f16753.css', 'page1_bundle_a4e9e288ce50e82528efab4e4b9e412b08fa9074.js' ]
+			fs.readdirSync( bundleDir ).sort(),
+			[ 'assets.json', path.relative( bundleDir, bundles.style ), path.relative( bundleDir, bundles.script ) ]
 		);
 	} );
 } );
@@ -101,6 +108,8 @@ test( 'page3', function( t ) {
 	var packageIds = [];
 	var parcelIdsByView = {};
 
+	var commonJsPackageId = "";
+
 	var c = cartero( viewDirPath, dstDir, {} );
 
 	c.on( 'packageCreated', function( newPackage ) {
@@ -109,6 +118,9 @@ test( 'page3', function( t ) {
 			viewMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' ) ] = parcelId;
 			parcelIdsByView[ path.basename( newPackage.view ) ] = parcelId;
 		}
+		else
+			if( newPackage.package.name === "common-js" )
+				commonJsPackageId = newPackage.id;
 
 		packageIds.push( newPackage.id );
 	} );
@@ -132,7 +144,7 @@ test( 'page3', function( t ) {
 		);
 
 		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, '9d82ba90fa7a400360054671ea26bfc03a7338bf' ) ).sort(),
+			fs.readdirSync( path.join( dstDir, commonJsPackageId ) ).sort(),
 			[ 'robot.png' ]
 		);
 	} );
