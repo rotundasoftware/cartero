@@ -110,6 +110,8 @@ function Cartero( viewDirPath, dstDir, options ) {
 				_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], postProcessors, function( err, finalBundles ) {
 					if( err ) return _this.emit( 'error', err );
 
+					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'bundle', thisBundle, thisBundleType ); } );
+					
 					_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, finalBundles, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
