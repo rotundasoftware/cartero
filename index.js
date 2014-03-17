@@ -12,6 +12,8 @@ var inherits = require( 'inherits' );
 var crypto = require( 'crypto' );
 var mkdirp = require( 'mkdirp' );
 var concat = require( 'concat-stream' );
+var through2 = require('through2');
+var combine = require( "stream-combiner" );
 
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
@@ -45,88 +47,100 @@ function Cartero( viewDirPath, dstDir, options ) {
 	this.assetTypes = kAssetTypes;
 
 	var tempBundlesByMain = {};
-	var assetTypesToConcatinate = options.concatinateCss ? [] : [ 'style' ];
+	var assetTypesToConcatinate = options.concatinateCss ? [ 'style' ] : [];
+	var postProcessors;
 
-	// clear the output directory before proceeding (sync for now...)
-	rimraf.sync( dstDir );
-	fs.mkdir( dstDir, function( err ) {
-		if( err ) return _this.emit( 'error', err );
+	async.series( [ function( nextSeries ) {
+		// delete the output directory
+		rimraf( dstDir, nextSeries );
+	}, function( nextSeries ) {
+		// now remake it
+		fs.mkdir( dstDir, nextSeries );
+	}, function( nextSeries ) {
+		_this.findMainPaths( function( err, res ) {
+			if( err ) return nextSeries( err );
 
-		_this.findMainPaths( function( err, jsMains ) {
-			if( err ) return _this.emit( 'error', err );
+			jsMains = res;
+			nextSeries();
+		} );
+	}, function( nextSeries ) {
+		_this.resolvePostProcessors( options.postProcessors, function( err, res ) {
+			if( err ) return nextSeries( err );
 
+			postProcessors = res;
+			nextSeries();
+		} );
+	}, function( nextSeries ) {
+		async.each( jsMains, function( thisMain, nextMain ) {
+			tempBundlesByMain[ thisMain ] = {
+				script : _this.getTempBundlePath( 'js' ),
+				style : _.contains( assetTypesToConcatinate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
+				//template : _.contains( options.assetTypesToConcatinate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
+				image : null
+			};
 
-			async.each( jsMains, function( thisMain, nextMain ) {
-				tempBundlesByMain[ thisMain ] = {
-					script : _this.getTempBundlePath( 'js' ),
-					style : _.contains( assetTypesToConcatinate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
-					//template : _.contains( options.assetTypesToConcatinate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
-					image : null
-				};
+			var parcelifyOptions = {
+				bundles : tempBundlesByMain[ thisMain ],
+				watch : options.watch,
+				browserifyBundleOptions : {
+					packageFilter : options.packageFilter,
+					debug : options.debug
+				},
+				existingPackages : _this.packageManifest
+			};
 
-				var parcelifyOptions = {
-					bundles : tempBundlesByMain[ thisMain ],
-					watch : options.watch,
-					browserifyBundleOptions : {
-						packageFilter : options.packageFilter,
-						debug : options.debug
-					},
-					existingPackages : _this.packageManifest
-				};
+			var p = parcelify( thisMain, parcelifyOptions );
+			var thisParcel;
 
-				var p = parcelify( thisMain, parcelifyOptions );
-				var thisParcel;
+			p.on( 'packageCreated', function( newPackage, isMain ) {
+				if( isMain ) thisParcel = newPackage;
 
-				p.on( 'packageCreated', function( newPackage, isMain ) {
-					if( isMain ) thisParcel = newPackage;
+				var assetTypesToWriteToDisk = _.difference( _this.assetTypes, assetTypesToConcatinate );
 
-					var assetTypesToWriteToDisk = _.difference( _this.assetTypes, assetTypesToConcatinate );
-
-					newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), true, function() {
-						// note there is a potential race condition if we are counting on assets being written
-						// at some later point in time. we do not keep track at moment when all the assets
-						// are done being written (although this would not be hard to implement)
+				newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
+					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
+						if( err ) return _this.emit( 'error', err );
 
 						_this.emit( 'packageCreated', newPackage, isMain );
 					} );
 				} );
+			} );
 
-				p.on( 'done', function() {
-					_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], function( err, finalBundles ) {
-						if( err ) return _this.emit( 'error', err );
-
-						_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, finalBundles, function( err ) {
-							if( err ) return _this.emit( 'error', err );
-
-							var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
-							_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
-
-							nextMain();
-						} );
-					} );
-				} );
-
-				if( options.watch )
-					p.on( 'assetUpdated', function( eventType, asset ) {
-						this.writeAssetsJsonForParcel( thisParcel, function( err ) {
-							if( err ) return _this.emit( 'error', err );
-
-							if( _.contains( assetTypesToWriteToDisk, asset.type ) ) asset.writeToDisk( null, true, function() {
-								// ... done
-							} );
-						} );
-					} );
-			}, function( err ) {
-				if( err ) return _this.emit( 'error', err );
-
-				var viewMapPath = path.join( dstDir, kViewMapName );
-
-				fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
+			p.on( 'done', function() {
+				_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], postProcessors, function( err, finalBundles ) {
 					if( err ) return _this.emit( 'error', err );
 
-					_this.emit( 'done' );
+					_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, finalBundles, function( err ) {
+						if( err ) return _this.emit( 'error', err );
+
+						var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
+						_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
+
+						nextMain();
+					} );
 				} );
 			} );
+
+			if( options.watch )
+				p.on( 'assetUpdated', function( eventType, asset ) {
+					this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+						if( err ) return _this.emit( 'error', err );
+
+						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) asset.writeToDisk( null, true, function() {
+							// ... done
+						} );
+					} );
+				} );
+		}, nextSeries );
+	} ], function( err ) {
+		if( err ) return _this.emit( 'error', err );
+
+		var viewMapPath = path.join( dstDir, kViewMapName );
+
+		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
+			if( err ) return _this.emit( 'error', err );
+
+			_this.emit( 'done' );
 		} );
 	} );
 
@@ -171,7 +185,7 @@ Cartero.prototype.findMainPaths = function( callback ) {
 	});
 };
 
-Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, callback ) {
+Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, postProcessors, callback ) {
 	var dstDir = this.getPackageOutputDirectory( parcel );
 	var parcelBaseName = path.basename( parcel.path );
 	var finalBundles = {};
@@ -194,11 +208,21 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 					
 					var dstPath = path.join( dstDir, parcelBaseName + '_bundle_' + bundleShasum + path.extname( thisBundleTempPath ) );
 					bundleStream = fs.createReadStream( thisBundleTempPath );
-					bundleStream.pipe( fs.createWriteStream( dstPath ) );
+
+					if( postProcessors.length !== 0 ) {
+						// apply post processors
+						bundleStream = bundleStream.pipe( combine.apply( null, postProcessors.map( function( thisPostProcessor ) {
+							return thisPostProcessor( dstPath );
+						} ) ) );
+					}
+
+					bundleStream.pipe( fs.createWriteStream( dstPath ).on( 'close', function() {
+						nextAssetType();
+					} ) );
 
 					finalBundles[ thisAssetType ] = dstPath;
 
-					fs.unlink( thisBundleTempPath, nextAssetType );
+					fs.unlink( thisBundleTempPath, function() {} );
 				} ) );
 			} );
 		}, function( err ) {
@@ -246,4 +270,33 @@ Cartero.prototype.getPackageOutputDirectory = function( thePackage ) {
 
 Cartero.prototype.getTempBundlePath = function( fileExtension ) {
 	return path.join( tmpdir, 'cartoro_bundle_' + Math.random() + Math.random() ) + '.' + fileExtension;
+};
+
+Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback ) {
+	async.map( postProcessorNames, function( thisPostProcessorName, nextPostProcessorName ) {
+		resolve( thisPostProcessorName, { basedir : process.cwd() }, function( err, modulePath ) {
+			if( err ) return nextPostProcessorName( err );
+
+			nextPostProcessorName( null, require( modulePath ) );
+		} );
+	}, callback );
+};
+
+Cartero.prototype.applyPostProcessorsToFiles = function( postProcessors, filePaths, callback ) {
+	if( postProcessors.length === 0 ) return callback();
+
+	async.each( filePaths, function( thisFilePath, nextFilePath ) {
+		var stream = fs.createReadStream( thisFilePath );
+		var throughStream;
+
+		stream = stream.pipe( combine.apply( null, postProcessors.map( function( thisPostProcessor ) {
+			return thisPostProcessor( thisFilePath );
+		} ) ) );
+
+		stream.on( 'end', function() {
+			throughStream.pipe( fs.createWriteStream( thisFilePath ).on( 'close', nextFilePath ) );
+		} );
+
+		throughStream = stream.pipe( through2() );
+	}, callback );
 };
