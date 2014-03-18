@@ -78,8 +78,9 @@ test( 'page2', function( t ) {
 
 	var bundles = {};
 
-	c.on( 'bundle', function( newBundle, bundleType ) {
-		bundles[ bundleType ] = newBundle;
+	c.on( 'fileWritten', function( path, type, isBundle ) {
+		if( isBundle )
+			bundles[ type ] = path;
 	} );
 
 	c.on( 'done', function() {

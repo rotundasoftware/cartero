@@ -32,8 +32,8 @@ function Cartero( viewDirPath, dstDir, options ) {
 	var _this = this;
 
 	options = _.defaults( {}, options, {
-		concatinateCss : true,
-		debug : false,
+		keepSeperate : false,
+		sourceMaps : false,
 		watch : false,
 		postProcessors : [],
 
@@ -45,9 +45,10 @@ function Cartero( viewDirPath, dstDir, options ) {
 	this.viewMap = {};
 	this.packageManifest = {};
 	this.assetTypes = kAssetTypes;
+	this.finalBundlesByParcelId = {};
 
 	var tempBundlesByMain = {};
-	var assetTypesToConcatinate = options.concatinateCss ? [ 'style' ] : [];
+	var assetTypesToConcatinate = options.keepSeperate ? [] : [ 'style' ];
 	var postProcessors;
 
 	async.series( [ function( nextSeries ) {
@@ -84,7 +85,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 				watch : options.watch,
 				browserifyBundleOptions : {
 					packageFilter : options.packageFilter,
-					debug : options.debug
+					debug : options.sourceMaps
 				},
 				existingPackages : _this.packageManifest
 			};
@@ -101,26 +102,44 @@ function Cartero( viewDirPath, dstDir, options ) {
 					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
+						pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
+
 						_this.emit( 'packageCreated', newPackage, isMain );
 					} );
 				} );
 			} );
 
 			p.on( 'done', function() {
+				var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
+				_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
+
 				_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], postProcessors, function( err, finalBundles ) {
 					if( err ) return _this.emit( 'error', err );
 
-					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'bundle', thisBundle, thisBundleType ); } );
+					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
 					
-					_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, finalBundles, function( err ) {
+					_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, function( err ) {
 						if( err ) return _this.emit( 'error', err );
-
-						var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
-						_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
 
 						nextMain();
 					} );
 				} );
+			} );
+
+			p.on( 'bundleWritten', function( path, assetType, watchModeUpdate ) {
+				if( watchModeUpdate ) {
+					_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ path ] ), postProcessors, function( err, finalBundles ) {
+						if( err ) return _this.emit( 'error', err );
+
+						_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
+					
+						_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatinate, function( err ) {
+							if( err ) return _this.emit( 'error', err );
+
+							nextMain();
+						} );
+					} );
+				}
 			} );
 
 			if( options.watch )
@@ -128,9 +147,16 @@ function Cartero( viewDirPath, dstDir, options ) {
 					this.writeAssetsJsonForParcel( thisParcel, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
-						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) asset.writeToDisk( null, true, function() {
-							// ... done
-						} );
+						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
+							if( eventType === 'added' || eventType === 'changed' )
+								asset.writeToDisk( null, true, function() {
+									_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
+									
+									// ... done
+								} );
+							else
+								fs.unlink( asset.dstPath, function( err ) { if( err ) _this.emit( 'error', err ); } );
+						}
 					} );
 				} );
 		}, nextSeries );
@@ -188,6 +214,7 @@ Cartero.prototype.findMainPaths = function( callback ) {
 };
 
 Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, postProcessors, callback ) {
+	var _this = this;
 	var dstDir = this.getPackageOutputDirectory( parcel );
 	var parcelBaseName = path.basename( parcel.path );
 	var finalBundles = {};
@@ -224,6 +251,9 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 
 					finalBundles[ thisAssetType ] = dstPath;
 
+					if( ! _this.finalBundlesByParcelId[ parcel.id ] ) _this.finalBundlesByParcelId[ parcel.id ] = {};
+					_this.finalBundlesByParcelId[ parcel.id ][ thisAssetType ] = dstPath;
+
 					fs.unlink( thisBundleTempPath, function() {} );
 				} ) );
 			} );
@@ -235,8 +265,9 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 	} );
 };
 
-Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConcatinate, bundles, callback ) {
+Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConcatinate, callback ) {
 	var _this = this;
+	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
 
 	var content = {
 		'script' : [ path.relative( _this.dstDir, bundles.script ) ]
