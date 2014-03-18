@@ -4,7 +4,7 @@ An asset pipeline based on commonjs and built on [browserify](http://browserify.
 
 ## Benefits
 
-* Get your javascript, css, and other assets where you need them to be, in the form you need them to be in.
+* Get your JavaScript, css, and other assets where you need them in the form you need them in.
 * Include css and images in npm modules and then serve them directly to your rendered pages.
 * Keep assets used by a particular view template in the same folder as the view.
 * Easily serve only the assets that are required by each page in multi-page applications.

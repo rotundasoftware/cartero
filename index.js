@@ -243,7 +243,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConca
 	};
 
 	// we assume script and style assets are the only ones we need to put in assets.json, ever.
-	[ 'script', 'style' ].forEach( function( thisAssetType ) {
+	[ 'style' ].forEach( function( thisAssetType ) {
 		var concatinateThisAssetType = _.contains( assetTypesToConcatinate, thisAssetType );
 
 		var filesOfThisType;
