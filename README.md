@@ -1,5 +1,4 @@
 
-
 A asset pipeline built on npm packages and [browserify](http://browserify.org/). 
 
 ## Benefits
@@ -83,7 +82,7 @@ You will also need to use a Cartero hook in your web application to return the a
 
 --postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglify js, compress images).
 
---packageFilter, -pf    Path of JavaScript file that exports a function that transforms package.json
+--packageTransform   	Path of JavaScript file that exports a function that transforms package.json
                         files before they are used. The function should be of the signature 
                         function( pkgJson, dirPath ) and return the parsed, transformed package.json.
                         This feature can be used to add default values to package.json files or
@@ -102,12 +101,12 @@ You will also need to use a Cartero hook in your web application to return the a
 
 ```javascript
 {
-    keepSeperate : false,       // keep css files separate, instead of concatenating them
-    sourceMaps : false,         // js source maps (passed through to browserify)
-    watch : false,              // re-process as appropriate when things change
-    postProcessors : [],        // an array of postProcesor transform functions or module names
+    keepSeperate : false           // keep css files separate, instead of concatenating them
+    sourceMaps : false             // js source maps (passed through to browserify)
+    watch : false                  // re-process as appropriate when things change
+    postProcessors : [],           // an array of postProcesor transform functions or module names
 
-    packageFilter : undefined   // a function as described in the -pf command line arg
+    packageTransform : undefined   // a function as described in the -pf command line arg
 }
 ```
 
