@@ -69,8 +69,8 @@ test( 'page2', function( t ) {
 
 	var c = cartero( viewDirPath, dstDir, options );
 
-	c.on( 'packageCreated', function( newPackage ) {
-		if( newPackage.isParcel ) {
+	c.on( 'packageCreated', function( newPackage, isMain ) {
+		if( isMain ) {
 			parcelId = newPackage.id;
 			viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
 		}
@@ -101,7 +101,7 @@ test( 'page2', function( t ) {
 
 
 test( 'page3', function( t ) {
-	t.plan( 5 );
+	t.plan( 6 );
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var dstDir = path.join( __dirname, 'example3/static/assets' );
@@ -113,8 +113,8 @@ test( 'page3', function( t ) {
 
 	var c = cartero( viewDirPath, dstDir, {} );
 
-	c.on( 'packageCreated', function( newPackage ) {
-		if( newPackage.isParcel ) {
+	c.on( 'packageCreated', function( newPackage, isMain ) {
+		if( isMain ) {
 			parcelId = newPackage.id;
 			viewMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' ) ] = parcelId;
 			parcelIdsByView[ path.basename( newPackage.view ) ] = parcelId;
@@ -134,10 +134,14 @@ test( 'page3', function( t ) {
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( dstDir, 'view_map.json' ), 'utf8' ) ), viewMap );
 	
-		t.deepEqual(
-			fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page1.jade' ] ) ).sort(),
-			[ 'assets.json', 'page1_bundle_14d030e0e64ea9a1fced71e9da118cb29caa6676.js', 'page1_bundle_da3d062d2f431a76824e044a5f153520dad4c697.css' ]
-		);
+		var page1PackageFiles = fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page1.jade' ] ) ).sort();
+		t.ok( _.contains( page1PackageFiles, 'page1_bundle_da3d062d2f431a76824e044a5f153520dad4c697.css' ) );
+
+		var page1JsBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.js'; } );
+		page1JsBundle = path.join( dstDir, parcelIdsByView[ 'page1.jade' ], page1JsBundle );
+
+		var page1JsContents = fs.readFileSync( page1JsBundle, 'utf8' );
+		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1 );
 
 		t.deepEqual(
 			fs.readdirSync( path.join( dstDir, parcelIdsByView[ 'page2.jade' ] ) ).sort(),

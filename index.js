@@ -12,8 +12,11 @@ var inherits = require( 'inherits' );
 var crypto = require( 'crypto' );
 var mkdirp = require( 'mkdirp' );
 var concat = require( 'concat-stream' );
+var through = require('through');
 var through2 = require('through2');
 var combine = require( "stream-combiner" );
+var pathMapper = require( "path-mapper" );
+var resolve = require( "resolve" );
 
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
@@ -36,6 +39,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 		sourceMaps : false,
 		watch : false,
 		postProcessors : [],
+		assetDirectoryUrl : '/',
 
 		packageFilter : undefined
 	} );
@@ -46,10 +50,15 @@ function Cartero( viewDirPath, dstDir, options ) {
 	this.packageManifest = {};
 	this.assetTypes = kAssetTypes;
 	this.finalBundlesByParcelId = {};
+	this.packagePathsToIds = {};
+	this.assetDirectoryUrl = options.assetDirectoryUrl;
 
 	var tempBundlesByMain = {};
 	var assetTypesToConcatinate = options.keepSeperate ? [] : [ 'style' ];
 	var postProcessors;
+
+	this.assetUrlTransform_resolveToAbsPath = _.bind( this.assetUrlTransform_resolveToAbsPath, this );
+	this.assetUrlTransform = _.bind( this.assetUrlTransform, this );
 
 	async.series( [ function( nextSeries ) {
 		// delete the output directory
@@ -93,8 +102,18 @@ function Cartero( viewDirPath, dstDir, options ) {
 			var p = parcelify( thisMain, parcelifyOptions );
 			var thisParcel;
 
+			p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
+				browserifyInstance.transform( _this.assetUrlTransform_resolveToAbsPath );
+			} );
+
 			p.on( 'packageCreated', function( newPackage, isMain ) {
 				if( isMain ) thisParcel = newPackage;
+
+				_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
+
+				newPackage.getAssets().forEach( function( thisAsset ) {
+					thisAsset.addTransform( _this.assetUrlTransform, true );
+				} );
 
 				var assetTypesToWriteToDisk = _.difference( _this.assetTypes, assetTypesToConcatinate );
 
@@ -151,7 +170,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 							if( eventType === 'added' || eventType === 'changed' )
 								asset.writeToDisk( null, true, function() {
 									_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
-									
+
 									// ... done
 								} );
 							else
@@ -238,9 +257,13 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 					var dstPath = path.join( dstDir, parcelBaseName + '_bundle_' + bundleShasum + path.extname( thisBundleTempPath ) );
 					bundleStream = fs.createReadStream( thisBundleTempPath );
 
-					if( postProcessors.length !== 0 ) {
+					// this is part of a hack to apply the ##url transform to javascript files. see assetUrlTransform_resolveToAbsPath
+					var postProcessorsToApply = _.clone( postProcessors );
+					if( thisAssetType === 'script' ) postProcessorsToApply.push( _this.assetUrlTransform );
+
+					if( postProcessorsToApply.length !== 0 ) {
 						// apply post processors
-						bundleStream = bundleStream.pipe( combine.apply( null, postProcessors.map( function( thisPostProcessor ) {
+						bundleStream = bundleStream.pipe( combine.apply( null, postProcessorsToApply.map( function( thisPostProcessor ) {
 							return thisPostProcessor( dstPath );
 						} ) ) );
 					}
@@ -332,4 +355,83 @@ Cartero.prototype.applyPostProcessorsToFiles = function( postProcessors, filePat
 
 		throughStream = stream.pipe( through2() );
 	}, callback );
+};
+
+
+Cartero.prototype.assetUrlTransform_resolveToAbsPath = function( file ) {
+	var _this = this;
+
+	// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
+	// files is using the browserify global transform. however, at the time those transforms are run we
+	// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
+	// resolve relative paths at this time, because once the js files are bundled the tranform will be
+	// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
+	// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
+	// src file to an absolute path (which we do using a browserify global transform), and the second is
+	// to resolve that absolute path to a url (which we do once we know all our package ids).
+
+	var data = '';
+
+	return through( write, end );
+
+	function write( buf ) {
+		var res = buf.toString( 'utf8' );
+
+		res = res.replace( /##url\(\ *(['"])([^']*)\1\ *\)/, function( wholeMatch, quote, assetSrcPath ) {
+			try {
+				assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
+			} catch ( err ) {
+				return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file ' + file ) );
+			}
+
+			return '##url(' + quote + assetSrcAbsPath + quote + ')';
+		} );
+
+		this.queue( new Buffer( res, 'utf8' ) );
+	}
+
+	function end() {
+		this.queue( null );
+	}
+};
+
+Cartero.prototype.assetUrlTransform = function( file ) {
+	var _this = this;
+
+	var data = '';
+
+	return through( write, end );
+
+	function write( buf ) {
+		var res = buf.toString( 'utf8' );
+
+		res = res.replace( /##url\(\ *(['"])([^']*)\1\ *\)/, function( wholeMatch, quote, assetSrcPath ) {
+			try {
+				assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
+			} catch ( err ) {
+				return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '"' ) );
+			}
+
+			var url = pathMapper( assetSrcAbsPath, function( srcDir ) {
+				return _this.packagePathsToIds[ srcDir ] ? '/' + _this.packagePathsToIds[ srcDir ] : null; // return val of dstDir needs to be absolute path
+			} );
+
+			// all assets urls should be different than their paths.. otherwise we have a problem
+			if( url === assetSrcAbsPath )
+				return _this.emit( 'error', new Error( 'The file "' + assetSrcAbsPath + '" referenced from ##url( "' + assetSrcPath + '" ) in file "' + file + '" is not an asset.' ) );
+
+			if( _this.assetDirectoryUrl ) {
+				var baseUrl = _this.assetDirectoryUrl[0] === path.sep ? _this.assetDirectoryUrl.slice(1) : _this.assetDirectoryUrl;
+				url = baseUrl + url;
+			}
+
+			return url;
+		} );
+
+		this.queue( new Buffer( res, 'utf8' ) );
+	}
+
+	function end() {
+		this.queue( null );
+	}
 };
