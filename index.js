@@ -41,7 +41,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 		postProcessors : [],
 		assetDirectoryUrl : '/',
 
-		packageFilter : undefined
+		packageTransform : undefined
 	} );
 
 	this.viewDirPath = viewDirPath;
@@ -93,7 +93,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 				bundles : tempBundlesByMain[ thisMain ],
 				watch : options.watch,
 				browserifyBundleOptions : {
-					packageFilter : options.packageFilter,
+					packageFilter : options.packageTransform,
 					debug : options.sourceMaps
 				},
 				existingPackages : _this.packageManifest

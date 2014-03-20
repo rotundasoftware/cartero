@@ -48,7 +48,7 @@ test( 'page2', function( t ) {
 	var parcelId, viewRelativePathHash;
 
 	var options = {
-		packageFilter : function( pkg ) {
+		packageTransform : function( pkg ) {
 			_.defaults( pkg, {
 				'style' : '*.css',
 				'browserify' : {
