@@ -7,7 +7,7 @@ A asset pipeline built on npm packages and [browserify](http://browserify.org/).
 * Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
 * Efficiently transform scss / less to css, coffee to JavaScript, etc. using streams.
 * Keep assets used by a particular view template in the same folder as their view.
-* Apply post-processor transform streams to uglify / minify / compress assets.
+* Use post-processor transform streams to uglify / minify / compress assets.
 * When developing, keep assets separate and watch for changes, reprocessing as appropriate. 
 
 Many thanks to [James Halliday](https://twitter.com/substack) for his help and guidance in bringing this project into reality.
@@ -95,9 +95,9 @@ You will also need to use a Cartero hook in your web application to return the a
 
 ## API
 
-### c = cartero( viewDirPath, dstDir, [options] )
+### c = cartero( viewDirPath, outputDir, [options] )
 
-`viewDirPath` is the path of the your views directory. `dstDir` is the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`viewDirPath` is the path of the your views directory. `outputDir` is the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 ```javascript
 {
@@ -129,7 +129,7 @@ Called when a new parcelify package is created. (Passed through from [parcelify]
 
 ## The output directory
 
-Cartero processes all assets and places them in the output directory, which should be at a publicly accessible url. You don't need to understand the specifics of how assets are laid out within the output directory, since the Cartero hook will take care of giving you the assets for a particular view, but here is the lay of the land.
+Cartero processes all assets and places them in the output directory. You don't need to understand the specifics of how assets are laid out within the output directory, since the Cartero hook will take care of giving you the assets for a particular view, but here is the lay of the land.
 
 ```
 ├── static
@@ -147,7 +147,12 @@ Cartero processes all assets and places them in the output directory, which shou
 │       └── view_map.json                                                   /* view map */
 ```
 
-Each subdirectory in the output directory corresponds to a particular package or parcel, and is named using that package or parcel's unique id. Each package or parcel directory contains all the assets specific to that package and has the same directory structure of the original package. Additionally, parcel directories contain the js and css bundles for the parcel, as well as an `assets.json` file, which enumerates all the assets that need to be loaded by the parcel's view. Finally, the `view_map.json` file contains a hash that maps view paths to parcel ids. At runtime, the Cartero hook, when given the path of a view, looks up the id of the view's parcel in `view_map.json`, and then parses the `assets.json` in the parcel's directory in order to return the assets needed by that view.
+* Each subdirectory in the output directory corresponds to a particular package or parcel, and is named using that package or parcel's unique id.
+* Each package or parcel directory contains all the assets specific to that package and has the same directory structure of the original package.
+* Parcel directories also contain the js and css bundles for the parcel, as well as an `assets.json` file, which enumerates the js/css assets that need to be loaded by the parcel's view.
+* The `view_map.json` file contains a hash that maps view paths to parcel ids.
+
+At runtime, the Cartero hook, when given the path of a view, looks up the id of the view's parcel in `view_map.json`, and then parses the `assets.json` in the parcel's directory in order to return the assets needed by that view.
 
 ## Resolving asset urls
 
