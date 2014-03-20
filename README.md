@@ -75,7 +75,7 @@ You will also need to use a Cartero hook in your web application to return the a
 ## Command line options
 
 ```
---keepSeperate, -s      Keep css files separate, instead of concatinating them (for dev mode)
+--keepSeperate, -s      Keep css files separate, instead of concatenating them (for dev mode)
 
 --maps, -m   	    	Enable JavaScript source maps in js bundles (for dev mode)
 
@@ -102,7 +102,7 @@ You will also need to use a Cartero hook in your web application to return the a
 
 ```javascript
 {
-    keepSeperate : false,       // keep css files separate, instead of concatinating them
+    keepSeperate : false,       // keep css files separate, instead of concatenating them
     sourceMaps : false,         // js source maps (passed through to browserify)
     watch : false,              // re-process as appropriate when things change
     postProcessors : [],        // an array of postProcesor transform functions or module names
