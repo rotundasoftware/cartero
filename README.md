@@ -1,10 +1,10 @@
 
 
-A asset pipeline for npm packages built on [browserify](http://browserify.org/). 
+A asset pipeline built on npm packages and [browserify](http://browserify.org/). 
 
 ## Benefits
 
-* Organize your entire app into packages (i.e. components) that have HTML, JavaScript, css, and images.
+* Organize your app into packages (i.e. components) containing HTML, JavaScript, css, and images.
 * Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
 * Efficiently transform scss / less to css, coffee to JavaScript, etc. using streams.
 * Keep assets used by a particular view template in the same folder as their view.
@@ -29,7 +29,7 @@ The days of organizing directories by the type of files they contain are over. T
 }
 ```
 
-Your application's `views` folder may also contain packages. For example, consider the following directory structure:
+Your application's `views` folder may also contain packages. Consider the following directory structure:
 
 ```
 ├── node_modules
@@ -39,12 +39,12 @@ Your application's `views` folder may also contain packages. For example, consid
 │       ├── package.json
 │       └── style.scss
 └── views
-    ├── page1
+    ├── page1                 /* parcel */
     │   ├── package.json
     │   ├── page1.jade
     │   ├── style.css
     │   └── index.js
-    └── page2
+    └── page2                 /* parcel */
         ├── package.json
         ├── style.css
         ├── page2.jade
@@ -60,11 +60,7 @@ Packages located in the `views` directory that have a `view` key in their `packa
 }
 ```
 
-At build time, Cartero computes the assets required by each parcel by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, and then dropped into your static directory.
-
-An inventory of what js/css assets are needed by what views is also generated. At run time, when a given view is rendered, your application asks the Cartero hook for the js/css assets associated with that view and the exact html needed to load them, which can then simply be dropped into the view's `head` section. The result is that each view loads exactly the js/css assets it needs, transformed and post-processed as appropriate.
-
-Other assets like images can be referenced using the spea
+At build time, Cartero computes the assets required by each parcel by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, and then dropped into your static directory, along with an inventory of what js/css assets are needed by what views. At run time, when a given view is rendered, your application asks the Cartero hook for the js/css assets associated with that view and the exact html needed to load them, which can then simply be dropped into the view's `head` section. The result is that each view loads exactly the js/css assets it needs, transformed and post-processed as appropriate.
 
 
 ## Usage
