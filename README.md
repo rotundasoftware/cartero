@@ -3,7 +3,7 @@ A asset pipeline built on npm packages and [browserify](http://browserify.org/).
 
 ## Benefits
 
-* Organize your app into packages (i.e. components) containing HTML, JavaScript, css, and images.
+* Organize your app into packages containing HTML, JavaScript, css, and images.
 * Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
 * Efficiently transform scss / less to css, coffee to JavaScript, etc. using streams.
 * Keep assets used by a particular view template in the same folder as their view.
@@ -14,7 +14,7 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages or components that contain HTML, JavaScript, css, images, and / or other assets. A Cartero package is defined as a directory that contains a `package.json` file, which means that all npm packages are Cartero packages. In keeping with the emerging npm trend, style and other assets are enumerated in a package's `package.json` using glob notation, along with any transforms that they require:
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets. Both npm and Cartero define a package as a directory that contains a `package.json` file. In keeping with [parcelify](https://github.com/rotundasoftware/parcelify) and similar tools, style and other assets are enumerated in `package.json` files using glob notation, along with any transforms they require:
 
 ```
 {
@@ -28,7 +28,7 @@ The days of organizing directories by the type of files they contain are over. T
 }
 ```
 
-Your application's `views` folder may also contain packages. Consider the following directory structure:
+Your application's `views` folder may also contain packages. Such "view packages" are called __parcels__. For example, consider this directory structure:
 
 ```
 ├── node_modules
@@ -50,7 +50,7 @@ Your application's `views` folder may also contain packages. Consider the follow
         └── index.js
 ```
 
-Packages located in the `views` directory that have a `view` key in their `package.json` file are called __parcels__. A parcel's `view` is a path that specifies the server side template to which it corresponds. For instance, the `package.json` for the parcel `page1` looks like this:
+The `package.json` of a parcel *must* have a `view` key that specifies the server side template to which the parcel corresponds. For instance, the `package.json` for the parcel `page1` looks like this:
 
 ```
 {
@@ -59,8 +59,9 @@ Packages located in the `views` directory that have a `view` key in their `packa
 }
 ```
 
-At build time, Cartero computes the assets required by each parcel by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, and then dropped into your static directory, along with an inventory of what js/css assets are needed by what views. At run time, when a given view is rendered, your application asks the Cartero hook for the js/css assets associated with that view and the exact html needed to load them, which can then simply be dropped into the view's `head` section. The result is that each view loads exactly the js/css assets it needs, transformed and post-processed as appropriate.
+__At build time,__ Cartero computes the assets required by each parcel by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, bundled when appropriate, and then dropped into your static directory, along with inventories of the assets used by each view.
 
+__At run time,__ when a given view is rendered, your application asks the Cartero hook for the HTML needed to load the js/css assets associated with that view, which can then simply be dropped into the view's `head` section. Your application is also able to access / use other assets like images and templates via the hook.
 
 ## Usage
 
@@ -69,7 +70,7 @@ $ npm install -g cartero
 $ cartero <viewsDir> <outputDir> [options]
 ```
 
-You will also need to use a Cartero hook in your web application to return the assets needed by each view at run time. A hook is currently only available for node.js but one can quickly be developed for any server side environment.
+You will also want to use a Cartero hook in your web application. A hook is currently only available for node.js but one can quickly be developed for any server side environment.
 
 ## Command line options
 
@@ -80,7 +81,7 @@ You will also need to use a Cartero hook in your web application to return the a
 
 --watch, -w      		Watch mode - watch for changes and update output as appropriate. (for dev mode)
 
---postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglify js, compress images).
+--postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglifyify, etc.).
 
 --packageTransform   	Path of JavaScript file that exports a function that transforms package.json
                         files before they are used. The function should be of the signature 
@@ -92,6 +93,23 @@ You will also need to use a Cartero hook in your web application to return the a
 
 ```
 
+## Resolving asset urls
+
+At times it is necessary to resolve the url of an asset, for example to reference an image from a stylesheet. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (*after* any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the Cartero output directory. For instance, in `my-module.css`:
+
+```css
+div.icon {
+    background: url( "##url( './icon.png' )" );
+}
+```
+
+or in `page1/index.js`:
+
+```javascript
+myModule = require( 'my-module' );
+
+$( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
+```
 
 ## API
 
@@ -101,12 +119,24 @@ You will also need to use a Cartero hook in your web application to return the a
 
 ```javascript
 {
+<<<<<<< HEAD
     keepSeperate : false           // keep css files separate, instead of concatenating them
     sourceMaps : false             // js source maps (passed through to browserify)
     watch : false                  // re-process as appropriate when things change
     postProcessors : [],           // an array of postProcesor transform functions or module names
 
     packageTransform : undefined   // a function as described in the -pf command line arg
+=======
+    assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
+    assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to bundle
+    
+    outputDirectoryUrl : '/'       // the base url of the output directory
+    packageTransform : undefined   // see the packageTranform command line arg
+
+    sourceMaps : false,            // js source maps (passed through to browserify)
+    watch : false,                 // re-process as appropriate when things change
+    postProcessors : [],           // an array of postProcesor functions or module names
+>>>>>>> add package_map for resolving asset urls at run time
 }
 ```
 
@@ -129,7 +159,7 @@ Called when a new parcelify package is created. (Passed through from [parcelify]
 
 ## The output directory
 
-Cartero processes all assets and places them in the output directory. You don't need to understand the specifics of how assets are laid out within the output directory, since the Cartero hook will take care of giving you the assets for a particular view, but here is the lay of the land.
+You generally don't need to know the anatomy of Cartero's output directory, since the Cartero hook serves as a wrapper for the information / assets in contains, but here is the lay of the land, for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
 
 ```
 ├── static
@@ -144,23 +174,29 @@ Cartero processes all assets and places them in the output directory. You don't 
 │       │   └── page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js
 │       ├── 9d82ba90fa7a400360054671ea26bfc03a7338bf                        /* package directory */
 │       │   └── robot.png
-│       └── view_map.json                                                   /* view map */
+│       ├── package_map.json
+│       └── view_map.json
 ```
 
 * Each subdirectory in the output directory corresponds to a particular package or parcel, and is named using that package or parcel's unique id.
 * Each package or parcel directory contains all the assets specific to that package and has the same directory structure of the original package.
-* Parcel directories also contain the js and css bundles for the parcel, as well as an `assets.json` file, which enumerates the js/css assets that need to be loaded by the parcel's view.
-* The `view_map.json` file contains a hash that maps view paths to parcel ids.
+* Parcel directories also contain an `assets.json` file, which enumerates the assets used by the parcel.
+* The `package_map.json` file contains a hash that maps package paths (absolute, shashumed for security) to package ids.
+* The `view_map.json` file contains a hash that maps view paths (relative to view directory, shashumed for security) to parcel ids.
 
-At runtime, the Cartero hook, when given the path of a view, looks up the id of the view's parcel in `view_map.json`, and then parses the `assets.json` in the parcel's directory in order to return the assets needed by that view.
+## FAQ
 
-## Resolving asset urls
+#### Q: What about client side templates?
 
-At times it is necessary to resolve the url of an asset, for example to reference an image from a stylesheet. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (before any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the Cartero output directory. For instance, `##url( './icon.png' )` might evaluate to `/66e20e747e10/icon.png` (where `66e20e747e10` is the id of the current package), and `##url( 'jqueryui/imgs/icons.png' )` might evaluate to `/880d74a4a4be/imgs/icons.png`. The transform will throw an error if provided with a path that does not resolve to an asset.
+You can include client side templates in your packages using a `template` key in your `package.json` file that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the cartero hook) will then contain an entry for templates required by that parcel, just like the one for styles, which you can then inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
 
-## Client side templates
+#### Q: Does Cartero address the issue of cache busting?
 
-You can include client side templates in your packages using a `template` key in your `package.json` file that behaves in the exact same was a the style key. The `assets.json` file (and the data returned by the cartero hook) for a parcel will then contain an entry for templates required by that parcel, just like the one for styles. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
+The name of asset bundles generated by Cartero includes an shasum of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
+
+#### Q: Won't image urls used in my stylesheets break when Cartero bundles them into one file?
+
+Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
 
 ## Contributers
 

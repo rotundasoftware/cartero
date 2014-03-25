@@ -22,8 +22,8 @@ var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
 
 var kViewMapName = "view_map.json";
+var kPackageMapName = "package_map.json";
 var kAssetsJsonName = "assets.json";
-var kAssetTypes = [ 'style', 'image' ];
 
 module.exports = Cartero;
 
@@ -35,7 +35,8 @@ function Cartero( viewDirPath, dstDir, options ) {
 	var _this = this;
 
 	options = _.defaults( {}, options, {
-		keepSeperate : false,
+		assetTypes : [ 'style', 'template', 'image' ],
+		assetTypesToConcatinate : [ 'style', 'template' ],
 		sourceMaps : false,
 		watch : false,
 		postProcessors : [],
@@ -46,13 +47,15 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 	this.viewDirPath = viewDirPath;
 	this.dstDir = dstDir;
-	this.viewMap = {};
-	this.packageManifest = {};
-	this.assetTypes = kAssetTypes;
-	this.finalBundlesByParcelId = {};
-	this.packagePathsToIds = {};
 	this.assetDirectoryUrl = options.assetDirectoryUrl;
 
+	this.packageManifest = {};
+	this.finalBundlesByParcelId = {};
+
+	this.viewMap = {};
+	this.packagePathsToIds = {};
+
+	var assetTypes = options.assetTypes;
 	var tempBundlesByMain = {};
 	var assetTypesToConcatenate = options.keepSeperate ? [] : [ 'style' ];
 	var postProcessors;
@@ -115,7 +118,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 					thisAsset.addTransform( _this.assetUrlTransform, true );
 				} );
 
-				var assetTypesToWriteToDisk = _.difference( _this.assetTypes, assetTypesToConcatenate );
+				var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatinate );
 
 				newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
 					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
@@ -129,15 +132,14 @@ function Cartero( viewDirPath, dstDir, options ) {
 			} );
 
 			p.on( 'done', function() {
-				var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, thisParcel.view ) ).digest( 'hex' );
-				_this.viewMap[ viewRelativePathHash ] = thisParcel.id;
+				_this.addToViewMap( thisParcel.view, thisParcel.id );
 
 				_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], postProcessors, function( err, finalBundles ) {
 					if( err ) return _this.emit( 'error', err );
 
 					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
 					
-					_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatenate, function( err ) {
+					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
 						nextMain();
@@ -152,7 +154,7 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 						_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
 					
-						_this.writeAssetsJsonForParcel( thisParcel, assetTypesToConcatenate, function( err ) {
+						_this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
 							if( err ) return _this.emit( 'error', err );
 
 							nextMain();
@@ -161,9 +163,9 @@ function Cartero( viewDirPath, dstDir, options ) {
 				}
 			} );
 
-			if( options.watch )
+			if( options.watch ) {
 				p.on( 'assetUpdated', function( eventType, asset ) {
-					this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+					this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
 						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
@@ -178,15 +180,18 @@ function Cartero( viewDirPath, dstDir, options ) {
 						}
 					} );
 				} );
+
+				p.on( 'packageJsonUpdated', function( thePackage ) {
+					if( thePackage === thisParcel )
+						_this.addToViewMap( thisParcel.view, thisParcel.id );
+				} );
+			}
 		}, nextSeries );
 	} ], function( err ) {
 		if( err ) return _this.emit( 'error', err );
 
-		var viewMapPath = path.join( dstDir, kViewMapName );
-
-		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
+		_this.writeViewAndPackageMaps( function( err ) {
 			if( err ) return _this.emit( 'error', err );
-
 			_this.emit( 'done' );
 		} );
 	} );
@@ -288,17 +293,17 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 	} );
 };
 
-Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypesToConcatenate, callback ) {
+Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callback ) {
 	var _this = this;
 	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
+	var assetTypesToConcatinate = Object.keys( bundles );
 
 	var content = {
 		'script' : [ path.relative( _this.dstDir, bundles.script ) ]
 	};
 
-	// we assume script and style assets are the only ones we need to put in assets.json, ever.
-	[ 'style' ].forEach( function( thisAssetType ) {
-		var concatenateThisAssetType = _.contains( assetTypesToConcatenate, thisAssetType );
+	_.without( assetTypes, 'script' ).forEach( function( thisAssetType ) {
+		var concatenateThisAssetType = _.contains( assetTypesToConcatinate, thisAssetType );
 
 		var filesOfThisType;
 		if( concatenateThisAssetType ) filesOfThisType = bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
@@ -434,4 +439,35 @@ Cartero.prototype.assetUrlTransform = function( file ) {
 	function end() {
 		this.queue( null );
 	}
+};
+
+Cartero.prototype.addToViewMap = function( viewPath, parcelId ) {
+	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewDirPath, viewPath ) ).digest( 'hex' );
+	this.viewMap[ viewRelativePathHash ] = parcelId;
+};
+
+Cartero.prototype.writeViewAndPackageMaps = function( callback ) {
+	var _this = this;
+
+	async.parallel( [ function( nextParallel ) {
+		var viewMapPath = path.join( _this.dstDir, kViewMapName );
+		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
+			if( err ) return callback( err );
+
+			_this.emit( 'done' );
+		} );
+	}, function( nextParallel ) {
+		var packageMapPath = path.join( _this.dstDir, kPackageMapName );
+		var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
+			var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
+			memo[ thisPackagePathShasum ] = thisPackageId;
+			return memo;
+		}, {} );
+
+		fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
+			if( err ) return callback( err );
+
+			_this.emit( 'done' );
+		} );
+	} ], callback );
 };
