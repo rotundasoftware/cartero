@@ -29,8 +29,8 @@ module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
 
-function Cartero( viewDirPath, dstDir, options ) {
-	if( ! ( this instanceof Cartero ) ) return new Cartero( viewDirPath, dstDir, options );
+function Cartero( viewDirPath, outputDirPath, options ) {
+	if( ! ( this instanceof Cartero ) ) return new Cartero( viewDirPath, outputDirPath, options );
 
 	var _this = this;
 
@@ -40,14 +40,14 @@ function Cartero( viewDirPath, dstDir, options ) {
 		sourceMaps : false,
 		watch : false,
 		postProcessors : [],
-		assetDirectoryUrl : '/',
+		outputDirUrl : '/',
 
 		packageTransform : undefined
 	} );
 
 	this.viewDirPath = viewDirPath;
-	this.dstDir = dstDir;
-	this.assetDirectoryUrl = options.assetDirectoryUrl;
+	this.outputDirPath = outputDirPath;
+	this.outputDirUrl = options.outputDirUrl;
 
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
@@ -65,10 +65,10 @@ function Cartero( viewDirPath, dstDir, options ) {
 
 	async.series( [ function( nextSeries ) {
 		// delete the output directory
-		rimraf( dstDir, nextSeries );
+		rimraf( outputDirPath, nextSeries );
 	}, function( nextSeries ) {
 		// now remake it
-		fs.mkdir( dstDir, nextSeries );
+		fs.mkdir( outputDirPath, nextSeries );
 	}, function( nextSeries ) {
 		_this.findMainPaths( function( err, res ) {
 			if( err ) return nextSeries( err );
@@ -239,11 +239,11 @@ Cartero.prototype.findMainPaths = function( callback ) {
 
 Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, postProcessors, callback ) {
 	var _this = this;
-	var dstDir = this.getPackageOutputDirectory( parcel );
+	var outputDirPath = this.getPackageOutputDirectory( parcel );
 	var parcelBaseName = path.basename( parcel.path );
 	var finalBundles = {};
 
-	mkdirp( dstDir, function( err ) {
+	mkdirp( outputDirPath, function( err ) {
 		if( err ) return( err );
 
 		async.each( Object.keys( tempBundles ), function( thisAssetType, nextAssetType ) {
@@ -259,7 +259,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 				bundleStream.pipe( crypto.createHash( 'sha1' ) ).pipe( concat( function( buf ) {
 					bundleShasum = buf.toString( 'hex' );
 					
-					var dstPath = path.join( dstDir, parcelBaseName + '_bundle_' + bundleShasum + path.extname( thisBundleTempPath ) );
+					var dstPath = path.join( outputDirPath, parcelBaseName + '_bundle_' + bundleShasum + path.extname( thisBundleTempPath ) );
 					bundleStream = fs.createReadStream( thisBundleTempPath );
 
 					// this is part of a hack to apply the ##url transform to javascript files. see assetUrlTransform_resolveToAbsPath
@@ -299,7 +299,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callb
 	var assetTypesToConcatinate = Object.keys( bundles );
 
 	var content = {
-		'script' : [ path.relative( _this.dstDir, bundles.script ) ]
+		'script' : [ path.relative( _this.outputDirPath, bundles.script ) ]
 	};
 
 	_.without( assetTypes, 'script' ).forEach( function( thisAssetType ) {
@@ -310,7 +310,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callb
 		else filesOfThisType = _.pluck( parcel.parcelAssetsByType[ thisAssetType ], 'dstPath' );
 
 		content[ thisAssetType ] = _.map( filesOfThisType, function( absPath ) {
-			return path.relative( _this.dstDir, absPath );
+			return path.relative( _this.outputDirPath, absPath );
 		} );
 	} );
 
@@ -326,7 +326,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callb
 };
 
 Cartero.prototype.getPackageOutputDirectory = function( thePackage ) {
-	return path.join( this.dstDir, thePackage.id );
+	return path.join( this.outputDirPath, thePackage.id );
 };
 
 Cartero.prototype.getTempBundlePath = function( fileExtension ) {
@@ -418,15 +418,15 @@ Cartero.prototype.assetUrlTransform = function( file ) {
 			}
 
 			var url = pathMapper( assetSrcAbsPath, function( srcDir ) {
-				return _this.packagePathsToIds[ srcDir ] ? '/' + _this.packagePathsToIds[ srcDir ] : null; // return val of dstDir needs to be absolute path
+				return _this.packagePathsToIds[ srcDir ] ? '/' + _this.packagePathsToIds[ srcDir ] : null; // return val of outputDirPath needs to be absolute path
 			} );
 
 			// all assets urls should be different than their paths.. otherwise we have a problem
 			if( url === assetSrcAbsPath )
 				return _this.emit( 'error', new Error( 'The file "' + assetSrcAbsPath + '" referenced from ##url( "' + assetSrcPath + '" ) in file "' + file + '" is not an asset.' ) );
 
-			if( _this.assetDirectoryUrl ) {
-				var baseUrl = _this.assetDirectoryUrl[0] === path.sep ? _this.assetDirectoryUrl.slice(1) : _this.assetDirectoryUrl;
+			if( _this.outputDirUrl ) {
+				var baseUrl = _this.outputDirUrl[0] === path.sep ? _this.outputDirUrl.slice(1) : _this.outputDirUrl;
 				url = baseUrl + url;
 			}
 
@@ -450,14 +450,14 @@ Cartero.prototype.writeViewAndPackageMaps = function( callback ) {
 	var _this = this;
 
 	async.parallel( [ function( nextParallel ) {
-		var viewMapPath = path.join( _this.dstDir, kViewMapName );
+		var viewMapPath = path.join( _this.outputDirPath, kViewMapName );
 		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
 			if( err ) return callback( err );
 
 			_this.emit( 'done' );
 		} );
 	}, function( nextParallel ) {
-		var packageMapPath = path.join( _this.dstDir, kPackageMapName );
+		var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
 		var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 			var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
 			memo[ thisPackagePathShasum ] = thisPackageId;
