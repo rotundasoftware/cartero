@@ -6,6 +6,8 @@ var fs = require( 'fs' );
 var crypto = require( 'crypto' );
 var _ = require( 'underscore' );
 
+var outputDirFiles = [ "package_map.json", "view_map.json" ];
+
 test( 'page1', function( t ) {
 	t.plan( 4 );
 
@@ -23,9 +25,11 @@ test( 'page1', function( t ) {
 	} );
 
 	c.on( 'done', function() {
+		console.log( 'whatup' );
+		
 		t.deepEqual(
 			fs.readdirSync( outputDirPath ).sort(),
-			[ packageId, 'view_map.json' ]
+			[ packageId ].concat( outputDirFiles ).sort()
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + packageId +'\"\n}' );
@@ -86,7 +90,7 @@ test( 'page2', function( t ) {
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( outputDirPath ).sort(),
-			[ parcelId, 'view_map.json' ]
+			[ parcelId ].concat( outputDirFiles ).sort()
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + parcelId + '\"\n}' );
@@ -129,7 +133,7 @@ test( 'page3', function( t ) {
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( outputDirPath ).sort(),
-			packageIds.sort().concat( [ 'view_map.json' ] )
+			packageIds.concat( outputDirFiles ).sort()
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ) ), viewMap );

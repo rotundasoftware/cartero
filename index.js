@@ -454,7 +454,7 @@ Cartero.prototype.writeViewAndPackageMaps = function( callback ) {
 		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
 			if( err ) return callback( err );
 
-			_this.emit( 'done' );
+			nextParallel();
 		} );
 	}, function( nextParallel ) {
 		var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
@@ -467,7 +467,7 @@ Cartero.prototype.writeViewAndPackageMaps = function( callback ) {
 		fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
 			if( err ) return callback( err );
 
-			_this.emit( 'done' );
+			nextParallel();
 		} );
 	} ], callback );
 };
