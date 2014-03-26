@@ -99,7 +99,7 @@ At times it is necessary to resolve the url of an asset, for example to referenc
 
 ```css
 div.icon {
-    background: url( "##url( './icon.png' )" );
+    background: url( ##url( './icon.png' ) );
 }
 ```
 

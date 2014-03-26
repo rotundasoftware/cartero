@@ -15,18 +15,19 @@ var concat = require( 'concat-stream' );
 var through2 = require('through2');
 var combine = require( "stream-combiner" );
 var resolve = require( "resolve" );
+var replaceStringTransform = require( 'replace-string-transform' );
 
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
-var relAssetUrlsTransform = require( './transforms/resolveRelativeAssetUrlsToAbsolute' );
-var assetUrlsTransformMaker = require( './transforms/assetUrls' );
+
+var assetUrlsTransform = require( './transforms/assetUrls' );
 
 var kViewMapName = "view_map.json";
 var kPackageMapName = "package_map.json";
 var kAssetsJsonName = "assets.json";
 
 module.exports = Cartero;
- 
+
 inherits( Cartero, EventEmitter );
 
 function Cartero( viewDirPath, outputDirPath, options ) {
@@ -57,10 +58,8 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 
 	var assetTypes = options.assetTypes;
 	var tempBundlesByMain = {};
-	var assetTypesToConcatenate = options.keepSeperate ? [] : [ 'style' ];
+	var assetTypesToConcatenate = options.assetTypesToConcatinate;
 	var postProcessors;
-
-	this.assetUrlTransform = assetUrlsTransformMaker( this.packagePathsToIds, this.outputDirUrl );
 
 	async.series( [ function( nextSeries ) {
 		// delete the output directory
@@ -105,7 +104,30 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 			var thisParcel;
 
 			p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
-				browserifyInstance.transform( relAssetUrlsTransform );
+				// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
+				// files is using the browserify global transform. however, at the time those transforms are run we
+				// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
+				// resolve relative paths at this time, because once the js files are bundled the tranform will be
+				// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
+				// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
+				// src file to an absolute path (which we do using a browserify global transform), and the second is
+				// to resolve that absolute path to a url (which we do once we know all our package ids).
+
+				browserifyInstance.transform( function( file ) {
+					// replace relative ##urls with absolute ones
+					return replaceStringTransform( file, {
+						find : /##url\(\ *(['"])([^']*)\1\ *\)/,
+						replace : function( file, wholeMatch, quote, assetSrcPath ) {
+							try {
+								assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
+							} catch ( err ) {
+								return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
+							}
+
+							return '##url(' + quote + assetSrcAbsPath + quote + ')';
+						}
+					} );
+				} );
 			} );
 
 			p.on( 'packageCreated', function( newPackage, isMain ) {
@@ -113,9 +135,28 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 
 				_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
 
-				newPackage.getAssets().forEach( function( thisAsset ) {
-					thisAsset.addTransform( _this.assetUrlTransform );
+				newPackage.addTransform( assetUrlsTransform, {
+					packagePathsToIds : _this.packagePathsToIds,
+					outputDirUrl : _this.outputDirUrl
 				} );
+
+				newPackage.addTransform( replaceStringTransform, {
+					find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
+					replace : function( file, match, url ) {
+						url = url.trim();
+
+						// absolute urls stay the same.
+						if( url.charAt( 0 ) === '/' ) return match;
+
+						var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
+
+						// urls in css files are relative to the css file itself
+						var absUrl = path.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), url );
+						absUrl = '/' + newPackage.id + absUrl;
+
+						return 'url( \'' + absUrl + '\' )';
+					}
+				}, 'style' );
 
 				var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatinate );
 
@@ -263,7 +304,10 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 
 					// this is part of a hack to apply the ##url transform to javascript files. see comments in transforms/resolveRelativeAssetUrlsToAbsolute
 					var postProcessorsToApply = _.clone( postProcessors );
-					if( thisAssetType === 'script' ) postProcessorsToApply.push( _this.assetUrlTransform );
+					if( thisAssetType === 'script' ) postProcessorsToApply.push( function( file ) { return assetUrlsTransform( file, {
+						packagePathsToIds : _this.packagePathsToIds,
+						outputDirUrl : _this.outputDirUrl
+					} ); } );
 
 					if( postProcessorsToApply.length !== 0 ) {
 						// apply post processors

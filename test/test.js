@@ -8,7 +8,7 @@ var _ = require( 'underscore' );
 
 var outputDirFiles = [ "package_map.json", "view_map.json" ];
 
-test( 'page1', function( t ) {
+test( 'example1', function( t ) {
 	t.plan( 4 );
 
 	var viewDirPath = path.join( __dirname, 'example1/views' );
@@ -25,8 +25,6 @@ test( 'page1', function( t ) {
 	} );
 
 	c.on( 'done', function() {
-		console.log( 'whatup' );
-		
 		t.deepEqual(
 			fs.readdirSync( outputDirPath ).sort(),
 			[ packageId ].concat( outputDirFiles ).sort()
@@ -44,7 +42,7 @@ test( 'page1', function( t ) {
 	} );
 } );
 
-test( 'page2', function( t ) {
+test( 'example2', function( t ) {
 	t.plan( 3 );
 
 	var viewDirPath = path.join( __dirname, 'example2/views' );
@@ -104,8 +102,8 @@ test( 'page2', function( t ) {
 } );
 
 
-test( 'page3', function( t ) {
-	t.plan( 6 );
+test( 'example3', function( t ) {
+	t.plan( 7 );
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var outputDirPath = path.join( __dirname, 'example3/static/assets' );
@@ -139,17 +137,26 @@ test( 'page3', function( t ) {
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ) ), viewMap );
 	
 		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ] ) ).sort();
-		t.ok( _.contains( page1PackageFiles, 'page1_bundle_da3d062d2f431a76824e044a5f153520dad4c697.css' ) );
+		t.deepEqual(
+			page1PackageFiles,
+			[ 'assets.json', 'page1_bundle_80161965675b6de03148f51c413205af9bb9ce04.css', 'page1_bundle_53e6349b34dd81ebd192a5e1f356083ca11c702f.js' ].sort()
+		);
 
 		var page1JsBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.js'; } );
 		page1JsBundle = path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ], page1JsBundle );
 
 		var page1JsContents = fs.readFileSync( page1JsBundle, 'utf8' );
-		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1 );
+		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, '##url resolved' );
+
+		var page1CssBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
+		page1CssBundle = path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ], page1CssBundle );
+
+		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
+		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, 'relative css url resolved' );
 
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, parcelIdsByView[ 'page2.jade' ] ) ).sort(),
-			[ 'assets.json', 'page2_bundle_182694e4a327db0056cfead31f2396287b7d4544.css', 'page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js' ]
+			[ 'assets.json', 'page2_bundle_59fbd6d0992e406a658dcc7abe4f0caffdbb4912.css', 'page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js' ].sort()
 		);
 
 		t.deepEqual(
@@ -158,3 +165,5 @@ test( 'page3', function( t ) {
 		);
 	} );
 } );
+
+
