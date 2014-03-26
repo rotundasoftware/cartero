@@ -119,14 +119,6 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 
 ```javascript
 {
-<<<<<<< HEAD
-    keepSeperate : false           // keep css files separate, instead of concatenating them
-    sourceMaps : false             // js source maps (passed through to browserify)
-    watch : false                  // re-process as appropriate when things change
-    postProcessors : [],           // an array of postProcesor transform functions or module names
-
-    packageTransform : undefined   // a function as described in the -pf command line arg
-=======
     assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
     assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to bundle
     
@@ -136,7 +128,6 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
     sourceMaps : false,            // js source maps (passed through to browserify)
     watch : false,                 // re-process as appropriate when things change
     postProcessors : [],           // an array of postProcesor functions or module names
->>>>>>> add package_map for resolving asset urls at run time
 }
 ```
 
