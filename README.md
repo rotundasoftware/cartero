@@ -112,7 +112,7 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 
 ### c = cartero( viewDir, outputDir, [options] )
 
-`viewDir` is the path of the your views directory. `outputDir` is the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`viewDir` is the path of the your views directory. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 ```javascript
 {
@@ -121,11 +121,11 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
     
     outputDirUrl : '/'             // the base url of the output directory
 
-    packageTransform : undefined   // A function that transforms package.json files before they are used.
-                                   // The function should be of the signature function( pkgJson, dirPath )
-                                   // and return the parsed, transformed package.json. This feature can be
-                                   // used to add default values to package.json files or alter the
-                                   // package.json of third party modules without modifying them directly.
+    /* packageTransform is function that transforms package.json files before they are used.
+    The function should be of the signature function( pkgJson, dirPath ) and return the parsed,
+    transformed package.json. This feature can be used to add default values to package.json
+    files or alter the package.json of third party modules without modifying them directly. */
+    packageTransform : undefined
 
     sourceMaps : false,            // js source maps (passed through to browserify)
     watch : false,                 // re-process as appropriate when things change
