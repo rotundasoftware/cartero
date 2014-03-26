@@ -15,7 +15,7 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets.
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets. Cartero is a build system and asset pipeline built from the ground up for this new paradigm.
 
 An package is a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, Cartero allows style and other assets to be enumerated in `package.json` files using glob notation, along with any transforms they require:
 
@@ -119,17 +119,17 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
     assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
     assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to concat into bundles
     
-    outputDirUrl : '/'             // the base url of the output directory
+    outputDirUrl : '/',             // the base url of the output directory
 
     /* packageTransform is function that transforms package.json files before they are used.
     The function should be of the signature function( pkgJson, dirPath ) and return the parsed,
     transformed package.json. This feature can be used to add default values to package.json
     files or alter the package.json of third party modules without modifying them directly. */
-    packageTransform : undefined
+    packageTransform : undefined,
 
     sourceMaps : false,            // js source maps (passed through to browserify)
     watch : false,                 // re-process as appropriate when things change
-    postProcessors : [],           // an array of postProcesor functions or module names
+    postProcessors : []            // an array of postProcesor functions or module names
 }
 ```
 
