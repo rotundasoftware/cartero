@@ -92,15 +92,7 @@ You will also want to use the [Cartero hook](https://github.com/rotundasoftware/
 
 ## Resolving asset urls
 
-At times it is necessary to resolve the url of an asset, for example to reference an image from a stylesheet. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (*after* any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the Cartero output directory. For instance, in `my-module.css`:
-
-```
-div.icon {
-    background: url( ##url( 'my-module/icon.png' ) );
-}
-```
-
-or in `page1/index.js`:
+At times it is necessary to resolve the url of an asset, for example to reference an image in one package from another. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (*after* any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the Cartero output directory. For instance, in `page1/index.js`:
 
 ```javascript
 myModule = require( 'my-module' );
