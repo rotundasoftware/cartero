@@ -1,6 +1,6 @@
 # Cartero
 
-A streaming build system / asset pipeline based on [npm](https://www.npmjs.org/‎) packages and [browserify](http://browserify.org/). 
+A streaming build system and asset pipeline based on [npm](https://www.npmjs.org/‎) packages and [browserify](http://browserify.org/). 
 
 ## Benefits
 
