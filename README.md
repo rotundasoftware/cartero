@@ -61,7 +61,7 @@ The `package.json` of a parcel *must* have a `view` key that specifies the serve
 
 __At build time,__ Cartero computes the assets required by each parcel by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, bundled when appropriate, and then dropped into your static directory, along with inventories of the assets used by each view.
 
-__At run time,__ when a given view is rendered, your application asks the Cartero hook for the HTML needed to load the js/css assets associated with that view, which can then simply be dropped into the view's `head` section. Your application is also able to access / use other assets like images and templates via the hook.
+__At run time,__ when a given view is rendered, your application asks the Cartero hook for the HTML needed to load the js/css assets associated with that view, which can then simply be dropped into the view's HTML. Your application is also able to access / use other assets like images and templates via the hook.
 
 ## Usage
 
@@ -83,12 +83,6 @@ You will also want to use a Cartero hook in your web application. A hook is curr
 
 --postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglifyify, etc.).
 
---packageTransform   	Path of JavaScript file that exports a function that transforms package.json
-                        files before they are used. The function should be of the signature 
-                        function( pkgJson, dirPath ) and return the parsed, transformed package.json.
-                        This feature can be used to add default values to package.json files or
-                        alter the package.json of third party modules without modifying them directly.
-
 --help, -h       		Show this message
 
 ```
@@ -99,7 +93,7 @@ At times it is necessary to resolve the url of an asset, for example to referenc
 
 ```css
 div.icon {
-    background: url( ##url( './icon.png' ) );
+    background: url( ##url( 'my-module/icon.png' ) );
 }
 ```
 
@@ -120,10 +114,15 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 ```javascript
 {
     assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
-    assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to bundle
+    assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to concat into bundles
     
-    outputDirectoryUrl : '/'       // the base url of the output directory
-    packageTransform : undefined   // see the packageTranform command line arg
+    outputDirUrl : '/'             // the base url of the output directory
+
+    packageTransform : undefined   // A function that transforms package.json files before they are used.
+                                   // The function should be of the signature function( pkgJson, dirPath )
+                                   // and return the parsed, transformed package.json. This feature can be
+                                   // used to add default values to package.json files or alter the
+                                   // package.json of third party modules without modifying them directly.
 
     sourceMaps : false,            // js source maps (passed through to browserify)
     watch : false,                 // re-process as appropriate when things change
@@ -143,14 +142,14 @@ Called when an error occurs.
 Called when a browserify / watchify instance is created.
 
 #### c.on( 'fileWritten', function( path, type, isBundle, watchModeUpdate ){} );
-Called when an asset or bundle has been written to disk. `watchModeUpdate` is true iff the write a result of a change in watch mode.
+Called when an asset or bundle has been written to disk. `watchModeUpdate` is true iff the write is a result of a change in watch mode.
 
 #### c.on( 'packageCreated', function( package, isMain ){} );
 Called when a new parcelify package is created. (Passed through from [parcelify](https://github.com/rotundasoftware/parcelify).)
 
 ## The output directory
 
-You generally don't need to know the anatomy of Cartero's output directory, since the Cartero hook serves as a wrapper for the information / assets in contains, but here is the lay of the land, for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
+You generally don't need to know the anatomy of Cartero's output directory, since the Cartero hook serves as a wrapper for the information / assets in contains, but here is the lay of the land for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
 
 ```
 ├── static
@@ -172,8 +171,8 @@ You generally don't need to know the anatomy of Cartero's output directory, sinc
 * Each subdirectory in the output directory corresponds to a particular package or parcel, and is named using that package or parcel's unique id.
 * Each package or parcel directory contains all the assets specific to that package and has the same directory structure of the original package.
 * Parcel directories also contain an `assets.json` file, which enumerates the assets used by the parcel.
-* The `package_map.json` file contains a hash that maps package paths (absolute, shashumed for security) to package ids.
-* The `view_map.json` file contains a hash that maps view paths (relative to view directory, shashumed for security) to parcel ids.
+* The `package_map.json` file contains a hash that maps absolute package paths (shashumed for security) to package ids.
+* The `view_map.json` file contains a hash that maps view paths (relative to the view directory, shashumed for security) to parcel ids.
 
 ## FAQ
 
@@ -185,9 +184,9 @@ You can include client side templates in your packages using a `template` key in
 
 The name of asset bundles generated by Cartero includes an shasum of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.
 
-#### Q: Won't image urls used in my stylesheets break when Cartero bundles them into one file?
+#### Q: Will relative urls used in my stylesheets break when Cartero bundles them into one file?
 
-Yes and No. They would break, but Cartero automatically scans your `.css` files for `url()` statements, and fixes their arguments so that they don't break.
+Well, they would break, but Cartero automatically applied a tranform to all your style assets that replaces relative `url()`s with absolute urls, calculated using the `outputDirUrl` option.
 
 ## Contributers
 

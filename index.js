@@ -38,12 +38,13 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 	options = _.defaults( {}, options, {
 		assetTypes : [ 'style', 'template', 'image' ],
 		assetTypesToConcatinate : [ 'style', 'template' ],
+	
+		outputDirUrl : '/',
+		packageTransform : undefined,
+
 		sourceMaps : false,
 		watch : false,
-		postProcessors : [],
-		outputDirUrl : '/',
-
-		packageTransform : undefined
+		postProcessors : []
 	} );
 
 	this.viewDirPath = viewDirPath;
