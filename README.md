@@ -15,7 +15,7 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets. Cartero is a build system and asset pipeline built from the ground up for this new paradigm.
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. Cartero is a build system and asset pipeline designed from the ground up for this new paradigm.
 
 An package is a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, Cartero allows style and other assets to be enumerated in `package.json` files using glob notation, along with any transforms they require:
 
