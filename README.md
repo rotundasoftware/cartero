@@ -17,7 +17,7 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets.
 
-An package is a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, style and other assets may be enumerated in `package.json` files using glob notation, along with any transforms they require:
+An package is a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, Cartero allows style and other assets to be enumerated in `package.json` files using glob notation, along with any transforms they require:
 
 ```
 {
@@ -73,7 +73,7 @@ $ npm install -g cartero
 $ cartero <viewsDir> <outputDir> [options]
 ```
 
-You will also want to use a Cartero hook in your web application. A hook is currently only available for node.js but one can quickly be developed for any server side environment.
+You will also want to use the [Cartero hook](https://github.com/rotundasoftware/cartero-node-hook) in your web application. A hook is currently only available for node.js but one can quickly be developed for any server side environment.
 
 ## Command line options
 
@@ -94,7 +94,7 @@ You will also want to use a Cartero hook in your web application. A hook is curr
 
 At times it is necessary to resolve the url of an asset, for example to reference an image from a stylesheet. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (*after* any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the Cartero output directory. For instance, in `my-module.css`:
 
-```css
+```
 div.icon {
     background: url( ##url( 'my-module/icon.png' ) );
 }
@@ -110,9 +110,9 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 
 ## API
 
-### c = cartero( viewDirPath, outputDir, [options] )
+### c = cartero( viewDir, outputDir, [options] )
 
-`viewDirPath` is the path of the your views directory. `outputDir` is the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`viewDir` is the path of the your views directory. `outputDir` is the directory into which all of your processed assets will be dropped (along with the meta data that will be used to look up the assets needed by each view). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 ```javascript
 {
