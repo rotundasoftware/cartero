@@ -1,12 +1,12 @@
 # Cartero
 
-A asset pipeline built on npm packages and [browserify](http://browserify.org/). 
+A streaming build system / asset pipeline based on [npm](https://www.npmjs.org/‎) packages and [browserify](http://browserify.org/). 
 
 ## Benefits
 
 * Organize your app into packages containing HTML, JavaScript, css, and images.
-* Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
 * Efficiently transform scss / less to css, coffee to JavaScript, etc. using streams.
+* Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
 * Keep assets used by a particular view template in the same folder as their view.
 * Use post-processor transform streams to uglify / minify / compress assets.
 * When developing, keep assets separate and watch for changes, reprocessing as appropriate. 
@@ -15,7 +15,9 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets. Both npm and Cartero define a package as a directory that contains a `package.json` file. In keeping with [parcelify](https://github.com/rotundasoftware/parcelify) and similar tools, style and other assets are enumerated in `package.json` files using glob notation, along with any transforms they require:
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, images, and / or other assets.
+
+An package is a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, style and other assets may be enumerated in `package.json` files using glob notation, along with any transforms they require:
 
 ```
 {
