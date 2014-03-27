@@ -15,7 +15,7 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing assets into directories by their type are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. npm is a popular platform for managing and sharing such packages. Cartero is an asset pipeline for web apps that consume them.
+The days of organizing assets into directories by their type are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. npm is a popular platform for managing and sharing such packages. Cartero is an asset pipeline for consuming them.
 
 An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, stylesheets and other assets of a package may be enumerated using globs.
 
