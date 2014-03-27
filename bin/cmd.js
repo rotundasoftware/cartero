@@ -14,6 +14,7 @@ var argv = minimist( process.argv.slice(2),
 			maps : 'm',
 			watch : 'w',
 			postProcessor : 'p',
+			outputDirUrl : 'u',
 			help : 'h'
 		},
 		boolean : [ 'keepSeparate', 'watch', 'help', 'maps' ]
@@ -26,15 +27,15 @@ if( argv.help ) {
 	} );
 }
 
-var viewsDirPath = argv._[0];
+var viewDirPath = argv._[0];
 var outputDirPath = argv._[1];
 
-if( viewsDirPath === undefined || outputDirPath === undefined ) {
+if( viewDirPath === undefined || outputDirPath === undefined ) {
 	console.log( 'Both a viewDir and an outputDir are required' );
 	process.exit( 1 );
 }
 
-viewsDirPath = resolvePath( viewsDirPath );
+viewDirPath = resolvePath( viewDirPath );
 outputDirPath = resolvePath( outputDirPath );
 
 var watch = argv.watch;
@@ -43,7 +44,8 @@ var carteroOptions = {
 	keepSeparate : argv.keepSeparate,
 	sourceMaps : argv.maps,
 	watch : watch,
-	packageTransform : arv.packageTransform,
+	outputDirUrl : argv.outputDirUrl,
+	packageTransform : argv.packageTransform,
 	postProcessors : argv.postProcessor
 };
 

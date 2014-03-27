@@ -2,6 +2,8 @@
 
 --maps, -m              Enable JavaScript source maps in js bundles (for dev mode)
 
+--outputDirUrl, -u      The base url of the output directory
+
 --watch, -w             Watch mode - watch for changes and update output as appropriate. (for dev mode)
 
 --postProcessor, -p     The name of a post processor module to apply to assets (e.g. uglify js, compress images).
