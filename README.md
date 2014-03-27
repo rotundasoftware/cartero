@@ -1,6 +1,6 @@
 # cartero
 
-A streaming asset pipeline based on [npm](https://www.npmjs.org/‎) packages and [browserify](http://browserify.org/). 
+A streaming asset pipeline based on [npm packages](https://www.npmjs.org/‎) and [browserify](http://browserify.org/). 
 
 ## Benefits
 
@@ -15,9 +15,9 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. Cartero is a build system and asset pipeline designed from the ground up for this component based paradigm.
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. cartero is an asset pipeline that makes it easy to consume such packages in your web applications.
 
-An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to the npm spec, cartero allows style and other assets to be enumerated in `package.json` files using glob notation, along with any transforms they require:
+An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, style and other assets may be enumerated in `package.json` files using glob notation:
 
 ```
 {
@@ -26,8 +26,8 @@ An package is defined as a directory that contains a [package.json](https://www.
     "main" : "lib/my-module.js",
 
     "style" : "*.scss",
-    "image" : "*.png",
-    "transforms" : [ "scss-css-stream" ],
+    "image" : [ "*.png", *.jpg ],
+    "transforms" : [ "scss-css-stream" ]
 }
 ```
 
