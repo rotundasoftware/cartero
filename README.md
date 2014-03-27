@@ -15,9 +15,9 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. cartero is an asset pipeline that makes it easy to consume such packages in your web applications.
+The days of organizing directories by the type of files they contain are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. cartero is an asset pipeline designed for this package based paradigm.
 
-An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, style and other assets may be enumerated in `package.json` files. (See the [parcelify](https://github.com/rotundasoftware/parcelify) docs for more info.)
+An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, stylesheets and other assets may be enumerated using globs. (See [parcelify](https://github.com/rotundasoftware/parcelify).)
 
 ```
 {
