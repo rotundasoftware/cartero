@@ -150,7 +150,7 @@ You can include client side templates in your packages using a `template` key in
 
 #### Q: What does cartero write to the output directory?
 
-You generally don't need to know the anatomy of cartero's output directory, since the cartero hook serves as a wrapper for the information / assets in contains, but here is the lay of the land for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
+You generally don't need to know the anatomy of cartero's output directory, since the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) serves as a wrapper for the information / assets in contains, but here is the lay of the land for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
 
 ```
 ├── static
