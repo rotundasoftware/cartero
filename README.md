@@ -53,7 +53,7 @@ Your application's `views` folder may also contain packages. Such "view packages
         └── index.js
 ```
 
-The `package.json` of a parcel *must* have a `view` key that specifies the server side template to which the parcel corresponds. For instance, the `package.json` for the parcel `page1` might look like this:
+The `package.json` of a parcel *must* have a `view` key that specifies the server side template to which the parcel corresponds. For instance, the `package.json` for the `page1` parcel might look like this:
 
 ```
 {
@@ -62,7 +62,7 @@ The `package.json` of a parcel *must* have a `view` key that specifies the serve
 }
 ```
 
-__At build time,__ cartero computes the assets required by each parcel in your view directory by inspecting browserify's dependency graph (starting from the parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, bundled when appropriate, and then dropped into your static directory, along with inventories of the assets used by each view.
+__At build time,__ cartero computes the assets required by each parcel in your view directory by inspecting browserify's dependency graph (starting from each parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, bundled when appropriate, and then dropped into your static directory, along with meta data such as lists of the assets used by each view.
 
 __At run time,__ when a given view is rendered, your application asks the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) for the HTML needed to load the js/css assets associated with that view, which can then simply be dropped into the view's HTML. Your application is also able to access / use other assets like images and templates via the hook.
 
@@ -142,7 +142,13 @@ Called when an asset or bundle has been written to disk. `watchModeUpdate` is tr
 #### c.on( 'packageCreated', function( package, isMain ){} );
 Called when a new parcelify package is created. (Passed through from [parcelify](https://github.com/rotundasoftware/parcelify).)
 
-## The output directory
+## FAQ
+
+#### Q: What is the best way to handle client side templates?
+
+You can include client side templates in your packages using a `template` key in your `package.json` file that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the cartero hook) will then contain an entry for templates required by that parcel, just like the one for styles, which you can then inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
+
+#### Q: What does cartero write to the output directory?
 
 You generally don't need to know the anatomy of cartero's output directory, since the cartero hook serves as a wrapper for the information / assets in contains, but here is the lay of the land for the curious. Note the internals of the output directory are not part of the public API and may be subject to change.
 
@@ -168,12 +174,6 @@ You generally don't need to know the anatomy of cartero's output directory, sinc
 * Parcel directories also contain an `assets.json` file, which enumerates the assets used by the parcel.
 * The `package_map.json` file contains a hash that maps absolute package paths (shashumed for security) to package ids.
 * The `view_map.json` file contains a hash that maps view paths (relative to the view directory, shashumed for security) to parcel ids.
-
-## FAQ
-
-#### Q: What about client side templates?
-
-You can include client side templates in your packages using a `template` key in your `package.json` file that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the cartero hook) will then contain an entry for templates required by that parcel, just like the one for styles, which you can then inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
 
 #### Q: Does cartero address the issue of cache busting?
 
