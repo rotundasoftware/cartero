@@ -109,7 +109,7 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 ```javascript
 {
     assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
-    assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to concat into bundles
+    assetTypesToConcatenate : [ 'style', 'template' ],  // asset types to concat into bundles
     
     outputDirUrl : '/',             // the base url of the output directory
 

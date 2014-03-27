@@ -37,7 +37,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 
 	options = _.defaults( {}, options, {
 		assetTypes : [ 'style', 'template', 'image' ],
-		assetTypesToConcatinate : [ 'style', 'template' ],
+		assetTypesToConcatenate : [ 'style', 'template' ],
 	
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -59,7 +59,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 
 	var assetTypes = options.assetTypes;
 	var tempBundlesByMain = {};
-	var assetTypesToConcatenate = options.assetTypesToConcatinate;
+	var assetTypesToConcatenate = options.assetTypesToConcatenate;
 	var postProcessors;
 
 	async.series( [ function( nextSeries ) {
@@ -159,7 +159,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 					}
 				}, 'style' );
 
-				var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatinate );
+				var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatenate );
 
 				newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
 					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
@@ -340,14 +340,14 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callback ) {
 	var _this = this;
 	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
-	var assetTypesToConcatinate = Object.keys( bundles );
+	var assetTypesToConcatenate = Object.keys( bundles );
 
 	var content = {
 		'script' : [ path.relative( _this.outputDirPath, bundles.script ) ]
 	};
 
 	_.without( assetTypes, 'script' ).forEach( function( thisAssetType ) {
-		var concatenateThisAssetType = _.contains( assetTypesToConcatinate, thisAssetType );
+		var concatenateThisAssetType = _.contains( assetTypesToConcatenate, thisAssetType );
 
 		var filesOfThisType;
 		if( concatenateThisAssetType ) filesOfThisType = bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
