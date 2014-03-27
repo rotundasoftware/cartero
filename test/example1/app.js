@@ -1,6 +1,7 @@
 var express = require( "express" ),
 	// to be replaced with new hook
-	carteroMiddleware = require( "cartero-express-hook" ),
+	hook = require( "cartero-node-hook" ),
+	carteroMiddleware = require( "cartero-express-middleware" ),
 	http = require( "http" ),
 	path = require( "path" );
 
@@ -14,7 +15,13 @@ app.configure( function() {
 	app.use( express.logger( "dev" ) );
 	app.use( express.bodyParser() );
 	app.use( express.methodOverride() );
-	app.use( carteroMiddleware(  { assetsDir : path.join( __dirname, "static", "assets" ), assetsBaseUrl : "/assets" } ) );
+	var h = hook(
+		path.join( __dirname, "views" ),
+		path.join( __dirname, "static/assets" ),
+		{ outputDirUrl : 'assets/' }
+	);
+	app.use( carteroMiddleware( h ) );
+	// app.use( carteroMiddleware(  { assetsDir : path.join( __dirname, "static", "assets" ), assetsBaseUrl : "/assets" } ) );
 	app.use( express.cookieParser( "your secret here" ) );
 	app.use( express.session() );
 	app.use( app.router );
