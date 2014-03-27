@@ -6,7 +6,7 @@ A streaming asset pipeline based on [npm packages](https://www.npmjs.org/‎) an
 
 * Organize your app into packages containing HTML, JavaScript, css, and images.
 * Efficiently transform scss / less to css, coffee to JavaScript, etc. using transform streams.
-* Serve assets directly to your rendered pages, no more messing with `script` and `link` tags!
+* Generate the exact `script` and `link` tags each page of your app needs to load its js/css assets.
 * Keep assets used by a particular view template in the same folder as their view.
 * Use post-processor transform streams to uglify / minify / compress assets.
 * When developing, keep assets separate and watch for changes, reprocessing as appropriate. 
@@ -15,9 +15,9 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing assets into directories by their type are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. npm is a popular platform for managing and sharing such packages. Cartero is an asset pipeline for consuming them.
+The days of organizing assets into directories by their type are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. npm is a popular platform for managing and sharing such packages. Cartero makes it easy for web apps to consume them.
 
-An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, stylesheets and other assets of a package may be enumerated using globs.
+An package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm `package.json` properties, stylesheets and other assets of a package may be enumerated using globs. Cartero is built on [parcelify](https://github.com/rotundasoftware/parcelify), and uses the same syntax to enumerate assets.
 
 ```
 {
@@ -62,7 +62,7 @@ The `package.json` of a parcel *must* have a `view` key that specifies the serve
 }
 ```
 
-__At build time,__ cartero computes the assets required by each parcel in your view directory by inspecting browserify's dependency graph (starting from each parcel's entry point). Assets are passed through a user-defined pipeline of transform streams, bundled when appropriate, and then dropped into your static directory, along with meta data such as lists of the assets used by each view.
+__At build time,__ cartero runs browserify on each parcel in your view directory, saves the js bundle that is generated, and uses the js dependency graph to collect the other assets needed by the parcel. The other assets are then passed through a user-defined pipeline of transform streams, optionally concatenated, and then dropped into your static directory, along with meta data such as lists of the assets used by each view. (Most of this work is actually done by [parcelify](https://github.com/rotundasoftware/parcelify), on which cartero depends.)
 
 __At run time,__ when a given view is rendered, your application asks the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) for the HTML needed to load the js/css assets associated with that view, which can then simply be dropped into the view's HTML. Your application is also able to access / use other assets like images and templates via the hook.
 
@@ -109,7 +109,8 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 ```javascript
 {
     assetTypes : [ 'style', 'template', 'image' ],      // asset keys in package.json files
-    assetTypesToConcatenate : [ 'style', 'template' ],  // asset types to concat into bundles
+    assetTypesToConcatinate : [ 'style', 'template' ],  // asset types to concat into bundles
+    // note JavaScript assets are always included and bundled (by browserify)
     
     outputDirUrl : '/',             // the base url of the output directory
 
