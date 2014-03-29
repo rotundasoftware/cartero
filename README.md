@@ -106,7 +106,7 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 The cartero API gives you the power to do pretty much anything you want with your assets. `viewDir` is the path of the your views directory. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 * `assetTypes` (default: [ 'style', 'template', 'image' ]) - The keys in package.json files that may enumerate assets that should be copied to the cartero output directory.
-* `assetTypesToConcatinate` (default: [ 'style', 'template' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are always included and bundled.
+* `assetTypesToConcatenate` (default: [ 'style', 'template' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are always included and bundled.
 * `outputDirUrl` (default: '/') - The base url of the output directory.
 * `packageTransform` (default: undefined) - A function that transforms package.json files before they are used of the signature `function( pkgJson, dirPath )`. Should return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
 * `sourceMap` (default: false) - Enable js source maps (passed through to browserify).
