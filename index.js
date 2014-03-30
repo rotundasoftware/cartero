@@ -36,8 +36,8 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 	var _this = this;
 
 	options = _.defaults( {}, options, {
-		assetTypes : [ 'style', 'template', 'image' ],
-		assetTypesToConcatenate : [ 'style', 'template' ],
+		assetTypes : [ 'style', 'image' ],
+		assetTypesToConcatenate : [ 'style' ],
 	
 		outputDirUrl : '/',
 		packageTransform : undefined,
