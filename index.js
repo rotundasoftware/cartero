@@ -39,6 +39,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
+		defaultTranforms : [],
 		outputDirUrl : '/',
 		packageTransform : undefined,
 
@@ -93,6 +94,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 
 			var parcelifyOptions = {
 				bundles : tempBundlesByMain[ thisMain ],
+				defaultTranforms : options.defaultTranforms,
 				watch : options.watch,
 				browserifyBundleOptions : {
 					packageFilter : options.packageTransform,

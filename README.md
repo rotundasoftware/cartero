@@ -80,6 +80,8 @@ Once you've run cartero, you'll ask the [cartero hook](https://github.com/rotund
 ```
 --keepSeperate, -s      Keep css files separate, instead of concatenating them (for dev mode).
 
+--transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
+
 --maps, -m   	    	Enable JavaScript source maps in js bundles (for dev mode).
 
 --watch, -w      		Watch mode - watch for changes and update output as appropriate (for dev mode).
@@ -89,7 +91,32 @@ Once you've run cartero, you'll ask the [cartero hook](https://github.com/rotund
 --help, -h       		Show this message.
 ```
 
-## Resolving asset urls
+## Tranforms
+
+Tranforms like sass -> css can be applied to assets in individual packages using the `transforms` key in a package's package.json, or quasi-globally using the `defaultTransforms` option. The `transform` key in package.json should be an array of names or file paths of [transform modules](https://github.com/substack/module-deps#transforms). For example,
+
+```
+{
+  "name": "my-module",
+  "description": "Example module.",
+  "version": "1.5.0",
+  "style" : "*.scss",
+  "transforms" : [ "sass-css-stream" ],
+  "dependencies" : {
+    "sass-css-stream": "0.0.1"
+  }
+}
+```
+
+Transforms modules are called on all assets (including JavaScript files). It is up to the module to determine whether or not it should apply itself to an asset based on the asset's file extension.
+
+NOTE: It is recommend that you rely on the `tranforms` key in package.json as opposed to the global `defaultTranforms` option whenever possible as the former make your packages far easier to consume across applications.
+
+### Built-in global transforms
+
+There are two built-in transforms that cartero automatically applies to all packages.
+
+#### The ##url() transform (to resolve asset urls)
 
 At times it is necessary to resolve the url of an asset, for example to reference an image in one package from another. Cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (*after* any other transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
 
@@ -97,6 +124,18 @@ At times it is necessary to resolve the url of an asset, for example to referenc
 myModule = require( 'my-module' );
 
 $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
+```
+
+The same resolution algorithm can be employed at run time (on the server side) via the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook).
+
+#### The relative to absolute path transform (style assets only)
+
+Cartero automatically applies a transform to your style assets that replaces relative `url()`s with absolute urls, calculated using the `outputDirUrl` option. As a result, package that use relative urls in css files like this one with not break.
+
+```css
+div.backdrop {
+    background: url( 'pattern.png' );
+}
 ```
 
 ## API
@@ -108,6 +147,7 @@ $( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
 * `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that may enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatinate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are always included and bundled.
 * `outputDirUrl` (default: '/') - The base url of the output directory.
+* `defaultTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to packages in which no local transforms are specified. Can be used for quasi-global transforms (without the risk of conflicting with packages that use their own transforms).
 * `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
 * `sourceMap` (default: false) - Enable js source maps (passed through to browserify).
 * `watch` (default: false) - Reprocess assets and bundles (and meta data) when things change.
