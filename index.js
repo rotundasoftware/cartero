@@ -30,8 +30,8 @@ module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
 
-function Cartero( viewDirPath, outputDirPath, options ) {
-	if( ! ( this instanceof Cartero ) ) return new Cartero( viewDirPath, outputDirPath, options );
+function Cartero( viewsDirPath, outputDirPath, options ) {
+	if( ! ( this instanceof Cartero ) ) return new Cartero( viewsDirPath, outputDirPath, options );
 
 	var _this = this;
 
@@ -48,7 +48,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 		postProcessors : []
 	} );
 
-	this.viewDirPath = viewDirPath;
+	this.viewsDirPath = viewsDirPath;
 	this.outputDirPath = outputDirPath;
 	this.outputDirUrl = options.outputDirUrl;
 
@@ -243,7 +243,7 @@ function Cartero( viewDirPath, outputDirPath, options ) {
 }
 
 Cartero.prototype.findMainPaths = function( callback ) {
-	parcelDetector( this.viewDirPath, function( err, detected ) {
+	parcelDetector( this.viewsDirPath, function( err, detected ) {
 		if (err) return callback( err );
 
 		var keys = Object.keys(detected);
@@ -409,7 +409,7 @@ Cartero.prototype.applyPostProcessorsToFiles = function( postProcessors, filePat
 };
 
 Cartero.prototype.addToViewMap = function( viewPath, parcelId ) {
-	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewDirPath, viewPath ) ).digest( 'hex' );
+	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewsDirPath, viewPath ) ).digest( 'hex' );
 	this.viewMap[ viewRelativePathHash ] = parcelId;
 };
 

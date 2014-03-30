@@ -78,13 +78,13 @@ Once you've run cartero, you'll ask the [cartero hook](https://github.com/rotund
 ## Command line options
 
 ```
---transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
-
 --maps, -m   	    	Enable JavaScript source maps in js bundles (for dev mode).
 
 --keepSeperate, -s      Keep css files separate, instead of concatenating them (for dev mode).
 
 --watch, -w      		Watch mode - watch for changes and update output as appropriate (for dev mode).
+
+--transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
 
 --postProcessor, -p		The name of a post processor module to apply to assets (e.g. uglifyify, etc.).
 
@@ -114,11 +114,11 @@ All transform modules are called on all assets plus JavaScript files. It is up t
 
 ### Application level (global) transforms
 
-You can apply quasi-global, application level transforms using the `defaultTransforms` option, which is an array that contains either transform module names / paths (just like the `transforms` key) or transform functions. Because globally applied transforms can easily conflict with local transforms, `defaultTransforms` is only applied to packages that to not specify their own local transforms.
+You can apply quasi-global, application level transforms using the `defaultTransforms` option, which is an array that contains either transform module names / paths (just like the `transforms` key) or transform functions. Because globally applied transforms can easily conflict with local transforms, default transforms are only applied to packages that to not specify their own local transforms.
 
 
 ```javascript
-c = cartero( viewDir, outputDir, {
+c = cartero( viewsDir, outputDir, {
     defaultTransforms : [ 'sass-css-stream' ]
 } );
 ```
@@ -126,7 +126,7 @@ c = cartero( viewDir, outputDir, {
 If you need more control over which transforms are applied to what packages, you can use the `packageTransform` option to insert transforms into the package.json of specific packages.
 
 ```javascript
-c = cartero( viewDir, outputDir, {
+c = cartero( viewsDir, outputDir, {
     packageTransform : function( pkg ) {
         if( ! shouldApplyGlobalTransforms( pkg ) ) return pkg;
 
@@ -142,7 +142,7 @@ There are two built-in transforms that cartero automatically applies to all pack
 
 #### The relative to absolute path transform (style assets only)
 
-Cartero automatically applies a transform to your style assets that replaces relative `url()`s with absolute urls, calculated using the `outputDirUrl` option (after any local / default transforms are applied). This transform is necessary so that relative urls in css files do not break when the files are concatenated into bundles. For example, the following url reference in a third party module will work even after concatenation:
+Cartero automatically applies a transform to your style assets that replaces relative urls with absolute urls, calculated using the `outputDirUrl` option (after any local / default transforms are applied). This transform is necessary so that relative urls do not break when css files are concatenated into bundles. For example, the following url reference in a third party module will work even after concatenation:
 
 ```css
 div.backdrop {
@@ -150,23 +150,23 @@ div.backdrop {
 }
 ```
 
-#### The ##url() transform (to resolve asset urls)
+#### The ##assetUrl() transform (to resolve asset urls)
 
-At times it is necessary to resolve the url of an asset, for example to reference an image in one package from another. To address this need, cartero applies a special transform to all assets that replaces expressions of the form `##url( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
+At times it is useful to resolve the url of an asset, for example to reference an image in one package from another. To address this need, cartero applies a special transform to all assets that replaces expressions of the form `##assetUrl( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
 
 ```javascript
 myModule = require( 'my-module' );
 
-$( 'img.my-module' ).attr( 'src', '##url( "my-module/icon.png" )' );
+$( 'img.my-module' ).attr( 'src', '##assetUrl( "my-module/icon.png" )' );
 ```
 
 The same resolution algorithm can be employed at run time (on the server side) via the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook).
 
 ## API
 
-### c = cartero( viewDir, outputDir, [options] )
+### c = cartero( viewsDir, outputDir, [options] )
 
-`viewDir` is the path of the your views directory. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`viewsDir` is the path of the your views directory. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 * `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatinate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are special cased and are always both included and bundled.
@@ -198,7 +198,7 @@ Called when a new [parcelify](https://github.com/rotundasoftware/parcelify) pack
 
 #### Q: What is the best way to handle client side templates?
 
-You can include client side templates in your packages by added `template` to the `assetTypes` options and using a `template` key in your `package.json` file that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the cartero hook) will then contain an entry for templates required by that parcel, just like the one for styles, which you can then inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
+You can include client side templates in your packages by adding `template` to the `assetTypes` options and using a `template` key in your package.json files that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook)) will then contain an entry for templates required by that parcel, just like the one for styles, which you can inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
 
 #### Q: What does cartero write to the output directory?
 
@@ -227,20 +227,20 @@ You generally don't need to know the anatomy of cartero's output directory, sinc
   * contains all the assets specific to that package, and
   * has the same directory structure as the original package.
 * Parcel directories also contain an `assets.json` file, which enumerates the assets used by the parcel.
-* The `view_map.json` file contains a hash that maps view paths (relative to the view directory, shashumed for security) to parcel ids.
+* The `view_map.json` file contains a hash that maps view paths (relative to `viewsDir`, shashumed for security) to parcel ids.
 * The `package_map.json` file contains a hash that maps absolute package paths (shashumed for security) to package ids.
 
-#### Q: Is it safe for browsers to cache my assets? Does cartero cache bust?
+#### Q: Is it safe for browsers to cache my assets?
 
 Yes. The name of asset bundles generated by cartero includes an shasum of their contents. When the contents of one of the files changes, its name will be updated, which will cause browsers to request a new copy of the content. (The [Rails Asset Pipeline](http://guides.rubyonrails.org/asset_pipeline.html) implements the same cache busting technique.)
 
 #### Q: Will relative urls in css files break when cartero bundles them into one file?
 
-Well, they would break, but cartero automatically applies a tranform to all your style assets that replaces relative `url()`s with absolute urls, calculated using the `outputDirUrl` option. So no, they won't break.
+Well, they would break, but cartero automatically applies a tranform to all your style assets that replaces relative urls with absolute urls, calculated using the `outputDirUrl` option. So no, they won't break.
 
 ## Contributers
 
-* [James Halliday](https://twitter.com/substack) (Minimization of metal footprint, sage advice, supporting modules.)
+* [James Halliday](https://twitter.com/substack) (Much sage advice, supporting modules.)
 * [David Beck](https://twitter.com/davegbeck)
 * [Oleg Seletsky](https://github.com/go-oleg)
 
