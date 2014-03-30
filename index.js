@@ -95,9 +95,9 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 			var parcelifyOptions = {
 				bundles : tempBundlesByMain[ thisMain ],
 				defaultTranforms : options.defaultTranforms,
+				packageTransform : options.packageTransform,
 				watch : options.watch,
 				browserifyBundleOptions : {
-					packageFilter : options.packageTransform,
 					debug : options.sourceMaps
 				},
 				existingPackages : _this.packageManifest
