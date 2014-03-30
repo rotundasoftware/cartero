@@ -2,4 +2,4 @@ require( "../common" );
 
 console.log( 'hellooo dave' );
 
-var robotPngPath = '##url( "../robot.png" )';
+var robotPngPath = '##asset_url( "../robot.png" )';

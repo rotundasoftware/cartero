@@ -20,7 +20,7 @@ var replaceStringTransform = require( 'replace-string-transform' );
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
 
-var assetUrlsTransform = require( './transforms/assetUrls' );
+var assetUrlTransform = require( './transforms/asset_url' );
 
 var kViewMapName = "view_map.json";
 var kPackageMapName = "package_map.json";
@@ -119,7 +119,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 				browserifyInstance.transform( function( file ) {
 					// replace relative ##urls with absolute ones
 					return replaceStringTransform( file, {
-						find : /##url\(\ *(['"])([^']*)\1\ *\)/,
+						find : /##asset_url\(\ *(['"])([^']*)\1\ *\)/,
 						replace : function( file, wholeMatch, quote, assetSrcPath ) {
 							try {
 								assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
@@ -127,7 +127,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 								return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
 							}
 
-							return '##url(' + quote + assetSrcAbsPath + quote + ')';
+							return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
 						}
 					} );
 				} );
@@ -138,7 +138,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 				_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
 
-				newPackage.addTransform( assetUrlsTransform, {
+				newPackage.addTransform( assetUrlTransform, {
 					packagePathsToIds : _this.packagePathsToIds,
 					outputDirUrl : _this.outputDirUrl
 				} );
@@ -307,7 +307,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 
 					// this is part of a hack to apply the ##url transform to javascript files. see comments in transforms/resolveRelativeAssetUrlsToAbsolute
 					var postProcessorsToApply = _.clone( postProcessors );
-					if( thisAssetType === 'script' ) postProcessorsToApply.push( function( file ) { return assetUrlsTransform( file, {
+					if( thisAssetType === 'script' ) postProcessorsToApply.push( function( file ) { return assetUrlTransform( file, {
 						packagePathsToIds : _this.packagePathsToIds,
 						outputDirUrl : _this.outputDirUrl
 					} ); } );

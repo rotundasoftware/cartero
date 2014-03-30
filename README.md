@@ -150,14 +150,14 @@ div.backdrop {
 }
 ```
 
-#### The ##assetUrl() transform (to resolve asset urls)
+#### The ##asset_url() transform (to resolve asset urls)
 
-At times it is useful to resolve the url of an asset, for example to reference an image in one package from another. To address this need, cartero applies a special transform to all assets that replaces expressions of the form `##assetUrl( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
+At times it is useful to resolve the url of an asset, for example in order to reference an image in one package from another. To address this need, cartero applies a special transform to all assets that replaces expressions of the form `##asset_url( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
 
 ```javascript
 myModule = require( 'my-module' );
 
-$( 'img.my-module' ).attr( 'src', '##assetUrl( "my-module/icon.png" )' );
+$( 'img.my-module' ).attr( 'src', '##asset_url( "my-module/icon.png" )' );
 ```
 
 The same resolution algorithm can be employed at run time (on the server side) via the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook).
