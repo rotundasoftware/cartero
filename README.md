@@ -174,7 +174,7 @@ The same resolution algorithm can be employed at run time (on the server side) v
 * `outputDirUrl` (default: '/') - The base url of the output directory.
 * `defaultTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to packages in which no local transforms are specified. Can be used for quasi-global transforms (without the risk of conflicting with packages that use their own transforms).
 * `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
-* `sourceMap` (default: false) - Enable js source maps (passed through to browserify).
+* `sourceMaps` (default: false) - Enable js source maps (passed through to browserify).
 * `watch` (default: false) - Reprocess assets and bundles (and meta data) when things change.
 * `postProcessors` (default: []) - An array of post-procesor functions or module names / paths. Post-processors should have the same signature as [transform modules](https://github.com/substack/module-deps#transforms).
 
