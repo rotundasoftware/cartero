@@ -1,17 +1,13 @@
---keepSeperate, -s      Keep css files separate, instead of concatinating them (for dev mode)
+--outputDirUrl, -o      The base url of the cartero output directory (e.g. "/assets"). Defaults to "/".
 
---maps, -m              Enable JavaScript source maps in js bundles (for dev mode)
+--transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
 
---outputDirUrl, -u      The base url of the output directory
+--postProcessor, -p     The name of a post processor module to apply to assets (e.g. uglifyify, etc.).
 
---watch, -w             Watch mode - watch for changes and update output as appropriate. (for dev mode)
+--maps, -m              Enable JavaScript source maps in js bundles (for dev mode).
 
---postProcessor, -p     The name of a post processor module to apply to assets (e.g. uglify js, compress images).
+--keepSeperate, -s      Keep css files separate, instead of concatenating them (for dev mode).
 
---packageFilter, -pf    Path of JavaScript file that exports a function that transforms package.json
-                        files before they are used. The function should be of the signature 
-                        function( pkgJson, dirPath ) and return the parsed, transformed package.json.
-                        This feature can be used to add default values to package.json files or
-                        alter the package.json of third party modules without modifying them directly.
+--watch, -w             Watch mode - watch for changes and update output as appropriate (for dev mode).
 
---help, -h              Show this message
+--help, -h              Show this message.

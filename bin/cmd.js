@@ -13,6 +13,7 @@ var argv = minimist( process.argv.slice(2),
 			keepSeparate : 's',
 			maps : 'm',
 			watch : 'w',
+			transform : 't',
 			postProcessor : 'p',
 			outputDirUrl : 'u',
 			help : 'h'
@@ -44,6 +45,7 @@ var carteroOptions = {
 	keepSeparate : argv.keepSeparate,
 	sourceMaps : argv.maps,
 	watch : watch,
+	defaultTransforms : argv.transform,
 	outputDirUrl : argv.outputDirUrl,
 	packageTransform : argv.packageTransform,
 	postProcessors : argv.postProcessor
