@@ -250,6 +250,8 @@ Cartero.prototype.findMainPaths = function( callback ) {
 		var pending = keys.length;
 		var mains = [];
 
+		if (pending === 0) callback( null, mains );
+
 		keys.forEach(function (key) {
 			var pkg = detected[key];
 			var pkgdir = path.dirname(key);

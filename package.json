@@ -2,6 +2,9 @@
   "name": "cartero",
   "description": "An asset pipeline built on browserify.",
   "version": "0.5.2",
+  "bin": {
+    "cartero": "bin/cmd.js"
+  },
   "author": {
     "name": "Rotunda Software",
     "email": "support@rotundasoftware.com"
