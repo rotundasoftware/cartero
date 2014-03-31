@@ -1,7 +1,7 @@
 {
   "name": "cartero",
   "description": "An asset pipeline built on browserify.",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "author": {
     "name": "Rotunda Software",
     "email": "support@rotundasoftware.com"
