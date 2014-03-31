@@ -1,5 +1,0 @@
-{
-	"remoteFiles" : [ "http://code.jquery.com/jquery-1.10.1.min.js" ],
-	"devModeOnlyFiles" : "jquery-1.10.1.js",
-	"prodModeOnlyFiles" : "http://code.jquery.com/jquery-1.10.1.min.js"
-}

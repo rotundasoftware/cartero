@@ -1,5 +1,0 @@
-{
-	"Main/CKEEditor" : {
-		"directoriesToFlatten" : [ "lang", "plugins", "samples", "skins" ]
-	}
-}

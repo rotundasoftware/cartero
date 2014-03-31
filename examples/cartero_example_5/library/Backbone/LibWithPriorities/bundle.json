@@ -1,5 +1,0 @@
-{
-	"filePriority" : [ "a.js", "_otherFiles/b.js" ],
-	"devModeOnlyFiles" : [ "_otherFiles/devModeFile.js" ],
-	"prodModeOnlyFiles" : [ "_otherFiles/prodModeFile.js" ]
-}

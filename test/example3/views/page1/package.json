@@ -1,0 +1,5 @@
+{
+	"view" : "page1.jade",
+	"main" : "page1.js",
+	"style" : "*.css"
+}
