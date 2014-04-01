@@ -38,8 +38,8 @@
   },
   "dependencies": {
     "underscore": "~1.4.4",
-    "parcel-detector": "~0.0.0",
     "parcelify": "~0.7.0",
+    "parcel-detector": "~0.0.1",
     "inherits": "~2.0.1",
     "glob": "~3.2.8",
     "rimraf": "~2.2.6",
@@ -51,6 +51,7 @@
     "stream-combiner": "0.0.4",
     "path-mapper": "~0.1.1",
     "through": "~2.3.4",
-    "minimist": "0.0.8"
+    "minimist": "0.0.8",
+    "colors": "~0.6.2"
   }
 }

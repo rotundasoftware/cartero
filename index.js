@@ -15,6 +15,7 @@ var concat = require( 'concat-stream' );
 var through2 = require('through2');
 var combine = require( "stream-combiner" );
 var resolve = require( "resolve" );
+var colors = require( 'colors' );
 var replaceStringTransform = require( 'replace-string-transform' );
 
 var parcelDetector = require( 'parcel-detector' );
@@ -39,7 +40,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
-		defaultTranforms : [],
+		defaultTransforms : [],
 		outputDirUrl : '/',
 		packageTransform : undefined,
 
@@ -61,6 +62,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 	var assetTypes = options.assetTypes;
 	var tempBundlesByMain = {};
 	var assetTypesToConcatenate = options.assetTypesToConcatenate;
+	var assetTypesToWriteToDisk = _.difference( assetTypes, assetTypesToConcatenate );
 	var postProcessors;
 
 	async.series( [ function( nextSeries ) {
@@ -94,7 +96,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 			var parcelifyOptions = {
 				bundles : tempBundlesByMain[ thisMain ],
-				defaultTranforms : options.defaultTranforms,
+				defaultTransforms : options.defaultTransforms,
 				packageTransform : options.packageTransform,
 				watch : options.watch,
 				browserifyBundleOptions : {
@@ -161,8 +163,6 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 					}
 				}, 'style' );
 
-				var assetTypesToWriteToDisk = _.difference( assetTypes, options.assetTypesToConcatenate );
-
 				newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
 					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
 						if( err ) return _this.emit( 'error', err );
@@ -182,7 +182,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
 					
-					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
+					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
 						nextMain();
@@ -192,23 +192,33 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 			p.on( 'bundleWritten', function( path, assetType, watchModeUpdate ) {
 				if( watchModeUpdate ) {
+					var oldBundlePath = _this.finalBundlesByParcelId[ thisParcel.id ] && _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
+					if( oldBundlePath )	{
+						fs.unlinkSync( oldBundlePath );
+						delete _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
+					}
+
 					_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ path ] ), postProcessors, function( err, finalBundles ) {
 						if( err ) return _this.emit( 'error', err );
 
 						_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
 					
-						_this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
+						_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 							if( err ) return _this.emit( 'error', err );
 
-							nextMain();
+							// done!
 						} );
 					} );
 				}
 			} );
 
+			_this.on( 'error', function( err ) {
+				console.log( 'Error: '.red + err.message );
+			} );
+
 			if( options.watch ) {
 				p.on( 'assetUpdated', function( eventType, asset ) {
-					this.writeAssetsJsonForParcel( thisParcel, assetTypes, function( err ) {
+					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
 						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
@@ -341,10 +351,9 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, p
 	} );
 };
 
-Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callback ) {
+Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, assetTypesToConcatenate, callback ) {
 	var _this = this;
 	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
-	var assetTypesToConcatenate = Object.keys( bundles );
 
 	var content = {
 		'script' : [ path.relative( _this.outputDirPath, bundles.script ) ]
@@ -354,6 +363,7 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, callb
 		var concatenateThisAssetType = _.contains( assetTypesToConcatenate, thisAssetType );
 
 		var filesOfThisType;
+
 		if( concatenateThisAssetType ) filesOfThisType = bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
 		else filesOfThisType = _.pluck( parcel.parcelAssetsByType[ thisAssetType ], 'dstPath' );
 

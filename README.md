@@ -241,7 +241,7 @@ Well, they would break, but cartero automatically applies a tranform to all your
 
 ## Contributers
 
-* [James Halliday](https://twitter.com/substack) (Much sage advice, supporting modules.)
+* [James Halliday](https://twitter.com/substack) (Design, sage advice, supporting modules.)
 * [David Beck](https://twitter.com/davegbeck)
 * [Oleg Seletsky](https://github.com/go-oleg)
 
