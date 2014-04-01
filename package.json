@@ -22,6 +22,9 @@
       "url": "https://github.com/rotundasoftware/cartero/blob/master/LICENSE-MIT"
     }
   ],
+  "scripts": {
+    "test": "tape test/test.js"
+  },
   "engines": {
     "node": ">= 0.8.0"
   },
