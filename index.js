@@ -17,6 +17,7 @@ var combine = require( "stream-combiner" );
 var resolve = require( "resolve" );
 var colors = require( 'colors' );
 var replaceStringTransform = require( 'replace-string-transform' );
+var globwatcher = require( 'globwatcher' ).globwatcher;
 
 var parcelDetector = require( 'parcel-detector' );
 var parcelify = require( 'parcelify' );
@@ -59,10 +60,6 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 	this.viewMap = {};
 	this.packagePathsToIds = {};
 
-	var assetTypes = options.assetTypes;
-	var tempBundlesByMain = {};
-	var assetTypesToConcatenate = options.assetTypesToConcatenate;
-	var assetTypesToWriteToDisk = _.difference( assetTypes, assetTypesToConcatenate );
 	var postProcessors;
 
 	async.series( [ function( nextSeries ) {
@@ -87,159 +84,27 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		} );
 	}, function( nextSeries ) {
 		async.each( jsMains, function( thisMain, nextMain ) {
-			tempBundlesByMain[ thisMain ] = {
-				script : _this.getTempBundlePath( 'js' ),
-				style : _.contains( assetTypesToConcatenate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
-				//template : _.contains( options.assetTypesToConcatenate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
-				image : null
-			};
-
-			var parcelifyOptions = {
-				bundles : tempBundlesByMain[ thisMain ],
-				defaultTransforms : options.defaultTransforms,
-				packageTransform : options.packageTransform,
-				watch : options.watch,
-				browserifyBundleOptions : {
-					debug : options.sourceMaps
-				},
-				existingPackages : _this.packageManifest
-			};
-
-			var p = parcelify( thisMain, parcelifyOptions );
-			var thisParcel;
-
-			p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
-				// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
-				// files is using the browserify global transform. however, at the time those transforms are run we
-				// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
-				// resolve relative paths at this time, because once the js files are bundled the tranform will be
-				// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
-				// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
-				// src file to an absolute path (which we do using a browserify global transform), and the second is
-				// to resolve that absolute path to a url (which we do once we know all our package ids).
-
-				browserifyInstance.transform( function( file ) {
-					// replace relative ##urls with absolute ones
-					return replaceStringTransform( file, {
-						find : /##asset_url\(\ *(['"])([^']*)\1\ *\)/,
-						replace : function( file, wholeMatch, quote, assetSrcPath ) {
-							try {
-								assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
-							} catch ( err ) {
-								return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
-							}
-
-							return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
-						}
-					} );
-				} );
-			} );
-
-			p.on( 'packageCreated', function( newPackage, isMain ) {
-				if( isMain ) thisParcel = newPackage;
-
-				_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
-
-				newPackage.addTransform( assetUrlTransform, {
-					packagePathsToIds : _this.packagePathsToIds,
-					outputDirUrl : _this.outputDirUrl
-				} );
-
-				newPackage.addTransform( replaceStringTransform, {
-					find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
-					replace : function( file, match, url ) {
-						url = url.trim();
-
-						// absolute urls stay the same.
-						if( url.charAt( 0 ) === '/' ) return match;
-
-						var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
-
-						// urls in css files are relative to the css file itself
-						var absUrl = path.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), url );
-						absUrl = '/' + newPackage.id + absUrl;
-
-						return 'url( \'' + absUrl + '\' )';
-					}
-				}, 'style' );
-
-				newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
-					_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
-						if( err ) return _this.emit( 'error', err );
-
-						pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
-
-						_this.emit( 'packageCreated', newPackage, isMain );
-					} );
-				} );
-			} );
-
-			p.on( 'done', function() {
-				_this.addToViewMap( thisParcel.view, thisParcel.id );
-
-				_this.copyBundlesToParcelDiretory( thisParcel, tempBundlesByMain[ thisMain ], postProcessors, function( err, finalBundles ) {
-					if( err ) return _this.emit( 'error', err );
-
-					_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
-					
-					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
-						if( err ) return _this.emit( 'error', err );
-
-						nextMain();
-					} );
-				} );
-			} );
-
-			p.on( 'bundleWritten', function( path, assetType, watchModeUpdate ) {
-				if( watchModeUpdate ) {
-					var oldBundlePath = _this.finalBundlesByParcelId[ thisParcel.id ] && _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
-					if( oldBundlePath )	{
-						fs.unlinkSync( oldBundlePath );
-						delete _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
-					}
-
-					_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ path ] ), postProcessors, function( err, finalBundles ) {
-						if( err ) return _this.emit( 'error', err );
-
-						_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
-					
-						_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
-							if( err ) return _this.emit( 'error', err );
-
-							// done!
-						} );
-					} );
-				}
-			} );
-
-			_this.on( 'error', function( err ) {
-				console.log( 'Error: '.red + err.message );
-			} );
-
-			if( options.watch ) {
-				p.on( 'assetUpdated', function( eventType, asset ) {
-					_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
-						if( err ) return _this.emit( 'error', err );
-
-						if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
-							if( eventType === 'added' || eventType === 'changed' )
-								asset.writeToDisk( null, true, function() {
-									_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
-
-									// ... done
-								} );
-							else
-								fs.unlink( asset.dstPath, function( err ) { if( err ) _this.emit( 'error', err ); } );
-						}
-					} );
-				} );
-
-				p.on( 'packageJsonUpdated', function( thePackage ) {
-					if( thePackage === thisParcel )
-						_this.addToViewMap( thisParcel.view, thisParcel.id );
-				} );
-			}
+			_this.processMain( thisMain, options, postProcessors, nextMain );
 		}, nextSeries );
+	}, function( nextSeries ) {
+		nextSeries();
+		// if( options.watch ) {
+		// 	var parcelJsonWatcher = globwatcher( _this.viewsDirPath, "/**/package.json" );
+		// 	parcelJsonWatcher.on( 'changed' update );
+		// 	function update() {
+		// 		_this.findMainPaths( function( err, newMains ) {
+		// 			if( err ) _this.emit( 'error', err );
+
+		// 			var oldMains = _.reduce( packageManifest, function( memo, thisPackage, thisPackageId ) {
+		// 				if( thisPackage.mainPath ) return memo.push( thisPackage.mainPath );
+		// 				else return memo;
+		// 			}, [] );
+
+		// 			var mainsThatWereAdded = _.difference( newMains, oldMains );
+
+		// 		} );
+		// 	}
+		// }
 	} ], function( err ) {
 		if( err ) return _this.emit( 'error', err );
 
@@ -251,6 +116,167 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 	return _this;
 }
+
+Cartero.prototype.processMain = function( mainPath, options, postProcessors, callback ) {
+	var _this = this;
+
+	var assetTypes = options.assetTypes;
+	var assetTypesToConcatenate = options.assetTypesToConcatenate;
+	var assetTypesToWriteToDisk = _.difference( assetTypes, assetTypesToConcatenate );
+
+	var tempBundles = {
+		script : _this.getTempBundlePath( 'js' ),
+		style : _.contains( assetTypesToConcatenate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
+		//template : _.contains( options.assetTypesToConcatenate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
+		image : null
+	};
+
+	var parcelifyOptions = {
+		bundles : tempBundles,
+		defaultTransforms : options.defaultTransforms,
+		packageTransform : options.packageTransform,
+		watch : options.watch,
+		browserifyBundleOptions : {
+			debug : options.sourceMaps
+		},
+		existingPackages : _this.packageManifest
+	};
+
+	var p = parcelify( mainPath, parcelifyOptions );
+	var thisParcel;
+
+	p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
+		// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
+		// files is using the browserify global transform. however, at the time those transforms are run we
+		// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
+		// resolve relative paths at this time, because once the js files are bundled the tranform will be
+		// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
+		// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
+		// src file to an absolute path (which we do using a browserify global transform), and the second is
+		// to resolve that absolute path to a url (which we do once we know all our package ids).
+
+		browserifyInstance.transform( function( file ) {
+			// replace relative ##urls with absolute ones
+			return replaceStringTransform( file, {
+				find : /##asset_url\(\ *(['"])([^']*)\1\ *\)/,
+				replace : function( file, wholeMatch, quote, assetSrcPath ) {
+					try {
+						assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
+					} catch ( err ) {
+						return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
+					}
+
+					return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
+				}
+			} );
+		} );
+	} );
+
+	p.on( 'packageCreated', function( newPackage, isMain ) {
+		if( isMain ) thisParcel = newPackage;
+
+		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
+
+		newPackage.addTransform( assetUrlTransform, {
+			packagePathsToIds : _this.packagePathsToIds,
+			outputDirUrl : _this.outputDirUrl
+		} );
+
+		newPackage.addTransform( replaceStringTransform, {
+			find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
+			replace : function( file, match, url ) {
+				url = url.trim();
+
+				// absolute urls stay the same.
+				if( url.charAt( 0 ) === '/' ) return match;
+
+				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
+
+				// urls in css files are relative to the css file itself
+				var absUrl = path.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), url );
+				absUrl = '/' + newPackage.id + absUrl;
+
+				return 'url( \'' + absUrl + '\' )';
+			}
+		}, 'style' );
+
+		newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
+			_this.applyPostProcessorsToFiles( postProcessors, pathsOfWrittenAssets, function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
+
+				_this.emit( 'packageCreated', newPackage, isMain );
+			} );
+		} );
+	} );
+
+	p.on( 'done', function() {
+		_this.addToViewMap( thisParcel.view, thisParcel.id );
+
+		_this.copyBundlesToParcelDiretory( thisParcel, tempBundles, postProcessors, function( err, finalBundles ) {
+			if( err ) return _this.emit( 'error', err );
+
+			_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
+			
+			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				callback();
+			} );
+		} );
+	} );
+
+	p.on( 'bundleWritten', function( path, assetType, watchModeUpdate ) {
+		if( watchModeUpdate ) {
+			var oldBundlePath = _this.finalBundlesByParcelId[ thisParcel.id ] && _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
+			if( oldBundlePath )	{
+				fs.unlinkSync( oldBundlePath );
+				delete _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
+			}
+
+			_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ path ] ), postProcessors, function( err, finalBundles ) {
+				if( err ) return _this.emit( 'error', err );
+
+				_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
+			
+				_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
+					if( err ) return _this.emit( 'error', err );
+
+					// done!
+				} );
+			} );
+		}
+	} );
+
+	_this.on( 'error', function( err ) {
+		console.log( 'Error: '.red + err );
+	} );
+
+	if( options.watch ) {
+		p.on( 'assetUpdated', function( eventType, asset ) {
+			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
+					if( eventType === 'added' || eventType === 'changed' )
+						asset.writeToDisk( null, true, function() {
+							_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
+
+							// ... done
+						} );
+					else
+						fs.unlink( asset.dstPath, function( err ) { if( err ) _this.emit( 'error', err ); } );
+				}
+			} );
+		} );
+
+		p.on( 'packageJsonUpdated', function( thePackage ) {
+			if( thePackage === thisParcel )
+				_this.addToViewMap( thisParcel.view, thisParcel.id );
+		} );
+	}
+};
 
 Cartero.prototype.findMainPaths = function( callback ) {
 	parcelDetector( this.viewsDirPath, function( err, detected ) {
