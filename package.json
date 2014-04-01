@@ -42,7 +42,7 @@
   "dependencies": {
     "underscore": "~1.4.4",
     "parcelify": "~0.7.0",
-    "parcel-detector": ">=0.0.0",
+    "parcel-detector": "*",
     "inherits": "~2.0.1",
     "glob": "~3.2.8",
     "rimraf": "~2.2.6",
