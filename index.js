@@ -49,8 +49,8 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		postProcessors : []
 	} );
 
-	this.viewsDirPath = viewsDirPath;
-	this.outputDirPath = outputDirPath;
+	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
+	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 	this.outputDirUrl = options.outputDirUrl;
 
 	this.packageManifest = {};
@@ -67,10 +67,10 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 	async.series( [ function( nextSeries ) {
 		// delete the output directory
-		rimraf( outputDirPath, nextSeries );
+		rimraf( _this.outputDirPath, nextSeries );
 	}, function( nextSeries ) {
 		// now remake it
-		fs.mkdir( outputDirPath, nextSeries );
+		fs.mkdir( _this.outputDirPath, nextSeries );
 	}, function( nextSeries ) {
 		_this.findMainPaths( function( err, res ) {
 			if( err ) return nextSeries( err );
