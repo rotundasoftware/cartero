@@ -15,12 +15,12 @@ var concat = require( 'concat-stream' );
 var through2 = require('through2');
 var combine = require( "stream-combiner" );
 var resolve = require( "resolve" );
-var colors = require( 'colors' );
 var replaceStringTransform = require( 'replace-string-transform' );
 var globwatcher = require( 'globwatcher' ).globwatcher;
 var Parcel = require( 'parcelify/lib/parcel.js' );
+var log = require( 'npmlog' );
 
-var parcelDetector = require( 'parcel-detector' );
+var parcelFinder = require( 'parcel-finder' );
 var parcelify = require( 'parcelify' );
 
 var assetUrlTransform = require( './transforms/asset_url' );
@@ -72,6 +72,8 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 	this.viewMap = {};
 	this.packagePathsToIds = {};
 
+	this.watching = false;
+
 	async.series( [ function( nextSeries ) {
 		// delete the output directory
 		rimraf( _this.outputDirPath, nextSeries );
@@ -94,12 +96,12 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 			var parcelJsonWatcher = globwatcher( path.join( _this.viewsDirPath, "/**/package.json" ) );
 			parcelJsonWatcher.on( 'added', _this.processParcels );
 			parcelJsonWatcher.on( 'changed', _this.processParcels );
+
+			_this.watching = true;
+			log.info( 'watching for changes...' );
 		}
 
-		_this.writeViewAndPackageMaps( function( err ) {
-			if( err ) return _this.emit( 'error', err );
-			_this.emit( 'done' );
-		} );
+		_this.emit( 'done' );
 	} );
 
 	return _this;
@@ -126,7 +128,15 @@ Cartero.prototype.processParcels = function( callback ) {
 		var mainsThatWereAdded = _.difference( newMains, oldMains );
 		async.each( mainsThatWereAdded, function( thisMain, nextMain ) {
 			_this.processMain( thisMain, nextMain );
-		}, callback );
+		}, function( err ) {
+			if( err ) return callback( err );
+
+			_this.writeViewAndPackageMaps( function( err ) {
+				if( err ) return callback( err );
+
+				callback();
+			} );
+		} );
 	} );
 };
 
@@ -158,7 +168,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	var p = parcelify( mainPath, parcelifyOptions );
 	var thisParcel;
 
-	p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
+	p.on( 'browserifyInstanceCreated', function( browserifyInstance ) {
 		// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
 		// files is using the browserify global transform. however, at the time those transforms are run we
 		// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
@@ -176,7 +186,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 					try {
 						assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
 					} catch ( err ) {
-						return _this.emit( 'error', new Error( 'Could not resolve ##url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
+						return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
 					}
 
 					return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
@@ -186,7 +196,10 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	} );
 
 	p.on( 'packageCreated', function( newPackage, isMain ) {
-		if( isMain ) thisParcel = newPackage;
+		if( isMain ) {
+			thisParcel = newPackage;
+			_this.addToViewMap( thisParcel.view, thisParcel.id );
+		}
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
 
@@ -218,6 +231,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				if( err ) return _this.emit( 'error', err );
 
 				pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
+				
+				if( _this.watching ) _this.writeViewAndPackageMaps( function() {} );
 
 				_this.emit( 'packageCreated', newPackage, isMain );
 			} );
@@ -225,12 +240,12 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	} );
 
 	p.on( 'done', function() {
-		_this.addToViewMap( thisParcel.view, thisParcel.id );
-
 		_this.copyBundlesToParcelDiretory( thisParcel, tempBundles, function( err, finalBundles ) {
 			if( err ) return _this.emit( 'error', err );
 
-			_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, false ); } );
+			_.each( finalBundles, function( thisBundle, thisBundleType ) {
+				_this.emit( 'fileWritten', thisBundle, thisBundleType, true, false );
+			} );
 			
 			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 				if( err ) return _this.emit( 'error', err );
@@ -240,7 +255,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		} );
 	} );
 
-	p.on( 'bundleWritten', function( path, assetType, watchModeUpdate ) {
+	p.on( 'bundleWritten', function( bundlePath, assetType, watchModeUpdate ) {
 		if( watchModeUpdate ) {
 			var oldBundlePath = _this.finalBundlesByParcelId[ thisParcel.id ] && _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
 			if( oldBundlePath )	{
@@ -248,7 +263,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				delete _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
 			}
 
-			_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ path ] ), function( err, finalBundles ) {
+			_this.copyBundlesToParcelDiretory( thisParcel, _.object( [ assetType ], [ bundlePath ] ), function( err, finalBundles ) {
 				if( err ) return _this.emit( 'error', err );
 
 				_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
@@ -263,7 +278,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	} );
 
 	_this.on( 'error', function( err ) {
-		console.log( 'Error: '.red + err );
+		log.error( '', err );
 	} );
 
 	if( _this.watch ) {
@@ -284,15 +299,11 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			} );
 		} );
 
-		
 		p.on( 'packageJsonUpdated', function( thePackage ) {
-			if( ! ( thePackage instanceof Parcel ) ) {
+			if( ! ( thePackage instanceof Parcel ) || thePackage === thisParcel ) {
 				// if any package is converted to a parcel, we need to re-process the package (as a parcel).
 				// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
-				console.log( 'yo' );
-				parcelDetector.parsePackage( thePackage.path, _this.packageTransform, function( err, isParcel, pkg ) {
-				console.log( isParcel );
-				console.log( pkg );
+				parcelFinder.parsePackage( thePackage.path, _this.packageTransform, function( err, isParcel, pkg ) {
 					if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
 						delete _this.packageManifest[ thePackage.id ];
 						thePackage.destroy();
@@ -309,7 +320,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 };
 
 Cartero.prototype.findMainPaths = function( packageTransform, callback ) {
-	parcelDetector( this.viewsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
+	parcelFinder( this.viewsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
 		if (err) return callback( err );
 
 		callback( null, _.reduce( detected, function( memo, thisPkg ) {
@@ -358,6 +369,12 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 					}
 
 					bundleStream.pipe( fs.createWriteStream( dstPath ).on( 'close', function() {
+						log.info( _this.watching ? 'watch' : '',
+							'%s bundle written for %s',
+							thisAssetType, path.relative( _this.viewsDirPath, parcel.view )
+						);
+						
+						fs.unlink( thisBundleTempPath, function() {} );
 						nextAssetType();
 					} ) );
 
@@ -365,8 +382,6 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 
 					if( ! _this.finalBundlesByParcelId[ parcel.id ] ) _this.finalBundlesByParcelId[ parcel.id ] = {};
 					_this.finalBundlesByParcelId[ parcel.id ][ thisAssetType ] = dstPath;
-
-					fs.unlink( thisBundleTempPath, function() {} );
 				} ) );
 			} );
 		}, function( err ) {
@@ -381,16 +396,17 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, assetTypes, asset
 	var _this = this;
 	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
 
-	var content = {
-		'script' : [ path.relative( _this.outputDirPath, bundles.script ) ]
-	};
+	var content = {};
+
+	if( bundles && bundles.script )
+		content.script = [ path.relative( _this.outputDirPath, bundles.script ) ];
 
 	_.without( assetTypes, 'script' ).forEach( function( thisAssetType ) {
 		var concatenateThisAssetType = _.contains( assetTypesToConcatenate, thisAssetType );
 
 		var filesOfThisType;
 
-		if( concatenateThisAssetType ) filesOfThisType = bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
+		if( concatenateThisAssetType ) filesOfThisType = bundles && bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
 		else filesOfThisType = _.pluck( parcel.parcelAssetsByType[ thisAssetType ], 'dstPath' );
 
 		content[ thisAssetType ] = _.map( filesOfThisType, function( absPath ) {
