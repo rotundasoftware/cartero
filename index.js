@@ -145,7 +145,7 @@ Cartero.prototype.processMain = function( mainPath, options, postProcessors, cal
 	var p = parcelify( mainPath, parcelifyOptions );
 	var thisParcel;
 
-	p.on( 'browerifyInstanceCreated', function( browserifyInstance ) {
+	p.on( 'browserifyInstanceCreated', function( browserifyInstance ) {
 		// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
 		// files is using the browserify global transform. however, at the time those transforms are run we
 		// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
