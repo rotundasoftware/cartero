@@ -2,6 +2,7 @@
 
 A streaming asset pipeline based on [npm packages](https://www.npmjs.org/‎) and [browserify](http://browserify.org/). 
 
+[![build status](https://secure.travis-ci.org/rotundasoftware/cartero.png)](http://travis-ci.org/rotundasoftware/cartero)
 ## Benefits
 
 * Organize your app into packages containing HTML, JavaScript, css, and images.
