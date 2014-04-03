@@ -1,6 +1,6 @@
 # cartero
 
-A streaming asset pipeline based on [npm packages](https://www.npmjs.org/‎) and [browserify](http://browserify.org/). 
+A streaming asset pipeline based on [npm packages](https://www.npmjs.org) and [browserify](http://browserify.org/). 
 
 [![build status](https://secure.travis-ci.org/rotundasoftware/cartero.png)](http://travis-ci.org/rotundasoftware/cartero)
 ## Benefits
