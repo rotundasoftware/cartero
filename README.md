@@ -27,7 +27,7 @@ A package is defined as a directory that contains a [package.json](https://www.n
     "main" : "lib/my-module.js",
 
     "style" : "*.scss",
-    "image" : [ "*.png", "myIcon.jpg" ],
+    "image" : [ "icon.png" ],
     "transforms" : [ "scss-css-stream" ]
 }
 ```
@@ -200,7 +200,7 @@ Called when a new [parcelify](https://github.com/rotundasoftware/parcelify) pack
 
 #### Q: What is the best way to handle client side templates?
 
-You can include client side templates in your packages by adding `template` to the `assetTypes` options and using a `template` key in your package.json files that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook)) will then contain an entry for templates required by that parcel, just like the one for styles, which you can inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [node-hbsfy](https://github.com/epeli/node-hbsfy) or [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile templates and `require` them explicitly from your JavaScript files.
+You can include client side templates in your packages by adding `template` to the `assetTypes` options and using a `template` key in your package.json files that behaves in the exact same was a the style key. The `assets.json` file for a parcel (and the data returned by the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook)) will then contain an entry for templates required by that parcel, just like the one for styles, which you can inject into the view's HTML. However, if you plan to share your packages we recommend against this practice as it makes your packages difficult to consume. Instead we recommend using a browserify transform like [nunjucksify](https://github.com/rotundasoftware/nunjucksify) or [node-hbsfy](https://github.com/epeli/node-hbsfy) to precompile templates and `require` them explicitly from your JavaScript files.
 
 #### Q: What does cartero write to the output directory?
 

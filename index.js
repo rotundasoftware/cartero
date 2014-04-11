@@ -48,7 +48,10 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 		sourceMaps : false,
 		watch : false,
-		postProcessors : []
+		postProcessors : [],
+
+		browserifyOptions : {},
+		browserifyBundleOptions: {}
 	} );
 
 	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
@@ -61,7 +64,9 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		'outputDirUrl',
 		'packageTransform',
 		'sourceMaps',
-		'watch'
+		'watch',
+		'browserifyOptions',
+		'browserifyBundleOptions'
 	) );
 
 	this.outputDirUrl = options.outputDirUrl;
@@ -159,9 +164,10 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		defaultTransforms : _this.defaultTransforms,
 		packageTransform : _this.packageTransform,
 		watch : _this.watch,
-		browserifyBundleOptions : {
+		browserifyOptions : _this.browserifyOptions,
+		browserifyBundleOptions : _.extend( {}, {
 			debug : _this.sourceMaps
-		},
+		}, _this.browserifyBundleOptions ),
 		existingPackages : _this.packageManifest
 	};
 
