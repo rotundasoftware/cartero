@@ -42,7 +42,9 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
-		defaultTransforms : [],
+		appTranforms : [],
+		appTranformDirs : [ viewsDirPath ],
+
 		outputDirUrl : '/',
 		packageTransform : undefined,
 
@@ -60,7 +62,8 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 	_.extend( this, _.pick( options,
 		'assetTypes',
 		'assetTypesToConcatenate',
-		'defaultTransforms',
+		'appTranforms',
+		'appTranformDirs',
 		'outputDirUrl',
 		'packageTransform',
 		'sourceMaps',
@@ -161,7 +164,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 	var parcelifyOptions = {
 		bundles : tempBundles,
-		defaultTransforms : _this.defaultTransforms,
+		appTranforms : _this.appTranforms,
+		appTranformDirs : _this.appTranformDirs,
 		packageTransform : _this.packageTransform,
 		watch : _this.watch,
 		browserifyOptions : _this.browserifyOptions,
