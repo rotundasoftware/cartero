@@ -118,7 +118,7 @@ All transform modules are called on all assets plus JavaScript files. It is up t
 
 ### Application level transforms
 
-You can apply transforms to all packages within your `views` directory using the `-t` command line argument (or the `appTransforms` option). This feature is useful to apply transforms like coffee -> js or image compression to all packages in your application. Packages inside a `node_modules` folder located inside of your views directory are not effected. (You can apply your application transforms to additional directories as well using the `transformDir` command line argument.)
+You can apply transforms to all packages within your `views` directory using the `-t` command line argument (or the `appTransforms` option). Packages inside a `node_modules` folder located inside of your views directory are not effected. (You can apply your application transforms to additional directories as well using the `transformDir` command line argument.)
 
 ```
 $ cartero views static/assets -t "sass-css-stream"
