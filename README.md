@@ -81,7 +81,7 @@ Once you've run cartero, you'll ask the [cartero hook](https://github.com/rotund
 ```
 --outputDirUrl, -o      The base url of the cartero output directory (e.g. "/assets"). Defaults to "/".
 
---transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
+--transform, -t         Name or path of a default transform. (See discussion of `appTransforms` option.)
 
 --postProcessor, -p     The name of a post processor module to apply to assets (e.g. uglifyify, etc.).
 
@@ -116,26 +116,12 @@ The safest and most portable way to apply transforms like sass -> css or coffee 
 
 All transform modules are called on all assets plus JavaScript files. It is up to the transform module to determine whether or not it should apply itself to a file (usually based on the file extension).
 
-### Application level (global) transforms
+### Application level transforms
 
-You can apply quasi-global, application level transforms using the `defaultTransforms` option.
-
+You can apply transforms to all packages within your `views` directory using the `-t` command line argument (or the `appTransforms` option). This feature is useful to apply transforms like coffee -> js or image compression to all packages in your application. Packages inside a `node_modules` folder located inside of your views directory are not effected. (You can apply your application transforms to additional directories as well using the `transformDir` command line argument.)
 
 ```
 $ cartero views static/assets -t "sass-css-stream"
-```
-
-Because globally applied transforms can easily conflict with local transforms, default transforms are only applied to packages that to not specify their own local transforms. If you need more control over which app level transforms are applied to what packages, you can use the `packageTransform` option to insert transforms into the package.json of specific packages.
-
-```javascript
-c = cartero( viewsDir, outputDir, {
-    packageTransform : function( pkg ) {
-        if( ! shouldApplyAppTransforms( pkg ) ) return pkg;
-
-        pkg.transforms = ( pkg.transforms || [] )
-            .concat( [ 'sass-scc-stream' ] );
-    }
-} );
 ```
 
 ### Built-in transforms
@@ -173,8 +159,9 @@ The same resolution algorithm can be employed at run time (on the server side) v
 * `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatenate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are special cased and are always both included and bundled.
 * `outputDirUrl` (default: '/') - The base url of the output directory.
-* `defaultTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to packages in which no local transforms are specified. Can be used for quasi-global transforms (without the risk of conflicting with packages that use their own transforms).
-* `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
+* `appTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to all packages in directories in the `appTransformDirs` array.
+* `appTransformDirs` (default: [ viewsDir ]) - `appTransforms` are applied to any packages that are within one of the directories in this array. (The recursive search is stopped on `node_module` directories.)
+* `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson, path )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
 * `sourceMaps` (default: false) - Enable js source maps (passed through to browserify).
 * `watch` (default: false) - Reprocess assets and bundles (and meta data) when things change.
 * `postProcessors` (default: []) - An array of post-procesor functions or module names / paths. Post-processors should have the same signature as [transform modules](https://github.com/substack/module-deps#transforms).
