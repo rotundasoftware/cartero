@@ -114,7 +114,7 @@ The safest and most portable way to apply transforms like sass -> css or coffee 
 }
 ```
 
-All transform modules are called on all assets plus JavaScript files. It is up to the transform module to determine whether or not it should apply itself to a file (usually based on the file extension).
+All transform modules are called on all assets (including JavaScript files). It is up to the transform module to determine whether or not it should apply itself to a file (usually based on the file extension).
 
 ### Application level transforms
 
