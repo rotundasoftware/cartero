@@ -38,12 +38,18 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 	var _this = this;
 
+	if( ! viewsDirPath ) throw new Error( 'Required argument viewDirPath was not supplied.' );
+	if( ! outputDirPath ) throw new Error( 'Required argument outputDirPath was not supplied.' );
+	
+	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
+	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
+
 	options = _.defaults( {}, options, {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
 		appTranforms : [],
-		appTranformDirs : [ viewsDirPath ],
+		appTranformDirs : [ this.viewsDirPath ],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -55,9 +61,6 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		browserifyOptions : {},
 		browserifyBundleOptions: {}
 	} );
-
-	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
-	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 
 	_.extend( this, _.pick( options,
 		'assetTypes',
