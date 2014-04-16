@@ -109,7 +109,7 @@ The safest and most portable way to apply transforms like sass -> css or coffee 
   "style" : "*.scss",
   "transforms" : [ "sass-css-stream" ],
   "dependencies" : {
-    "sass-css-stream": "0.0.1"
+    "sass-css-stream": "~0.0.1"
   }
 }
 ```
