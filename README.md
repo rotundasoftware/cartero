@@ -4,15 +4,17 @@ Modular front end development for the masses. Built on [npm](https://www.npmjs.o
 
 ## Overview
 
-Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution now, allowing you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'my-module' )`.
+Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution now.
 
-cartero is primarily a build tool based on CommonJS, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. You can efficiently precompile, concatenate, and postprocess all assets in a multi-page application with a single command,
+cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'my-module' )`.
+
+cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (It is also similar to Component.js, but with some important distinctions.) Building all the assets you need for your application is as simple as
 
 ```
 $ cartero ./views ./static/assets
 ```
 
-The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is automatically updated as appropriate when assets are changed. cartero's watch mode is extremely efficient responding perfectly and appropriately as changes are made.
+The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is automatically updated when assets are changed. cartero's watch mode is extremely efficient, only rebuilding what is necessary given the changes made.
 
 ### The hook
 
