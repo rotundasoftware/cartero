@@ -6,7 +6,7 @@ var fs = require( 'fs' );
 var crypto = require( 'crypto' );
 var _ = require( 'underscore' );
 
-var outputDirFiles = [ "package_map.json", "view_map.json" ];
+var outputDirFiles = [ "parcel_map.json" ];
 
 test( 'example1', function( t ) {
 	t.plan( 4 );
@@ -20,7 +20,7 @@ test( 'example1', function( t ) {
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			packageId = newPackage.id;
-			viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
+			parcelRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' );
 		}
 	} );
 
@@ -30,7 +30,7 @@ test( 'example1', function( t ) {
 			[ packageId ].concat( outputDirFiles ).sort()
 		);
 
-		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + packageId +'\"\n}' );
+		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePathHash + '\": \"' + packageId +'\"\n}' );
 	
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
@@ -47,7 +47,7 @@ test( 'example2', function( t ) {
 
 	var viewDirPath = path.join( __dirname, 'example2/views' );
 	var outputDirPath = path.join( __dirname, 'example2/static/assets' );
-	var parcelId, viewRelativePathHash;
+	var parcelId, parcelRelativePathHash;
 
 	var options = {
 		packageTransform : function( pkg ) {
@@ -74,7 +74,7 @@ test( 'example2', function( t ) {
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			parcelId = newPackage.id;
-			viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' );
+			parcelRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' );
 		}
 	} );
 
@@ -91,7 +91,7 @@ test( 'example2', function( t ) {
 			[ parcelId ].concat( outputDirFiles ).sort()
 		);
 
-		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ), '{\n    \"' + viewRelativePathHash + '\": \"' + parcelId + '\"\n}' );
+		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePathHash + '\": \"' + parcelId + '\"\n}' );
 
 		var bundleDir = path.join( outputDirPath, parcelId );
 		t.deepEqual(
@@ -107,9 +107,9 @@ test( 'example3', function( t ) {
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var outputDirPath = path.join( __dirname, 'example3/static/assets' );
-	var viewMap = {};
+	var parcelMap = {};
 	var packageIds = [];
-	var parcelIdsByView = {};
+	var parcelIdsByPath = {};
 
 	var commonJsPackageId = "";
 
@@ -118,8 +118,8 @@ test( 'example3', function( t ) {
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			parcelId = newPackage.id;
-			viewMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.view ) ).digest( 'hex' ) ] = parcelId;
-			parcelIdsByView[ path.basename( newPackage.view ) ] = parcelId;
+			parcelMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' ) ] = parcelId;
+			parcelIdsByPath[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 		}
 		else
 			if( newPackage.package.name === "common-js" )
@@ -134,18 +134,18 @@ test( 'example3', function( t ) {
 			packageIds.concat( outputDirFiles ).sort()
 		);
 
-		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'view_map.json' ), 'utf8' ) ), viewMap );
+		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ) ), parcelMap );
 	
-		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ] ) ).sort();
+		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page1' ] ) ).sort();
 
 		var page1JsBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.js'; } );
-		page1JsBundle = path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ], page1JsBundle );
+		page1JsBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1JsBundle );
 
 		var page1JsContents = fs.readFileSync( page1JsBundle, 'utf8' );
 		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, '##asset_url resolved' );
 		
 		var page1CssBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
-		page1CssBundle = path.join( outputDirPath, parcelIdsByView[ 'page1.jade' ], page1CssBundle );
+		page1CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1CssBundle );
 
 		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
 		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, 'relative css url resolved' );

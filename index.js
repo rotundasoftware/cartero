@@ -25,7 +25,7 @@ var parcelify = require( 'parcelify' );
 
 var assetUrlTransform = require( './transforms/asset_url' );
 
-var kViewMapName = "view_map.json";
+var kParcelMapName = "parcel_map.json";
 var kPackageMapName = "package_map.json";
 var kAssetsJsonName = "assets.json";
 
@@ -40,7 +40,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 
 	if( ! viewsDirPath ) throw new Error( 'Required argument viewDirPath was not supplied.' );
 	if( ! outputDirPath ) throw new Error( 'Required argument outputDirPath was not supplied.' );
-	
+
 	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
 	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 
@@ -80,7 +80,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
 
-	this.viewMap = {};
+	this.parcelMap = {};
 	this.packagePathsToIds = {};
 
 	this.watching = false;
@@ -142,7 +142,7 @@ Cartero.prototype.processParcels = function( callback ) {
 		}, function( err ) {
 			if( err ) return callback( err );
 
-			_this.writeViewAndPackageMaps( function( err ) {
+			_this.writeTopLevelMaps( function( err ) {
 				if( err ) return callback( err );
 
 				callback();
@@ -211,7 +211,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	p.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			thisParcel = newPackage;
-			_this.addToViewMap( thisParcel.view, thisParcel.id );
+			_this.addToParcelMap( thisParcel, thisParcel.id );
 		}
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
@@ -245,7 +245,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 				pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
 				
-				if( _this.watching ) _this.writeViewAndPackageMaps( function() {} );
+				if( _this.watching ) _this.writeTopLevelMaps( function() {} );
 
 				_this.emit( 'packageCreated', newPackage, isMain );
 			} );
@@ -327,7 +327,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			}
 			else if( thePackage === thisParcel )
 				// in case the view key changed
-				_this.addToViewMap( thisParcel.view, thisParcel.id );
+				_this.addToParcelMap( thisParcel, thisParcel.id );
 		} );
 	}
 };
@@ -477,33 +477,33 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 	}, callback );
 };
 
-Cartero.prototype.addToViewMap = function( viewPath, parcelId ) {
-	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewsDirPath, viewPath ) ).digest( 'hex' );
-	this.viewMap[ viewRelativePathHash ] = parcelId;
+Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
+	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewsDirPath, parcel.path ) ).digest( 'hex' );
+	this.parcelMap[ viewRelativePathHash ] = parcelId;
 };
 
-Cartero.prototype.writeViewAndPackageMaps = function( callback ) {
+Cartero.prototype.writeTopLevelMaps = function( callback ) {
 	var _this = this;
 
 	async.parallel( [ function( nextParallel ) {
-		var viewMapPath = path.join( _this.outputDirPath, kViewMapName );
-		fs.writeFile( viewMapPath, JSON.stringify( _this.viewMap, null, 4 ), function( err ) {
+		var parcelMapPath = path.join( _this.outputDirPath, kParcelMapName );
+		fs.writeFile( parcelMapPath, JSON.stringify( _this.parcelMap, null, 4 ), function( err ) {
 			if( err ) return callback( err );
 
 			nextParallel();
 		} );
-	}, function( nextParallel ) {
-		var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
-		var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
-			var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
-			memo[ thisPackagePathShasum ] = thisPackageId;
-			return memo;
-		}, {} );
+	// }, function( nextParallel ) {
+	// 	var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
+	// 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
+	// 		var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
+	// 		memo[ thisPackagePathShasum ] = thisPackageId;
+	// 		return memo;
+	// 	}, {} );
 
-		fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
-			if( err ) return callback( err );
+	// 	fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
+	// 		if( err ) return callback( err );
 
-			nextParallel();
-		} );
+	// 		nextParallel();
+	// 	} );
 	} ], callback );
 };

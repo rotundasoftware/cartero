@@ -16,9 +16,9 @@ Many thanks to [James Halliday](https://twitter.com/substack) for his help and g
 
 ## Overview
 
-The days of organizing assets into directories by their type are over. The new black is organizing applications into packages that contain HTML, JavaScript, css, and images. [npm](https://www.npmjs.org/‎) is a powerful platform for managing and sharing such packages. Cartero makes it easy for web apps to consume them.
+cartero is a build tool that makes it easy for your application to consume npm packages with client side assets like styles, templates, and images. Think browserify + gulp + the rails asset pipeline. It allows you to easily modularize your front end ui components and use then in conjunction with other npm packages.
 
-A package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm package.json properties, stylesheets and other assets of a package may be enumerated using globs, along with any transforms they require (as implemented in [parcelify](https://github.com/rotundasoftware/parcelify), on which cartero is built).
+A npm package is defined as a directory that contains a [package.json](https://www.npmjs.org/doc/json.html) file. In addition to standard npm package.json properties, stylesheets and other assets of a package may be enumerated using globs, along with any transforms they require (as implemented in [parcelify](https://github.com/rotundasoftware/parcelify), on which cartero is built).
 
 ```
 {
@@ -54,18 +54,9 @@ Your application's `views` folder may also contain packages. Such "view packages
         └── index.js
 ```
 
-The `package.json` file of a parcel *must* have a special `view` key that specifies the server side template to which the parcel corresponds. For instance, the `package.json` for the `page1` parcel might look like this:
+__At build time,__ cartero runs browserify on each parcel in your view directory, saves the js bundle that is generated, and uses the js dependency graph to collect the other assets needed by the parcel. The other assets are then passed through a user-defined pipeline of transform streams and dropped into your static directory, along with meta used to find parcel assets. (Most of the bundling and transform work is actually done by [parcelify](https://github.com/rotundasoftware/parcelify).)
 
-```
-{
-	"view" : "page1.jade",
-	"style" : "style.css"
-}
-```
-
-__At build time,__ cartero runs browserify on each parcel in your view directory, saves the js bundle that is generated, and uses the js dependency graph to collect the other assets needed by the parcel. The other assets are then passed through a user-defined pipeline of transform streams and dropped into your static directory, along with meta used to find the assets used by each view at run time. (Most of the bundling and transform work is actually done by [parcelify](https://github.com/rotundasoftware/parcelify).)
-
-__At run time,__ when a given view is rendered, your application asks the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) for the HTML needed to load the js / css assets associated with that view, which can then simply be dropped into the view's HTML. Your application is also able to access / use other assets like images and templates via the hook.
+__At run time,__ Your application can ask the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) for assets associated with a particular parcel. If you are using express, the [cartero express middleware](https://github.com/rotundasoftware/cartero-express-middleware) will automatically populate `res.locals` with the HTML needed to load the js and css assets for the view being rendered, which you can then just output as part of the view's template.
 
 ## Usage
 
