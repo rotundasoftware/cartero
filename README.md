@@ -4,9 +4,9 @@ Modular front end development for the masses. Built on [npm](https://www.npmjs.o
 
 ## Overview
 
-Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution now.
+Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution today.
 
-cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'my-module' )`.
+cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`.
 
 cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (It is also similar to Component.js, but with some important distinctions.) Building all the assets you need for your application is as simple as
 
@@ -14,11 +14,11 @@ cartero is primarily a build tool, similar to [browserify](http://browserify.org
 $ cartero ./views ./static/assets
 ```
 
-The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is automatically updated when assets are changed. cartero's watch mode is extremely efficient, only rebuilding what is necessary given the changes made.
+The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is updated whenever assets are changed. cartero's watch mode is extremely efficient, only rebuilding what is necessary.
 
 ### The hook
 
-But the friction involved in modularizing front end code is not limited to build time, especially in multi-page applications. At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small (< 100 LOC) runtime library that your server side logic can use to look up asset urls or paths (based on a map output by cartero at build time). At the time of this writing, a hook is only available for node.js, but one can quickly be written for any server side environment.
+But the friction involved in modularizing front end code is not limited to build time, especially in multi-page applications. At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small ([< 100 LOC](https://github.com/rotundasoftware/cartero-node-hook/blob/master/index.js)) runtime library that your server side logic can use to look up asset urls or paths (based on a map output by cartero at build time). At the time of this writing, a hook [is available for node.js](https://github.com/rotundasoftware/cartero-node-hook) only, but one can quickly be written for any server side environment.
 
 For example, if a `package.json` is provided in `./views/page1`, the following call will return the `script` and `link` tags needed to load its js and css bundles:
 
