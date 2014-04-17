@@ -233,7 +233,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 				// urls in css files are relative to the css file itself
 				var absUrl = path.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), url );
-				absUrl = '/' + newPackage.id + absUrl;
+				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -478,8 +478,9 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 };
 
 Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
-	var viewRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( this.viewsDirPath, parcel.path ) ).digest( 'hex' );
-	this.parcelMap[ viewRelativePathHash ] = parcelId;
+	var parcelRelativePath = path.relative( this.viewsDirPath, parcel.path );
+	//var parcelRelativePathHash = crypto.createHash( 'sha1' ).update( parcelRelativePath ).digest( 'hex' );
+	this.parcelMap[ parcelRelativePath ] = parcelId;
 };
 
 Cartero.prototype.writeTopLevelMaps = function( callback ) {

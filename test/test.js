@@ -13,14 +13,14 @@ test( 'example1', function( t ) {
 
 	var viewDirPath = path.join( __dirname, 'example1/views' );
 	var outputDirPath = path.join( __dirname, 'example1/static/assets' );
-	var packageId, viewRelativePathHash;
+	var packageId, parcelRelativePath;
 
 	var c = cartero( viewDirPath, outputDirPath, {} );
 
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			packageId = newPackage.id;
-			parcelRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' );
+			parcelRelativePath = path.relative( viewDirPath, newPackage.path );
 		}
 	} );
 
@@ -30,7 +30,7 @@ test( 'example1', function( t ) {
 			[ packageId ].concat( outputDirFiles ).sort()
 		);
 
-		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePathHash + '\": \"' + packageId +'\"\n}' );
+		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePath + '\": \"' + packageId +'\"\n}' );
 	
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
@@ -74,7 +74,7 @@ test( 'example2', function( t ) {
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			parcelId = newPackage.id;
-			parcelRelativePathHash = crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' );
+			parcelRelativePath = path.relative( viewDirPath, newPackage.path );
 		}
 	} );
 
@@ -91,7 +91,7 @@ test( 'example2', function( t ) {
 			[ parcelId ].concat( outputDirFiles ).sort()
 		);
 
-		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePathHash + '\": \"' + parcelId + '\"\n}' );
+		t.deepEqual( fs.readFileSync( path.join( outputDirPath, 'parcel_map.json' ), 'utf8' ), '{\n    \"' + parcelRelativePath + '\": \"' + parcelId + '\"\n}' );
 
 		var bundleDir = path.join( outputDirPath, parcelId );
 		t.deepEqual(
@@ -118,7 +118,7 @@ test( 'example3', function( t ) {
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( isMain ) {
 			parcelId = newPackage.id;
-			parcelMap[ crypto.createHash( 'sha1' ).update( path.relative( viewDirPath, newPackage.path ) ).digest( 'hex' ) ] = parcelId;
+			parcelMap[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 			parcelIdsByPath[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 		}
 		else
