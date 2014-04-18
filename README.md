@@ -64,7 +64,7 @@ cartero packages are just regular npm packages that include style and / or image
 
 Packages can be in any location, just like in node.js. The CommonJS `require( 'modules' )` syntax is used to import a module from a package, along with all its css and other assets. The argument to `require` is resolved resolved by [browserify](http://browserify.org/) using the [node resolve algorthim](https://github.com/substack/node-resolve).
 
-A **parcel** is just a package that is an entry point. A parcel generally is used by one or more pages in your application. The collection of assets used by a given page is, after all, a package -- it has its own js and css, may depend on other packages, or may be depended upon. In fact, the parallel is so strong, it is recommend (but not required) that you put your parcels in your `views` directory, together with the server side view templates to which they coorespond. For example:
+A **parcel** is just a package that is an entry point. A parcel generally is used by one or more pages in your application. The collection of assets used by a given page is, after all, a package -- it has its own js and css, may depend on other packages, or may be depended upon. In fact, the parallel is so strong, it is recommend (but not required) that you put your parcels in your `views` directory, together with the server side view templates to which they correspond. For example:
 
 
 ```
