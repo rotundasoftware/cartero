@@ -116,14 +116,14 @@ test( 'example3', function( t ) {
 	var c = cartero( viewDirPath, outputDirPath, {} );
 
 	c.on( 'packageCreated', function( newPackage, isMain ) {
+		if( newPackage.package.name === "common-js" )
+			commonJsPackageId = newPackage.id;
+
 		if( isMain ) {
 			parcelId = newPackage.id;
 			parcelMap[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 			parcelIdsByPath[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 		}
-		else
-			if( newPackage.package.name === "common-js" )
-				commonJsPackageId = newPackage.id;
 
 		packageIds.push( newPackage.id );
 	} );
@@ -150,10 +150,10 @@ test( 'example3', function( t ) {
 		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
 		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, 'relative css url resolved' );
 
-		t.deepEqual(
+		t.ok( _.contains(
 			fs.readdirSync( path.join( outputDirPath, commonJsPackageId ) ).sort(),
-			[ 'robot.png' ]
-		);
+			'robot.png'
+		), 'robot.png in common package' );
 	} );
 } );
 

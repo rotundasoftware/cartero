@@ -33,15 +33,15 @@ module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
 
-function Cartero( viewsDirPath, outputDirPath, options ) {
-	if( ! ( this instanceof Cartero ) ) return new Cartero( viewsDirPath, outputDirPath, options );
+function Cartero( parcelsDirPath, outputDirPath, options ) {
+	if( ! ( this instanceof Cartero ) ) return new Cartero( parcelsDirPath, outputDirPath, options );
 
 	var _this = this;
 
-	if( ! viewsDirPath ) throw new Error( 'Required argument viewDirPath was not supplied.' );
+	if( ! parcelsDirPath ) throw new Error( 'Required argument parcelsDirPath was not supplied.' );
 	if( ! outputDirPath ) throw new Error( 'Required argument outputDirPath was not supplied.' );
 
-	this.viewsDirPath = path.resolve( path.dirname( require.main.filename ), viewsDirPath );
+	this.parcelsDirPath = path.resolve( path.dirname( require.main.filename ), parcelsDirPath );
 	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 
 	options = _.defaults( {}, options, {
@@ -49,7 +49,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		assetTypesToConcatenate : [ 'style' ],
 	
 		appTranforms : [],
-		appTranformDirs : [ this.viewsDirPath ],
+		appTranformDirs : [ this.parcelsDirPath ],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -104,7 +104,7 @@ function Cartero( viewsDirPath, outputDirPath, options ) {
 		if( err ) return _this.emit( 'error', err );
 
 		if( options.watch ) {
-			var parcelJsonWatcher = globwatcher( path.join( _this.viewsDirPath, "/**/package.json" ) );
+			var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "/**/package.json" ) );
 			parcelJsonWatcher.on( 'added', _this.processParcels );
 			parcelJsonWatcher.on( 'changed', _this.processParcels );
 
@@ -316,12 +316,21 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			if( ! ( thePackage instanceof Parcel ) || thePackage === thisParcel ) {
 				// if any package is converted to a parcel, we need to re-process the package (as a parcel).
 				// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
-				parcelFinder.parsePackage( thePackage.path, _this.packageTransform, function( err, isParcel, pkg ) {
+				parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
 					if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
+						var oldDependentParcels = oldPackage.dependentParcels;
+
 						delete _this.packageManifest[ thePackage.id ];
 						thePackage.destroy();
 
-						_this.processMain( pkg.__mainPath, function() {} );
+						log.warn( '', 'Recreating package at ' + thePackage.path + ' as Parcel.' );
+
+						_this.processMain( pkg.__mainPath, function() {
+							oldDependentParcels.forEach( function( thisDependentParcel ) {
+								thisDependentParcel.calcSortedDependencies();
+								thisDependentParcel.calcParcelAssets( assetTypes );
+							} );
+						} );
 					}
 				} );
 			}
@@ -333,7 +342,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 };
 
 Cartero.prototype.findMainPaths = function( packageTransform, callback ) {
-	parcelFinder( this.viewsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
+	parcelFinder( this.parcelsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
 		if (err) return callback( err );
 
 		callback( null, _.reduce( detected, function( memo, thisPkg ) {
@@ -384,7 +393,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 					bundleStream.pipe( fs.createWriteStream( dstPath ).on( 'close', function() {
 						log.info( _this.watching ? 'watch' : '',
 							'%s bundle written for %s',
-							thisAssetType, path.relative( _this.viewsDirPath, parcel.view )
+							thisAssetType, path.relative( _this.parcelsDirPath, parcel.path )
 						);
 						
 						fs.unlink( thisBundleTempPath, function() {} );
@@ -478,7 +487,7 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 };
 
 Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
-	var parcelRelativePath = path.relative( this.viewsDirPath, parcel.path );
+	var parcelRelativePath = path.relative( this.parcelsDirPath, parcel.path );
 	//var parcelRelativePathHash = crypto.createHash( 'sha1' ).update( parcelRelativePath ).digest( 'hex' );
 	this.parcelMap[ parcelRelativePath ] = parcelId;
 };

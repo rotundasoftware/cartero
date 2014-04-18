@@ -8,7 +8,7 @@ Modularization is *the fundamental tool* that programmers have to keep large cod
 
 cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`.
 
-cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (Want a more thorough [comparison with other tools](https://github.com/rotundasoftware/cartero/blob/master/comparison.md)?) Building all the assets you need for your application is as simple as
+cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for a comparison with other tools.) Building all the assets you need for your application is as simple as
 
 ```
 $ cartero ./views ./static/assets
@@ -18,7 +18,7 @@ The cartero command bundles up the js and css assets required by each entry poin
 
 ### The hook
 
-But the friction involved in modularizing front end code is not limited to build time, especially in multi-page applications. At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small ([< 100 LOC](https://github.com/rotundasoftware/cartero-node-hook/blob/master/index.js)) runtime library that your server side logic can use to look up asset urls or paths (based on a map output by cartero at build time). At the time of this writing, a hook [is available for node.js](https://github.com/rotundasoftware/cartero-node-hook) only, but one can quickly be written for any server side environment.
+But the friction involved in modularizing front end code is not limited to build time, especially in multi-page applications. At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small ([< 100 LOC](https://github.com/rotundasoftware/cartero-node-hook/blob/master/index.js)) runtime library that your server side logic can use to look up asset urls or paths (based on a map output by cartero at build time). At the time of this writing, only a [hook for node.js](https://github.com/rotundasoftware/cartero-node-hook) is available, but one can quickly be written for any server side environment.
 
 For example, if a `package.json` is provided in `./views/page1`, the following call will return the `script` and `link` tags needed to load its js and css bundles:
 
@@ -42,7 +42,7 @@ h.getAssetUrl( path.join( resolve( 'grill' ), 'carnes.png' ), function( err, url
 } );
 ```
 
-Relying on the hook at run time to find assets also provides several others benefits - it enables cartero to implement cache busting through [fingerprinting](http://guides.rubyonrails.org/asset_pipeline.html#what-is-fingerprinting-and-why-should-i-care-questionmark), and to keep css files separate in dev mode without forcing you to modify your view templates.
+Relying on the hook at run time to find assets, instead of limiting cartero strictly to build time, also provides several others benefits - it enables cartero to implement cache busting through [fingerprinting](http://guides.rubyonrails.org/asset_pipeline.html#what-is-fingerprinting-and-why-should-i-care-questionmark), and to keep css files separate in dev mode without forcing you to modify your view templates.
 
 ## Packages and parcels
 
@@ -60,7 +60,7 @@ cartero packages are just regular npm packages that include style and / or image
 }
 ```
 
-Packages can be in any location, just like in node.js. The CommonJS `require( 'modules' )` syntax is used to import a module from a package, along with all its css and other assets. The argument to `require` is resolved resolved by browserify using the [node resolve algorthim](https://github.com/substack/node-resolve).
+Packages can be in any location, just like in node.js. The CommonJS `require( 'modules' )` syntax is used to import a module from a package, along with all its css and other assets. The argument to `require` is resolved resolved by [browserify](http://browserify.org/) using the [node resolve algorthim](https://github.com/substack/node-resolve).
 
 A **parcel** is just a package that is an entry point. A parcel generally is used by one or more pages in your application. The collection of assets used by a given page is, after all, a package -- it has its own js and css, may depend on other packages, or may be depended upon. In fact, the parallel is so strong, it is recommend (but not required) that you put your parcels in your `views` directory, together with the server side view templates to which they coorespond. For example:
 
