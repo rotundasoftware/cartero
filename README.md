@@ -2,6 +2,8 @@
 
 Modular front end development for the masses. Built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/). 
 
+[![Build Status](https://travis-ci.org/rotundasoftware/cartero.svg?branch=simple-parcel)](https://travis-ci.org/rotundasoftware/cartero)
+
 ## Overview
 
 Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution today.
