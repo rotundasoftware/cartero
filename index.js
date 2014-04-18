@@ -392,8 +392,8 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 
 					bundleStream.pipe( fs.createWriteStream( dstPath ).on( 'close', function() {
 						log.info( _this.watching ? 'watch' : '',
-							'%s bundle written for %s',
-							thisAssetType, path.relative( _this.parcelsDirPath, parcel.path )
+							'%s bundle written for parcel "%s"',
+							thisAssetType, './' + path.relative( process.cwd(), parcel.path )
 						);
 						
 						fs.unlink( thisBundleTempPath, function() {} );
