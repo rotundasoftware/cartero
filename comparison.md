@@ -30,7 +30,7 @@ Similar to the [rails asset pipeline](http://guides.rubyonrails.org/asset_pipeli
 
 cartero's watch mode only updates the files that it absolutely needs to given the changes made to a source file. Thus it can watch an entire application at once without slowing down.
 
-#### The cartero hook can tell youthe url of any given asset
+#### The cartero hook can tell you the url of any given asset
 
 The cartero hook can be used at run time to track down the url of path of an asset given its source path, even if that path is in some very deeply nested dependency.
 
