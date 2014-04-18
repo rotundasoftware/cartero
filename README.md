@@ -94,7 +94,7 @@ $ npm install -g cartero
 $ cartero <parcelsDir> <outputDir> [options]
 ```
 
-The `cartero` command scans `parcelsDir` recursively for parcels, i.e. directories that contain `package.json` files with valid js entry points (either `index.js` or the `main` property in `package.json`). It runs [parcelify](https://github.com/rotundasoftware/parcelify) on the entry point of each parcel, saving all the parcel's assets as well as those of its dependencies in the `outputDir`. (Note `node_module` directories nested within the `parcelsDir` are not scanned.)
+The `cartero` command scans `parcelsDir` recursively for parcels, i.e. directories that contain `package.json` files with valid js entry points (either `index.js` or the `main` property in `package.json`). It runs [parcelify](https://github.com/rotundasoftware/parcelify) on the entry point of each parcel, saving all the parcel's assets as well as those of its dependencies in the `outputDir`. (Note `node_modules` directories nested within the `parcelsDir` are not scanned.)
 
 At run time, the HTML tags needed to load a parcel's js and css bundles, as well as its other assets, can be found using the [cartero hook's](https://github.com/rotundasoftware/cartero-node-hook) `getParcelTags` and `getParcelAssets` methods. The [cartero express middleware](https://github.com/rotundasoftware/cartero-express-middleware) can be used for an added level of convenience.
 
