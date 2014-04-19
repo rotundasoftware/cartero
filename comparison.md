@@ -38,4 +38,4 @@ The cartero hook can be used at run time to track down the url of path of an ass
 
 #### cartero is young
 
-It's a double edged sword. cartero has more bugs and fringe cases that have not been considered than Component. The flip side is that there is lots of room for improvement and changes. Send us your feedback and help cartero grow up!
+It's a double edged sword. cartero has more bugs and fringe cases that have not been considered than other tools. The flip side is that there is lots of room for improvement and changes. Send us your feedback and help cartero grow up!

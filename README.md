@@ -10,7 +10,7 @@ Modularization is *the fundamental tool* that programmers have to keep large cod
 
 cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`.
 
-cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools.) It takes just one command to build all assets for multi-page application.
+cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. (See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools.) Just one command builds all assets for a multi-page application.
 
 ```
 $ cartero ./views ./static/assets
