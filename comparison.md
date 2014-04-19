@@ -10,7 +10,7 @@ A cartero component ***is*** an npm module. To require an npm module, you just d
 
 npm is very good at package management, and is [on course to become even better](http://techcrunch.com/2014/02/11/npm/). cartero harnesses npm instead of relying on a parallel package management system, and passes on the savings to you.
 
-Similarly, browserify is very good at its job, so cartero relies on it instead of implementing its own dependency resolution and js bundling system, which means you get more features with a smaller footprint. 
+Similarly, browserify is very good at its job, so cartero relies on it instead of implementing its own dependency resolution and js bundling system, which means you get more power with a smaller footprint. 
 
 #### cartero is a streaming asset pipeline.
 
