@@ -1,14 +1,16 @@
 # Cartero compared to other solutions
 
-[cartero](https://github.com/rotundasoftware/cartero) is a streaming asset pipeline based on npm packages. Think [browserify](http://browserify.org/) + [gulp](http://gulpjs.com/) + [the rails asset pipeline](http://guides.rubyonrails.org/asset_pipeline.html). It picks up where npm and browserify leave off, handling the build process, including precompiling, postprocessing, and serving HTML, js, css, and images. Of the existing tools out there for modular front end development, it is most similar to [Component](https://github.com/component/component). To add to [this great article](https://github.com/component/guide/blob/master/component/vs.md) that compares Component to other front end solutions, here is a comparison between cartero and Component. 
+To understand [cartero](https://github.com/rotundasoftware/cartero) in terms of other tools, imagine stringing together [browserify](http://browserify.org/) + [gulp](http://gulpjs.com/) + [the rails asset pipeline](http://guides.rubyonrails.org/asset_pipeline.html). cartero handles the entire build process, including precompiling, postprocessing, and serving HTML, js, css, and images. Of the existing tools out there for modular front end development, it is most similar to [Component](https://github.com/component/component). Most of what is said about [how Component compares](https://github.com/component/guide/blob/master/component/vs.md) to other front end solutions is also true for cartero. To pick up where that comparison leaves off... 
 
 ### cartero vs Component
 
-#### cartero is built on npm and browserify.
+#### cartero is built on npm and browserify
 
-A cartero component ***is*** an npm module. To require an npm module, you just do `require( 'mushu' )`. Component conforms to the CommonJS spec, but it provides its own package management system with its own API. As a result, you can not require npm modules from your components, and a special `component.json` file is needed to define a component. cartero relies on npm's `package.json`.
+A cartero component ***is*** an npm module. To require an npm module, you just do `require( 'mushu' )`. Component conforms to the CommonJS spec, but it provides its own package management system with its own API. As a result, you can not require npm modules from your components, and a special `component.json` file is needed to define a component. cartero just adds a few extra keys to npm's `package.json`.
 
-Another benefit of being built on npm is that npm handles the case where two different packages require two different versions of a dependency very nicely. In general, the consensus is that npm is a pretty awesome package manager, and it provides a solid foundation.
+npm is very good at package management, and is [on course to become even better](http://techcrunch.com/2014/02/11/npm/). cartero harnesses npm instead of relying on a parallel package management system, and passes on the savings to you.
+
+Similarly, browserify is very good at its job, so cartero relies on it instead of implementing its own dependency resolution and js bundling system, which means you get more features with a smaller footprint. 
 
 #### cartero is a streaming asset pipeline.
 
@@ -36,4 +38,4 @@ The cartero hook can be used at run time to track down the url of path of an ass
 
 #### cartero is young
 
-Component is not so young. It's a double edged sword. cartero surely has more bugs and fringe cases that have not been considered. The flip side is that there is lots of room for improvement and changes. Send us your feedback and help cartero grow up!
+It's a double edged sword. cartero has more bugs and fringe cases that have not been considered than Component. The flip side is that there is lots of room for improvement and changes. Send us your feedback and help cartero grow up!
