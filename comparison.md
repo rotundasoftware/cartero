@@ -12,7 +12,7 @@ Another benefit of being built on npm is that npm handles the case where two dif
 
 #### cartero is a streaming asset pipeline.
 
-Do you use Sass or CoffeeScript? Maybe you want to inline images in your css files? cartero transforms make it easy to manipulate your assets any way you want. Similar to browserify and gulp, cartero is built on streams, so all you need in a simple transform module to get you where you want to be. You can even use browserify transforms like [hbsify](https://github.com/epeli/node-hbsfy) and [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile your template files.
+Do you use Sass or CoffeeScript? Maybe you want to inline images in your css files? cartero transforms make it easy to manipulate your assets any way you want. Similar to browserify and gulp, cartero is built on streams, so all you need in a simple transform module to get you where you want to be. You can even use browserify transforms like [hbsfy](https://github.com/epeli/node-hbsfy) and [nunjucksify](https://github.com/rotundasoftware/nunjucksify) to precompile your template files.
 
 #### cartero is designed for multi-page applications
 
