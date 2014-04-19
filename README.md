@@ -2,7 +2,7 @@
 
 Modular front end development for the masses. Built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/). 
 
-[![Build Status](https://travis-ci.org/rotundasoftware/cartero.svg?branch=simple-parcel)](https://travis-ci.org/rotundasoftware/cartero)
+[![Build Status](https://travis-ci.org/rotundasoftware/cartero.svg?branch=master)](https://travis-ci.org/rotundasoftware/cartero)
 
 ## Overview
 
