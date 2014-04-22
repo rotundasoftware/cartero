@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "underscore": "~1.4.4",
-    "parcelify": "~0.9.1",
+    "parcelify": "~0.9.2",
     "inherits": "~2.0.1",
     "glob": "~3.2.8",
     "rimraf": "~2.2.6",
@@ -54,7 +54,7 @@
     "path-mapper": "~0.1.1",
     "through": "~2.3.4",
     "minimist": "0.0.8",
-    "globwatcher": "~1.2.2",
+    "globwatcher": "~1.2.3",
     "resolve": "~0.6.2",
     "npmlog": "0.0.6",
     "parcel-finder": "~0.2.3"
