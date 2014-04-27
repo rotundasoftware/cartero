@@ -104,9 +104,9 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 		if( err ) return _this.emit( 'error', err );
 
 		if( options.watch ) {
-			var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "/**/package.json" ) );
-			parcelJsonWatcher.on( 'added', _this.processParcels );
-			parcelJsonWatcher.on( 'changed', _this.processParcels );
+			var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
+			parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
+			parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
 
 			_this.watching = true;
 			log.info( 'watching for changes...' );
@@ -120,6 +120,11 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 
 Cartero.prototype.processParcels = function( callback ) {
 	var _this = this;
+
+	log.info( _this.watching ? 'watch' : '',
+		'prcoessing parcels in "%s"',
+		_this.parcelsDirPath
+	);
 
 	_this.findMainPaths( _this.packageTransform, function( err, newMains ) {
 		if( err ) _this.emit( 'error', err );
@@ -140,12 +145,12 @@ Cartero.prototype.processParcels = function( callback ) {
 		async.each( mainsThatWereAdded, function( thisMain, nextMain ) {
 			_this.processMain( thisMain, nextMain );
 		}, function( err ) {
-			if( err ) return callback( err );
+			if( err ) _this.emit( 'error', err );
 
 			_this.writeTopLevelMaps( function( err ) {
-				if( err ) return callback( err );
+				if( err ) _this.emit( 'error', err );
 
-				callback();
+				if( callback ) callback();
 			} );
 		} );
 	} );
@@ -239,32 +244,10 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			}
 		}, 'style' );
 
-		newPackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( newPackage ), function( err, pathsOfWrittenAssets ) {
-			_this.applyPostProcessorsToFiles( pathsOfWrittenAssets, function( err ) {
-				if( err ) return _this.emit( 'error', err );
-
-				pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
-				
-				if( _this.watching ) _this.writeTopLevelMaps( function() {} );
-
-				_this.emit( 'packageCreated', newPackage, isMain );
-			} );
-		} );
-	} );
-
-	p.on( 'done', function() {
-		_this.copyBundlesToParcelDiretory( thisParcel, tempBundles, function( err, finalBundles ) {
+		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
 			if( err ) return _this.emit( 'error', err );
 
-			_.each( finalBundles, function( thisBundle, thisBundleType ) {
-				_this.emit( 'fileWritten', thisBundle, thisBundleType, true, false );
-			} );
-			
-			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
-				if( err ) return _this.emit( 'error', err );
-
-				callback();
-			} );
+			_this.emit( 'packageCreated', newPackage, isMain );
 		} );
 	} );
 
@@ -290,35 +273,63 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		}
 	} );
 
+	p.on( 'done', function() {
+		_this.copyBundlesToParcelDiretory( thisParcel, tempBundles, function( err, finalBundles ) {
+			if( err ) return _this.emit( 'error', err );
+
+			_.each( finalBundles, function( thisBundle, thisBundleType ) {
+				_this.emit( 'fileWritten', thisBundle, thisBundleType, true, false );
+			} );
+			
+			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				callback();
+			} );
+		} );
+	} );
+
 	_this.on( 'error', function( err ) {
 		log.error( '', err );
 	} );
 
 	if( _this.watch ) {
 		p.on( 'assetUpdated', function( eventType, asset ) {
-			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
-				if( err ) return _this.emit( 'error', err );
-
+			async.series( [ function( nextSeries ) {
 				if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
 					if( eventType === 'added' || eventType === 'changed' )
-						asset.writeToDisk( null, true, function() {
+						asset.writeToDisk( null, function() {
+							log.info( 'watch', '%s asset "%s" updated', asset.type, asset.dstPath );
 							_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
 
-							// ... done
+							nextSeries();
 						} );
 					else
-						fs.unlink( asset.dstPath, function( err ) { if( err ) _this.emit( 'error', err ); } );
+						fs.unlink( asset.dstPath, function( err ) {
+							if( err ) _this.emit( 'error', err );
+							nextSeries();
+						} );
 				}
+			}, function( nextSeries ) {
+				_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
+					if( err ) return _this.emit( 'error', err );
+
+					nextSeries();
+				} );
+			} ], function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				// done
 			} );
 		} );
 
 		p.on( 'packageJsonUpdated', function( thePackage ) {
-			if( ! ( thePackage instanceof Parcel ) || thePackage === thisParcel ) {
+			if( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) {
 				// if any package is converted to a parcel, we need to re-process the package (as a parcel).
 				// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
 				parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
 					if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
-						var oldDependentParcels = oldPackage.dependentParcels;
+						var oldDependentParcels = thePackage.dependentParcels;
 
 						delete _this.packageManifest[ thePackage.id ];
 						thePackage.destroy();
@@ -334,9 +345,6 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 					}
 				} );
 			}
-			else if( thePackage === thisParcel )
-				// in case the view key changed
-				_this.addToParcelMap( thisParcel, thisParcel.id );
 		} );
 	}
 };
@@ -365,7 +373,10 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 			if( ! thisBundleTempPath ) return nextAssetType();
 
 			fs.exists( thisBundleTempPath, function( bundleExists ) {
-				if( ! bundleExists ) return nextAssetType(); // maybe there were no assets of this type
+				if( ! bundleExists ) {
+					log.info( '', 'no ' + thisAssetType + ' assets exist for parcel ' + './' + path.relative( process.cwd(), parcel.path ) );
+					return nextAssetType(); // maybe there were no assets of this type
+				}
 
 				var bundleStream = fs.createReadStream( thisBundleTempPath );
 				var bundleShasum;
@@ -463,6 +474,22 @@ Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback
 			nextPostProcessorName( null, require( modulePath ) );
 		} );
 	}, callback );
+};
+
+Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypesToWriteToDisk, callback ) {
+	var _this = this;
+
+	thePackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( thePackage ), function( err, pathsOfWrittenAssets ) {
+		_this.applyPostProcessorsToFiles( pathsOfWrittenAssets, function( err ) {
+			if( err ) return callback( err );
+
+			pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
+			
+			if( _this.watching ) _this.writeTopLevelMaps( function() {} );
+
+			callback();
+		} );
+	} );
 };
 
 Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
