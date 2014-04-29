@@ -98,6 +98,14 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 			_this.postProcessors = res;
 			nextSeries();
 		} );
+
+		_this.on( 'error', function( err ) {
+			log.error( '', err );
+		} );
+
+		_this.on( 'fileWritten', function( filePath, assetType, isBundle, isWatchMode ) {
+			log.info( isWatchMode ? 'watch' : '', '%s %s written to "%s"', assetType, isBundle ? 'bundle' : 'asset', filePath );
+		} );
 	}, function( nextSeries ) {
 		_this.processParcels( nextSeries );
 	} ], function( err ) {
@@ -233,6 +241,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 				// absolute urls stay the same.
 				if( url.charAt( 0 ) === '/' ) return match;
+				if( url.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
 				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
 
@@ -289,21 +298,12 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		} );
 	} );
 
-	_this.on( 'error', function( err ) {
-		log.error( '', err );
-	} );
-
 	if( _this.watch ) {
-		p.on( 'assetUpdated', function( eventType, asset ) {
+		p.on( 'assetUpdated', function( eventType, asset, thePackage ) {
 			async.series( [ function( nextSeries ) {
 				if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
 					if( eventType === 'added' || eventType === 'changed' )
-						asset.writeToDisk( null, function() {
-							log.info( 'watch', '%s asset "%s" updated', asset.type, asset.dstPath );
-							_this.emit( 'fileWritten', asset.dstPath, asset.type, false, true );
-
-							nextSeries();
-						} );
+						_this.writeIndividualAssetsToDisk( thePackage, [ asset.type ], nextSeries );
 					else
 						fs.unlink( asset.dstPath, function( err ) {
 							if( err ) _this.emit( 'error', err );
@@ -402,10 +402,10 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 					}
 
 					bundleStream.pipe( fs.createWriteStream( dstPath ).on( 'close', function() {
-						log.info( _this.watching ? 'watch' : '',
-							'%s bundle written for parcel "%s"',
-							thisAssetType, './' + path.relative( process.cwd(), parcel.path )
-						);
+						// log.info( _this.watching ? 'watch' : '',
+						// 	'%s bundle written for parcel "%s"',
+						// 	thisAssetType, './' + path.relative( process.cwd(), parcel.path )
+						// );
 						
 						fs.unlink( thisBundleTempPath, function() {} );
 						nextAssetType();
@@ -478,18 +478,33 @@ Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback
 
 Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypesToWriteToDisk, callback ) {
 	var _this = this;
+	var pathsOfWrittenAssets = [];
+	var outputDirectoryPath = this.getPackageOutputDirectory( thePackage );
 
-	thePackage.writeAssetsToDisk( assetTypesToWriteToDisk, _this.getPackageOutputDirectory( thePackage ), function( err, pathsOfWrittenAssets ) {
-		_this.applyPostProcessorsToFiles( pathsOfWrittenAssets, function( err ) {
-			if( err ) return callback( err );
+	assetTypesToWriteToDisk = _.intersection( assetTypesToWriteToDisk, Object.keys( thePackage.assetsByType ) );
 
-			pathsOfWrittenAssets.forEach( function( thisAssetPath ) { _this.emit( 'fileWritten', thisAssetPath, false ); } );
-			
-			if( _this.watching ) _this.writeTopLevelMaps( function() {} );
+	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
+		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
+			var thisAssetDstPath = path.join( outputDirectoryPath, path.relative( thePackage.path, thisAsset.srcPath ) );
+			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
-			callback();
-		} );
-	} );
+			pathsOfWrittenAssets.push( thisAssetDstPath );
+
+			thisAsset.writeToDisk( thisAssetDstPath, function( err ) {
+				if( err ) return nextAsset( err );
+
+				_this.applyPostProcessorsToFiles( [ thisAssetDstPath ], function( err ) {
+					if( err ) return nextAsset( err );
+
+					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
+					
+					if( _this.watching ) _this.writeTopLevelMaps( function() {} );
+
+					nextAsset();
+				} );
+			} );
+		}, nextAssetType );
+	}, callback );
 };
 
 Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
@@ -544,3 +559,9 @@ Cartero.prototype.writeTopLevelMaps = function( callback ) {
 	// 	} );
 	} ], callback );
 };
+
+/********************* Utility functions *********************/
+
+function renameFileExtension( file, toExt ) {
+	return file.replace( new RegExp( path.extname( file ) + "$" ), toExt );
+}

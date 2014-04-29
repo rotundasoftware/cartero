@@ -16,7 +16,7 @@ cartero is primarily a build tool, similar to [browserify](http://browserify.org
 $ cartero ./views ./static/assets
 ```
 
-The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is updated whenever assets are changed. cartero's watch mode is extremely efficient, only rebuilding what is necessary.
+The cartero command bundles up the js and css assets required by each entry point found in `./views` and drops them into the output directory at `./static/assets` (along with information used at run time by [the hook](#the-hook)). Adding a `-w` flag will run cartero in watch mode so that the output is updated whenever assets are changed. cartero's watch mode is extremely efficient, only rebuilding what is necessary for a given change.
 
 ### The hook
 

@@ -1,6 +1,6 @@
 {
   "name": "cartero",
-  "description": "An asset pipeline built on browserify.",
+  "description": "Modular front end development for the masses. Built on npm and browserify.",
   "version": "2.1.2",
   "bin": {
     "cartero": "bin/cmd.js"
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "underscore": "~1.4.4",
-    "parcelify": "~0.9.2",
+    "parcelify": "~0.10.0",
     "inherits": "~2.0.1",
     "glob": "~3.2.8",
     "rimraf": "~2.2.6",
