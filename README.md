@@ -10,9 +10,11 @@ Modularization is *the fundamental tool* that programmers have to keep large cod
 
 cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`.
 
-cartero is primarily a build tool, similar to [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. cartero does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, cartero is built from the ground up for modularized applications, and eliminates the friction that occurs when using conventional build tools with modular directory structures.
+cartero is primarily a build tool, similar to (and based on) [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. cartero does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, cartero is built from the ground up for modularized applications, and eliminates the friction that occurs when using conventional build tools with modular directory structures.
 
 (See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools, and [this tutorial](https://github.com/rotundasoftware/cartero-tutorial) to get started.)
+
+### The build command
 
 Just one command builds all assets for a multi-page application.
 
