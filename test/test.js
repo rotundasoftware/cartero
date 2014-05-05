@@ -6,7 +6,7 @@ var fs = require( 'fs' );
 var crypto = require( 'crypto' );
 var _ = require( 'underscore' );
 
-var outputDirFiles = [ "parcel_map.json" ];
+var outputDirFiles = [ 'parcel_map.json', 'package_map.json' ];
 
 test( 'example1', function( t ) {
 	t.plan( 4 );

@@ -104,6 +104,7 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 		} );
 
 		_this.on( 'fileWritten', function( filePath, assetType, isBundle, isWatchMode ) {
+			filePath = path.relative( process.cwd(), filePath );
 			log.info( isWatchMode ? 'watch' : '', '%s %s written to "%s"', assetType, isBundle ? 'bundle' : 'asset', filePath );
 		} );
 	}, function( nextSeries ) {
@@ -130,8 +131,8 @@ Cartero.prototype.processParcels = function( callback ) {
 	var _this = this;
 
 	log.info( _this.watching ? 'watch' : '',
-		'prcoessing parcels in "%s"',
-		_this.parcelsDirPath
+		'processing parcels in "%s"',
+		path.relative( process.cwd(), _this.parcelsDirPath )
 	);
 
 	_this.findMainPaths( _this.packageTransform, function( err, newMains ) {
@@ -306,7 +307,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 						_this.writeIndividualAssetsToDisk( thePackage, [ asset.type ], nextSeries );
 					else
 						fs.unlink( asset.dstPath, function( err ) {
-							if( err ) _this.emit( 'error', err );
+							if( err ) return _this.emit( 'error', err );
 							nextSeries();
 						} );
 				}
@@ -324,27 +325,31 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		} );
 
 		p.on( 'packageJsonUpdated', function( thePackage ) {
-			if( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) {
-				// if any package is converted to a parcel, we need to re-process the package (as a parcel).
-				// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
-				parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
-					if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
-						var oldDependentParcels = thePackage.dependentParcels;
+			_this.writeIndividualAssetsToDisk( thePackage, assetTypesToWriteToDisk, function( err ) {
+				if( err ) return _this.emit( 'error', err );
 
-						delete _this.packageManifest[ thePackage.id ];
-						thePackage.destroy();
+				if( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) {
+					// if any package is converted to a parcel, we need to re-process the package (as a parcel).
+					// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
+					parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
+						if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
+							var oldDependentParcels = thePackage.dependentParcels;
 
-						log.warn( '', 'Recreating package at ' + thePackage.path + ' as Parcel.' );
+							delete _this.packageManifest[ thePackage.id ];
+							thePackage.destroy();
 
-						_this.processMain( pkg.__mainPath, function() {
-							oldDependentParcels.forEach( function( thisDependentParcel ) {
-								thisDependentParcel.calcSortedDependencies();
-								thisDependentParcel.calcParcelAssets( assetTypes );
+							log.warn( '', 'Recreating package at ' + thePackage.path + ' as Parcel.' );
+
+							_this.processMain( pkg.__mainPath, function() {
+								oldDependentParcels.forEach( function( thisDependentParcel ) {
+									thisDependentParcel.calcSortedDependencies();
+									thisDependentParcel.calcParcelAssets( assetTypes );
+								} );
 							} );
-						} );
-					}
-				} );
-			}
+						}
+					} );
+				}
+			} );
 		} );
 	}
 };
@@ -374,7 +379,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 
 			fs.exists( thisBundleTempPath, function( bundleExists ) {
 				if( ! bundleExists ) {
-					log.info( '', 'no ' + thisAssetType + ' assets exist for parcel ' + './' + path.relative( process.cwd(), parcel.path ) );
+					log.info( '', 'no ' + thisAssetType + ' assets exist for parcel "' + path.relative( process.cwd(), parcel.path ) + '"' );
 					return nextAssetType(); // maybe there were no assets of this type
 				}
 
@@ -544,19 +549,19 @@ Cartero.prototype.writeTopLevelMaps = function( callback ) {
 
 			nextParallel();
 		} );
-	// }, function( nextParallel ) {
-	// 	var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
-	// 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
-	// 		var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
-	// 		memo[ thisPackagePathShasum ] = thisPackageId;
-	// 		return memo;
-	// 	}, {} );
+	}, function( nextParallel ) {
+		var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
+		var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
+			var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
+			memo[ thisPackagePathShasum ] = thisPackageId;
+			return memo;
+		}, {} );
 
-	// 	fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
-	// 		if( err ) return callback( err );
+		fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
+			if( err ) return callback( err );
 
-	// 		nextParallel();
-	// 	} );
+			nextParallel();
+		} );
 	} ], callback );
 };
 
