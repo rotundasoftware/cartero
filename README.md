@@ -1,6 +1,6 @@
 # cartero
 
-Modular front end development for the masses. Built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/). 
+An asset pipeline designed to reduce the friction involved in applying modular design principles to front end web development. Built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/). 
 
 [![Build Status](https://travis-ci.org/rotundasoftware/cartero.svg?branch=master)](https://travis-ci.org/rotundasoftware/cartero)
 
