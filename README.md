@@ -1,6 +1,6 @@
 # cartero
 
-An asset pipeline designed to reduce the friction involved in applying modular design principles to front end web development. Built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/). 
+cartero is an asset pipeline built on [npm](https://www.npmjs.org) and [browserify](http://browserify.org/) designed to reduce the friction involved in applying modular design principles to front end web development.
 
 [![Build Status](https://travis-ci.org/rotundasoftware/cartero.svg?branch=master)](https://travis-ci.org/rotundasoftware/cartero)
 
