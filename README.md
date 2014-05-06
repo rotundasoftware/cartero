@@ -12,7 +12,7 @@ cartero allows you to easily organize your front end code into reusable packages
 
 cartero is primarily a build tool, similar to (and based on) [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. cartero does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, cartero is built from the ground up for modularized applications, and eliminates the friction that occurs when using conventional build tools with modular directory structures.
 
-See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools, and [this tutorial](https://github.com/rotundasoftware/cartero-tutorial) to get started.
+See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools, and [this tutorial](http://www.jslifeandlove.org/intro-to-cartero/) to get started.
 
 ### The build command
 
