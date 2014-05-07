@@ -6,9 +6,12 @@ cartero is an asset pipeline built on [npm](https://www.npmjs.org) and [browseri
 
 ## Overview
 
-Modularization is *the fundamental tool* that programmers have to keep large code bases manageable. Yet there are [very few easy ways](https://medium.com/what-i-learned-building/5a31feb15e2) to modularize client side code in web applications today. [Web Components](http://css-tricks.com/modular-future-web-components/) aims to fill this void several years down the road. cartero provides a solution today.
+cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`. A package might contain assets for
 
-cartero allows you to easily organize your front end code into reusable packages containing HTML, JavaScript, css, and images. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code. Depending on a package is as simple as `require( 'pork-and-beans' )`.
+* A calendar widget
+* A popup dialog
+* A header or footer
+* An entire web page
 
 cartero is primarily a build tool, similar to (and based on) [browserify](http://browserify.org/), but with consideration for additional asset types, and designed for complete applications, instead of a single entry point. cartero does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, cartero is built from the ground up for modularized applications, and eliminates the friction that occurs when using conventional build tools with modular directory structures.
 
