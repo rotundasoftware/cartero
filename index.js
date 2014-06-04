@@ -48,8 +48,8 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
-		appTranforms : [],
-		appTranformDirs : [ this.parcelsDirPath ],
+		appTransforms : [],
+		appTransformDirs : [ this.parcelsDirPath ],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -65,8 +65,8 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 	_.extend( this, _.pick( options,
 		'assetTypes',
 		'assetTypesToConcatenate',
-		'appTranforms',
-		'appTranformDirs',
+		'appTransforms',
+		'appTransformDirs',
 		'outputDirUrl',
 		'packageTransform',
 		'sourceMaps',
@@ -181,8 +181,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 	var parcelifyOptions = {
 		bundles : tempBundles,
-		appTranforms : _this.appTranforms,
-		appTranformDirs : _this.appTranformDirs,
+		appTransforms : _this.appTransforms,
+		appTransformDirs : _this.appTransformDirs,
 		packageTransform : _this.packageTransform,
 		watch : _this.watch,
 		browserifyOptions : _this.browserifyOptions,

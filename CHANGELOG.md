@@ -1,5 +1,8 @@
 # Change Log
 
+### v2.2.0
+* BREAKING CHANGE: Corrected spelling of "appTranform" and "appTranformDir" to "appTransforms" and "appTransformDirs"
+
 ### v2.1.0
 
 * BREAKING CHANGE: Swapped out defaultTranforms for appTransforms.
