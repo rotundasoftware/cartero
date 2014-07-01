@@ -76,6 +76,7 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 	) );
 
 	this.outputDirUrl = options.outputDirUrl;
+	if( this.outputDirUrl.charAt( 0 ) !== '/' ) this.outputDirUrl = '/' + this.outputDirUrl;
 
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
