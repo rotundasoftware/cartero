@@ -237,8 +237,7 @@ You generally don't need to know the anatomy of cartero's output directory, sinc
 │       │   └── page2_bundle_5066f9594b8be17fd6360e23df52ffe750206020.js
 │       ├── 9d82ba90fa7a400360054671ea26bfc03a7338bf                        /* package directory */
 │       │   └── robot.png
-│       ├── package_map.json
-│       └── view_map.json
+│       └── metaData.json
 ```
 
 * Each subdirectory in the output directory
@@ -247,8 +246,7 @@ You generally don't need to know the anatomy of cartero's output directory, sinc
   * contains all the assets specific to that package, and
   * has the same directory structure as the original package.
 * Parcel directories also contain an `assets.json` file, which enumerates the assets used by the parcel.
-* The `parcel_map.json` file maps parcel paths (relative to `parcelsDir`) to parcel ids.
-* The `package_map.json` file maps absolute package paths (shashumed for security) to package ids.
+* The `metaData.json` file maps absolute package paths to package ids.
 
 #### Q: Is it safe to let browsers cache asset bundles?
 
