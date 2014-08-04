@@ -183,9 +183,9 @@ The same resolution algorithm can be employed at run time (on the server side) v
 
 ## API
 
-### c = cartero( parcelsDir, outputDir, [options] )
+### c = cartero( parcelsDirPath, outputDir, [options] )
 
-`viewsDir` is the path of the your views directory. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`parcelsDirPath` is the path of the your parcels directory, which is generally the views directory of your applcation. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
 * `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatenate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are special cased and are always both included and bundled.

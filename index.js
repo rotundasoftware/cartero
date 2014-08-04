@@ -1,7 +1,6 @@
 
 var _ = require( 'underscore' );
 var fs = require( 'fs' );
-var glob = require( 'glob' );
 var path = require( 'path' );
 var rimraf = require( 'rimraf' );
 var async = require( 'async' );
@@ -25,23 +24,25 @@ var parcelify = require( 'parcelify' );
 
 var assetUrlTransform = require( './transforms/asset_url' );
 
-var kParcelMapName = "parcel_map.json";
-var kPackageMapName = "package_map.json";
+var kMetaDataFileName = "metaData.json";
 var kAssetsJsonName = "assets.json";
 
 module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
 
-function Cartero( parcelsDirPath, outputDirPath, options ) {
-	if( ! ( this instanceof Cartero ) ) return new Cartero( parcelsDirPath, outputDirPath, options );
+function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
+	if( ! ( this instanceof Cartero ) ) return new Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options );
 
 	var _this = this;
 
-	if( ! parcelsDirPath ) throw new Error( 'Required argument parcelsDirPath was not supplied.' );
+	if( ! parcelsDirPathOrArrayOfMains ) throw new Error( 'Required argument parcelsDirPathOrArrayOfMains was not supplied.' );
 	if( ! outputDirPath ) throw new Error( 'Required argument outputDirPath was not supplied.' );
 
-	this.parcelsDirPath = path.resolve( path.dirname( require.main.filename ), parcelsDirPath );
+	if( ! _.isArray( parcelsDirPathOrArrayOfMains ) )
+		this.parcelsDirPath = path.resolve( path.dirname( require.main.filename ), parcelsDirPathOrArrayOfMains );
+	else this.mainPaths = parcelsDirPathOrArrayOfMains;
+
 	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 
 	options = _.defaults( {}, options, {
@@ -49,7 +50,7 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 		assetTypesToConcatenate : [ 'style' ],
 	
 		appTransforms : [],
-		appTransformDirs : [ this.parcelsDirPath ],
+		appTransformDirs : this.parcelsDirPath ? [ this.parcelsDirPath ] : [],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -114,9 +115,11 @@ function Cartero( parcelsDirPath, outputDirPath, options ) {
 		if( err ) return _this.emit( 'error', err );
 
 		if( options.watch ) {
-			var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
-			parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
-			parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
+			if( _this.parcelsDirPath ) {
+				var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
+				parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
+				parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
+			}
 
 			_this.watching = true;
 			log.info( 'watching for changes...' );
@@ -132,13 +135,20 @@ Cartero.prototype.processParcels = function( callback ) {
 	var _this = this;
 
 	log.info( _this.watching ? 'watch' : '',
-		'processing parcels in "%s"',
-		path.relative( process.cwd(), _this.parcelsDirPath )
+		_this.parcelsDirPath ?
+			'processing parcels in "' + path.relative( process.cwd(), _this.parcelsDirPath ) + '"' :
+			'processing ' + this.mainPaths.length + ' parcels'
 	);
 
-	_this.findMainPaths( _this.packageTransform, function( err, newMains ) {
-		if( err ) _this.emit( 'error', err );
+	async.waterfall( [ function( nextWaterfall ) {
+		if( _this.mainPaths ) return nextWaterfall( null, _this.mainPaths );
 
+		_this.findMainPaths( _this.packageTransform, function( err, newMains ) {
+			if( err ) return _this.emit( 'error', err );
+
+			nextWaterfall( null, newMains );
+		} );
+	}, function( newMains ) {
 		// figure out which mains are new and process those parcels. note there is a case
 		// where mains are removed that we do not consider. The issue is that a parcel may
 		// have been changed to a package, in which case its directory and associated info
@@ -157,13 +167,13 @@ Cartero.prototype.processParcels = function( callback ) {
 		}, function( err ) {
 			if( err ) _this.emit( 'error', err );
 
-			_this.writeTopLevelMaps( function( err ) {
+			_this.writeMetaDataFile( function( err ) {
 				if( err ) _this.emit( 'error', err );
 
 				if( callback ) callback();
 			} );
 		} );
-	} );
+	} ] );
 };
 
 Cartero.prototype.processMain = function( mainPath, callback ) {
@@ -193,6 +203,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		existingPackages : _this.packageManifest
 	};
 
+	log.info( _this.watching ? 'watch' : '', 'processing parcel "%s"', mainPath	);
+
 	var p = parcelify( mainPath, parcelifyOptions );
 	var thisParcel;
 
@@ -211,6 +223,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			return replaceStringTransform( file, {
 				find : /##asset_url\(\ *(['"])([^']*)\1\ *\)/,
 				replace : function( file, wholeMatch, quote, assetSrcPath ) {
+					var assetSrcAbsPath;
+
 					try {
 						assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
 					} catch ( err ) {
@@ -329,7 +343,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			_this.writeIndividualAssetsToDisk( thePackage, assetTypesToWriteToDisk, function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
-				if( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) {
+				if( _this.parcelsDirPath && ( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) ) {
 					// if any package is converted to a parcel, we need to re-process the package (as a parcel).
 					// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
 					parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
@@ -504,7 +518,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
 					
-					if( _this.watching ) _this.writeTopLevelMaps( function() {} );
+					if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
 					nextAsset();
 				} );
@@ -535,35 +549,32 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 };
 
 Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
-	var parcelRelativePath = path.relative( this.parcelsDirPath, parcel.path );
-	//var parcelRelativePathHash = crypto.createHash( 'sha1' ).update( parcelRelativePath ).digest( 'hex' );
-	this.parcelMap[ parcelRelativePath ] = parcelId;
+	//var parcelPathHash = crypto.createHash( 'sha1' ).update( parcelPathHash ).digest( 'hex' );
+	this.parcelMap[ parcel.path ] = parcelId;
 };
 
-Cartero.prototype.writeTopLevelMaps = function( callback ) {
+Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
-	async.parallel( [ function( nextParallel ) {
-		var parcelMapPath = path.join( _this.outputDirPath, kParcelMapName );
-		fs.writeFile( parcelMapPath, JSON.stringify( _this.parcelMap, null, 4 ), function( err ) {
-			if( err ) return callback( err );
+	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
+	
+	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
+		var thisPackageKey = thisPackagePath;
+		//thisPackageKey = crypto.createHash( 'sha1' ).update( thisPackageKey ).digest( 'hex' );
+		memo[ thisPackageKey ] = thisPackageId;
+		return memo;
+	}, {} );
 
-			nextParallel();
-		} );
-	}, function( nextParallel ) {
-		var packageMapPath = path.join( _this.outputDirPath, kPackageMapName );
-		var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
-			var thisPackagePathShasum = crypto.createHash( 'sha1' ).update( thisPackagePath ).digest( 'hex' );
-			memo[ thisPackagePathShasum ] = thisPackageId;
-			return memo;
-		}, {} );
+	var metaData = JSON.stringify( {
+		formatVersion : 1,
+		packageMap : packageMap
+	}, null, 4 );
 
-		fs.writeFile( packageMapPath, JSON.stringify( packageMap, null, 4 ), function( err ) {
-			if( err ) return callback( err );
+	fs.writeFile( metaDataFilePath, metaData, function( err ) {
+		if( err ) return callback( err );
 
-			nextParallel();
-		} );
-	} ], callback );
+		callback();
+	} );
 };
 
 /********************* Utility functions *********************/

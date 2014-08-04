@@ -1,5 +1,12 @@
 # Change Log
 
+### v3.0.0
+* Allow `parcelsDirPath` argument to cartero to be an array of explicit entry points, instead of a directory name.
+* Combined `parcel_map.json` and `package_map.json` into one `metaData.json` file.
+* NOTE: hooks written for cartero < v3.0.0 will NOT work with cartero v3.0.0 and later.
+* Fixed some problems related to circular dependencies.
+* There were no API changes in this version but since a hook is required we bumped the major version number.
+
 ### v2.2.0
 * BREAKING CHANGE: Corrected spelling of "appTranform" and "appTranformDir" to "appTransforms" and "appTransformDirs"
 
