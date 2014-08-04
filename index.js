@@ -560,10 +560,19 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = thisPackagePath;
+
+		// parcels need to take precedence over packages. if we have a situation where one package has
+		// multiple incarnations and one is a parcel, we have to make sure the parcel takes precedence.
+		// note that if we had a situation where there was more than one incarnation as a parcel, we
+		// might run into problems. can cross that bridge when we get to it...
+		if( _this.parcelMap[ thisPackagePath ] ) thisPackageId = _this.parcelMap[ thisPackagePath ];
+		
 		//thisPackageKey = crypto.createHash( 'sha1' ).update( thisPackageKey ).digest( 'hex' );
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
+
+	_.extend( packageMap, this.parcelMap ); 
 
 	var metaData = JSON.stringify( {
 		formatVersion : 1,
