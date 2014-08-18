@@ -1,7 +1,7 @@
 {
   "name": "cartero",
   "description": "Modular front end development for the masses. Built on npm and browserify.",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "bin": {
     "cartero": "bin/cmd.js"
   },
