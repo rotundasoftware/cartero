@@ -63,6 +63,8 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		browserifyBundleOptions: {}
 	} );
 
+	if ( options.logLevel ) log.level = options.logLevel;
+
 	_.extend( this, _.pick( options,
 		'assetTypes',
 		'assetTypesToConcatenate',
@@ -73,7 +75,8 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'sourceMaps',
 		'watch',
 		'browserifyOptions',
-		'browserifyBundleOptions'
+		'browserifyBundleOptions',
+		'logLevel'
 	) );
 
 	this.outputDirUrl = options.outputDirUrl;
@@ -200,7 +203,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		browserifyBundleOptions : _.extend( {}, {
 			debug : _this.sourceMaps
 		}, _this.browserifyBundleOptions ),
-		existingPackages : _this.packageManifest
+		existingPackages : _this.packageManifest,
+		logLevel : _this.logLevel
 	};
 
 	log.info( _this.watching ? 'watch' : '', 'processing parcel "%s"', mainPath	);
@@ -248,7 +252,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		newPackage.addTransform( assetUrlTransform, {
 			packagePathsToIds : _this.packagePathsToIds,
 			outputDirUrl : _this.outputDirUrl
-		} );
+		}, 'style' );
 
 		newPackage.addTransform( replaceStringTransform, {
 			find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
