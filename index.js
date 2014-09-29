@@ -1,6 +1,7 @@
 
 var _ = require( 'underscore' );
 var fs = require( 'fs' );
+var url = require( 'url' );
 var path = require( 'path' );
 var rimraf = require( 'rimraf' );
 var async = require( 'async' );
@@ -256,17 +257,17 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 		newPackage.addTransform( replaceStringTransform, {
 			find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
-			replace : function( file, match, url ) {
-				url = url.trim();
+			replace : function( file, match, theUrl ) {
+				theUrl = theUrl.trim();
 
 				// absolute urls stay the same.
-				if( url.charAt( 0 ) === '/' ) return match;
-				if( url.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
+				if( theUrl.charAt( 0 ) === '/' ) return match;
+				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
 				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
 
 				// urls in css files are relative to the css file itself
-				var absUrl = path.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), url );
+				var absUrl = url.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), theUrl );
 				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
 
 				return 'url( \'' + absUrl + '\' )';
