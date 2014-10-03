@@ -240,6 +240,9 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				}
 			} );
 		} );
+
+		_this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPath )
+
 	} );
 
 	p.on( 'packageCreated', function( newPackage, isMain ) {
