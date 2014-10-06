@@ -1,5 +1,7 @@
 --outputDirUrl, -o      The base url of the cartero output directory (e.g. "/assets"). Defaults to "/".
 
+--baseUrl, -b           The base url where the output directory (e.g. "/assets") will be served by the webserver. Defaults to "/".
+
 --transform, -t         Name or path of a default transform. (See discussion of `defaultTransforms` option.)
 
 --postProcessor, -p     The name of a post processor module to apply to assets (e.g. uglifyify, etc.).

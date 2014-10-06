@@ -122,6 +122,8 @@ At run time, the HTML tags needed to load a parcel's js and css bundles, as well
 
 --outputDirUrl, -o      The base url of the cartero output directory (e.g. "/assets"). Defaults to "/".
 
+--baseUrl, -b           The base url where the output directory (e.g. "/assets") will be served by the webserver. Defaults to "/".
+
 --help, -h              Show this message.
 ```
 
@@ -190,6 +192,7 @@ The same resolution algorithm can be employed at run time (on the server side) v
 * `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatenate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are special cased and are always both included and bundled.
 * `outputDirUrl` (default: '/') - The base url of the output directory.
+* `baseUrl` (default: '/') - The base url where the output directory will be served by the webserver.
 * `appTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to all packages in directories in the `appTransformDirs` array.
 * `appTransformDirs` (default: [ parcelsDir ]) - `appTransforms` are applied to any packages that are within one of the directories in this array. (The recursive search is stopped on `node_module` directories.)
 * `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson, pkgPath )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
