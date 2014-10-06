@@ -205,8 +205,8 @@ Called when all assets and meta data has been written to the destination directo
 #### c.on( 'error', function( err ){} );
 Called when an error occurs.
 
-#### c.on( 'browerifyInstanceCreated', function( browserifyInstance , parcelPath ) );
-Called when a browserify / watchify instance is created, ```parcelPath``` is the absolute path to the entry point of the folder/parcel that is being process at that time
+#### c.on( 'browserifyInstanceCreated', function( browserifyInstance, mainPath ) );
+Called when a browserify / watchify instance is created, `mainPath` is the absolute path to the entry point of the parcel to which the instance corresponds.
 
 #### c.on( 'fileWritten', function( path, assetType, isBundle, watchModeUpdate ){} );
 Called when an asset or bundle has been written to disk. `watchModeUpdate` is true iff the write is a result of a change in watch mode.

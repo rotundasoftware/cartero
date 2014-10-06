@@ -241,8 +241,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			} );
 		} );
 
-		_this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPath )
-
+		_this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPath );
 	} );
 
 	p.on( 'packageCreated', function( newPackage, isMain ) {
@@ -268,9 +267,11 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
 				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
+				var cssFileDirPathRelativeToPackageDir = path.dirname( '/' + cssFilePathRelativeToPackageDir );
+				if( cssFileDirPathRelativeToPackageDir !== '/' ) cssFileDirPathRelativeToPackageDir += '/';
 
 				// urls in css files are relative to the css file itself
-				var absUrl = url.resolve( path.dirname( '/' + cssFilePathRelativeToPackageDir ), theUrl );
+				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
 				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
 
 				return 'url( \'' + absUrl + '\' )';
