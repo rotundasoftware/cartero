@@ -16,6 +16,7 @@ var argv = minimist( process.argv.slice(2),
 			transform : 't',
 			postProcessor : 'p',
 			outputDirUrl : 'u',
+			baseUrl : 'b',
 			help : 'h'
 		},
 		boolean : [ 'keepSeparate', 'watch', 'help', 'maps' ]
@@ -48,7 +49,8 @@ var carteroOptions = {
 	defaultTransforms : argv.transform,
 	outputDirUrl : argv.outputDirUrl,
 	packageTransform : argv.packageTransform,
-	postProcessors : argv.postProcessor
+	postProcessors : argv.postProcessor,
+	baseUrl : argv.baseUrl
 };
 
 var c = cartero( viewDirPath, outputDirPath, carteroOptions );

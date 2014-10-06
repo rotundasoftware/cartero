@@ -49,12 +49,13 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 	options = _.defaults( {}, options, {
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
-	
+
 		appTransforms : [],
 		appTransformDirs : this.parcelsDirPath ? [ this.parcelsDirPath ] : [],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
+		baseUrl: '/',
 
 		sourceMaps : false,
 		watch : false,
@@ -73,6 +74,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'appTransformDirs',
 		'outputDirUrl',
 		'packageTransform',
+		'baseUrl',
 		'sourceMaps',
 		'watch',
 		'browserifyOptions',
@@ -159,7 +161,7 @@ Cartero.prototype.processParcels = function( callback ) {
 		// is still needed, eventhough it is no longer a parcel. we would have to jump thru
 		// hoops in order to ensure that the parcel was correctly re-initialized as a package,
 		// so instead of doing all that, just leave everything intact as if the parcel was
-		// still there. 
+		// still there.
 		var oldMains = [];
 		_.each( _this.packageManifest, function( thisPackage ) {
 			if( thisPackage.mainPath ) oldMains.push( thisPackage.mainPath );
@@ -272,7 +274,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 				// urls in css files are relative to the css file itself
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
-				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
+				absUrl = path.join( _this.baseUrl, _this.outputDirUrl + newPackage.id + absUrl );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -297,7 +299,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				if( err ) return _this.emit( 'error', err );
 
 				_.each( finalBundles, function( thisBundle, thisBundleType ) { _this.emit( 'fileWritten', thisBundle, thisBundleType, true, true ); } );
-			
+
 				_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 					if( err ) return _this.emit( 'error', err );
 
@@ -314,7 +316,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			_.each( finalBundles, function( thisBundle, thisBundleType ) {
 				_this.emit( 'fileWritten', thisBundle, thisBundleType, true, false );
 			} );
-			
+
 			_this.writeAssetsJsonForParcel( thisParcel, assetTypes, assetTypesToConcatenate, function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
@@ -412,7 +414,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 
 				bundleStream.pipe( crypto.createHash( 'sha1' ) ).pipe( concat( function( buf ) {
 					bundleShasum = buf.toString( 'hex' );
-					
+
 					var dstPath = path.join( outputDirPath, parcelBaseName + '_bundle_' + bundleShasum + path.extname( thisBundleTempPath ) );
 					bundleStream = fs.createReadStream( thisBundleTempPath );
 
@@ -435,7 +437,7 @@ Cartero.prototype.copyBundlesToParcelDiretory = function( parcel, tempBundles, c
 						// 	'%s bundle written for parcel "%s"',
 						// 	thisAssetType, './' + path.relative( process.cwd(), parcel.path )
 						// );
-						
+
 						fs.unlink( thisBundleTempPath, function() {} );
 						nextAssetType();
 					} ) );
@@ -526,7 +528,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 					if( err ) return nextAsset( err );
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
-					
+
 					if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
 					nextAsset();
@@ -566,7 +568,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
 	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
-	
+
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = thisPackagePath;
 
@@ -575,13 +577,13 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		// note that if we had a situation where there was more than one incarnation as a parcel, we
 		// might run into problems. can cross that bridge when we get to it...
 		if( _this.parcelMap[ thisPackagePath ] ) thisPackageId = _this.parcelMap[ thisPackagePath ];
-		
+
 		//thisPackageKey = crypto.createHash( 'sha1' ).update( thisPackageKey ).digest( 'hex' );
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
 
-	_.extend( packageMap, this.parcelMap ); 
+	_.extend( packageMap, this.parcelMap );
 
 	var metaData = JSON.stringify( {
 		formatVersion : 1,
