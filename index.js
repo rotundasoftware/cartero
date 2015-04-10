@@ -206,6 +206,13 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 		if( _this.packageTransform ) pkg = _this.packageTransform( pkg, dirPath );
 
+		if( pkg.transforms ) {
+			// curry transforms in the 'transforms' key to browserify
+			if( ! pkg.browserify ) pkg.browserify = {};
+			if( ! pkg.browserify.transform ) pkg.browserify.transform = [];
+			pkg.browserify.transform = pkg.transforms.concat( pkg.browserify.transform );
+		}
+
 		if( _this.appTransforms ) {
 			var pkgIsInAppTransformsDir = _.find( _this.appTransformDirs, function( thisAppDirPath ) {
 				var relPath = path.relative( thisAppDirPath, dirPath );
@@ -213,7 +220,6 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				var appTransformsApplyToThisDir = ! needToBackup && relPath.indexOf( 'node_modules' ) === -1;
 				return appTransformsApplyToThisDir;
 			} );
-
 		
 			if( pkgIsInAppTransformsDir ) {
 				if( ! pkg.browserify ) pkg.browserify = {};
