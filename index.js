@@ -60,6 +60,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 
 		sourceMaps : false,
 		watch : false,
+		browserifyOptions : {},
 		postProcessors : []
 	} );
 
@@ -78,7 +79,10 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 	) );
 
 	this.outputDirUrl = options.outputDirUrl;
+
+	// normalize outputDirUrl so that it starts and ends with a forward slash
 	if( this.outputDirUrl.charAt( 0 ) !== '/' ) this.outputDirUrl = '/' + this.outputDirUrl;
+	if( this.outputDirUrl.charAt( this.outputDirUrl.length - 1 ) !== '/' ) this.outputDirUrl += '/';
 
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
@@ -88,45 +92,47 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 
 	this.watching = false;
 
-	async.series( [ function( nextSeries ) {
-		// delete the output directory
-		rimraf( _this.outputDirPath, nextSeries );
-	}, function( nextSeries ) {
-		// now remake it
-		fs.mkdir( _this.outputDirPath, nextSeries );
-	}, function( nextSeries ) {
-		_this.resolvePostProcessors( options.postProcessors, function( err, res ) {
-			if( err ) return nextSeries( err );
+	setTimeout( function() {
+		async.series( [ function( nextSeries ) {
+			// delete the output directory
+			rimraf( _this.outputDirPath, nextSeries );
+		}, function( nextSeries ) {
+			// now remake it
+			fs.mkdir( _this.outputDirPath, nextSeries );
+		}, function( nextSeries ) {
+			_this.resolvePostProcessors( options.postProcessors, function( err, res ) {
+				if( err ) return nextSeries( err );
 
-			_this.postProcessors = res;
-			nextSeries();
-		} );
+				_this.postProcessors = res;
+				nextSeries();
+			} );
 
-		_this.on( 'error', function( err ) {
-			log.error( '', err );
-		} );
+			_this.on( 'error', function( err ) {
+				log.error( '', err );
+			} );
 
-		_this.on( 'fileWritten', function( filePath, assetType, isBundle, isWatchMode ) {
-			filePath = path.relative( process.cwd(), filePath );
-			log.info( isWatchMode ? 'watch' : '', '%s %s written to "%s"', assetType, isBundle ? 'bundle' : 'asset', filePath );
-		} );
-	}, function( nextSeries ) {
-		_this.processParcels( nextSeries );
-	} ], function( err ) {
-		if( err ) return _this.emit( 'error', err );
+			_this.on( 'fileWritten', function( filePath, assetType, isBundle, isWatchMode ) {
+				filePath = path.relative( process.cwd(), filePath );
+				log.info( isWatchMode ? 'watch' : '', '%s %s written to "%s"', assetType, isBundle ? 'bundle' : 'asset', filePath );
+			} );
+		}, function( nextSeries ) {
+			_this.processParcels( nextSeries );
+		} ], function( err ) {
+			if( err ) return _this.emit( 'error', err );
 
-		if( options.watch ) {
-			if( _this.parcelsDirPath ) {
-				var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
-				parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
-				parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
+			if( options.watch ) {
+				if( _this.parcelsDirPath ) {
+					var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
+					parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
+					parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
+				}
+
+				_this.watching = true;
+				log.info( 'watching for changes...' );
 			}
 
-			_this.watching = true;
-			log.info( 'watching for changes...' );
-		}
-
-		_this.emit( 'done' );
+			_this.emit( 'done' );
+		} );
 	} );
 
 	return _this;
@@ -238,6 +244,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 	var browserifyOptions = { entries : mainPath, packageFilter : packageFilter, debug : this.sourceMaps };
 	if( this.watch ) _.extend( browserifyOptions, { cache: {}, packageCache: {} } );
+	if( this.browserifyOptions ) _.extend( browserifyOptions, this.browserifyOptions );
 
 	var browserifyInstance = browserify( browserifyOptions );
 	if( this.watch ) watchify( browserifyInstance );
@@ -264,6 +271,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				} catch ( err ) {
 					return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
 				}
+
+				console.log( assetSrcAbsPath );
 
 				return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
 			}
