@@ -186,15 +186,18 @@ Cartero.prototype.processParcels = function( callback ) {
 Cartero.prototype.processMain = function( mainPath, callback ) {
 	var _this = this;
 
-	var assetTypes = _this.assetTypes;
-	var assetTypesToConcatenate = _this.assetTypesToConcatenate;
+	var assetTypes = this.assetTypes;
+	var assetTypesToConcatenate = this.assetTypesToConcatenate;
 	var assetTypesToWriteToDisk = _.difference( assetTypes, assetTypesToConcatenate );
 
-	var tempParcelifyBundles = {
-		style : _.contains( assetTypesToConcatenate, 'style' ) ? _this.getTempBundlePath( 'css' ) : null,
-		//template : _.contains( options.assetTypesToConcatenate, 'template' ) ? _this.getTempBundlePath( 'tmpl' ) : null
-		image : null
-	};
+	var tempParcelifyBundles = {};
+	_.each( assetTypes, function( thisAssetType ) {
+		var fileExtension = thisAssetType === 'style' ? 'css' : thisAssetType;
+
+		tempParcelifyBundles[ thisAssetType ] = _.contains( assetTypesToConcatenate, thisAssetType )
+			? _this.getTempBundlePath( fileExtension )
+			: null
+	} );
 
 	var parcelifyOptions = {
 		bundles : tempParcelifyBundles,

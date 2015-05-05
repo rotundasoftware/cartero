@@ -116,7 +116,7 @@ test( 'example3', function( t ) {
 
 	var commonJsPackageId = "";
 
-	var c = cartero( viewDirPath, outputDirPath, {} );
+	var c = cartero( viewDirPath, outputDirPath, { assetTypes: [ 'random', 'style' ] } );
 
 	c.on( 'packageCreated', function( newPackage, isMain ) {
 		if( newPackage.package.name === "common-js" )
