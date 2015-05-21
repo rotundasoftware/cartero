@@ -16,12 +16,7 @@
   "bugs": {
     "url": "https://github.com/rotundasoftware/cartero/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/rotundasoftware/cartero/blob/master/LICENSE-MIT"
-    }
-  ],
+  "license": "MIT",
   "scripts": {
     "test": "tape test/test.js"
   },
