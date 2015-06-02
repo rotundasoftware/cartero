@@ -169,7 +169,7 @@ Cartero.prototype.processParcels = function( callback ) {
 		} );
 
 		var mainsThatWereAdded = _.difference( newMains, oldMains );
-		async.each( mainsThatWereAdded, function( thisMain, nextMain ) {
+		async.eachLimit( mainsThatWereAdded, 5, function( thisMain, nextMain ) {
 			_this.processMain( thisMain, nextMain );
 		}, function( err ) {
 			if( err ) _this.emit( 'error', err );
@@ -229,7 +229,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				var appTransformsApplyToThisDir = ! needToBackup && relPath.indexOf( 'node_modules' ) === -1;
 				return appTransformsApplyToThisDir;
 			} );
-		
+
 			if( pkgIsInAppTransformsDir ) {
 				if( ! pkg.browserify ) pkg.browserify = {};
 				if( ! pkg.browserify.transform ) pkg.browserify.transform = [];
