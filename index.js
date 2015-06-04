@@ -223,6 +223,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		}
 
 		if( _this.appTransforms ) {
+			dirPath = fs.realpathSync( dirPath );
+
 			var pkgIsInAppTransformsDir = _.find( _this.appTransformDirs, function( thisAppDirPath ) {
 				var relPath = path.relative( thisAppDirPath, dirPath );
 				var needToBackup = relPath.charAt( 0 ) === '.' && relPath.charAt( 1 ) === '.';
