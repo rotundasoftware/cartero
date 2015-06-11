@@ -64,7 +64,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		postProcessors : []
 	} );
 
-	if ( options.logLevel ) log.level = options.logLevel;
+	if( options.logLevel ) log.level = options.logLevel;
 
 	_.extend( this, _.pick( options,
 		'assetTypes',
@@ -75,6 +75,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'packageTransform',
 		'sourceMaps',
 		'watch',
+		'browserifyOptions',
 		'logLevel'
 	) );
 
@@ -248,7 +249,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	}
 
 	var browserifyOptions = { entries : mainPath, packageFilter : packageFilter, debug : this.sourceMaps };
-	if( this.watch ) _.extend( browserifyOptions, { cache: {}, packageCache: {} } );
+	if( this.watch ) _.extend( browserifyOptions, { cache : {}, packageCache : {} } );
 	if( this.browserifyOptions ) _.extend( browserifyOptions, this.browserifyOptions );
 
 	var browserifyInstance = browserify( browserifyOptions );
