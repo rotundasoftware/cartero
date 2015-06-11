@@ -54,6 +54,6 @@
     "through": "~2.3.4",
     "through2": "~0.4.1",
     "underscore": "~1.4.4",
-    "watchify": "^3.2.1"
+    "watchify": "^3.2.2"
   }
 }
