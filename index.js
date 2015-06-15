@@ -71,6 +71,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'assetTypesToConcatenate',
 		'appTransforms',
 		'appTransformDirs',
+		'appRootDir',
 		'outputDirUrl',
 		'packageTransform',
 		'sourceMaps',
@@ -79,6 +80,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'logLevel'
 	) );
 
+	this.appRootDir = options.appRootDir;
 	this.outputDirUrl = options.outputDirUrl;
 
 	// normalize outputDirUrl so that it starts and ends with a forward slash
@@ -626,8 +628,7 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 };
 
 Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
-	//var parcelPathHash = crypto.createHash( 'sha1' ).update( parcelPathHash ).digest( 'hex' );
-	this.parcelMap[ parcel.path ] = parcelId;
+	this.parcelMap[ this.getPackageMapKeyFromPath( parcel.path ) ] = parcelId;
 };
 
 Cartero.prototype.writeMetaDataFile = function( callback ) {
@@ -636,13 +637,13 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
 	
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
-		var thisPackageKey = thisPackagePath;
+		var thisPackageKey = _this.getPackageMapKeyFromPath( thisPackagePath );
 
 		// parcels need to take precedence over packages. if we have a situation where one package has
 		// multiple incarnations and one is a parcel, we have to make sure the parcel takes precedence.
 		// note that if we had a situation where there was more than one incarnation as a parcel, we
 		// might run into problems. can cross that bridge when we get to it...
-		if( _this.parcelMap[ thisPackagePath ] ) thisPackageId = _this.parcelMap[ thisPackagePath ];
+		if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
 		
 		//thisPackageKey = crypto.createHash( 'sha1' ).update( thisPackageKey ).digest( 'hex' );
 		memo[ thisPackageKey ] = thisPackageId;
@@ -661,6 +662,12 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 
 		callback();
 	} );
+};
+
+Cartero.prototype.getPackageMapKeyFromPath = function( packagePath ) {
+	//var key = crypto.createHash( 'sha1' ).update( key ).digest( 'hex' );
+	if( this.appRootDir ) return './' + path.relative( this.appRootDir, packagePath );
+	else return packagePath;
 };
 
 /********************* Utility functions *********************/
