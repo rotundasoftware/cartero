@@ -12,10 +12,10 @@ module.exports = function( file, options ) {
 		var _this = this;
 		var res = buf.toString( 'utf8' );
 
-		res = res.replace( /##asset_url\(\ *(['"])([^']*)\1\ *\)/, function( wholeMatch, quote, assetSrcPath ) {
+		res = res.replace( /##asset_url\(\ *(['"])([^'"]*)\1\ *\)/, function( wholeMatch, quote, assetSrcPath ) {
 			try {
 				assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
-			} catch ( err ) {
+			} catch( err ) {
 				return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
 			}
 

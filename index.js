@@ -218,12 +218,39 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 		if( _this.packageTransform ) pkg = _this.packageTransform( pkg, dirPath );
 
+		if( ! pkg.browserify ) pkg.browserify = {};
+		if( ! pkg.browserify.transform ) pkg.browserify.transform = [];
+
 		if( pkg.transforms ) {
 			// curry transforms in the 'transforms' key to browserify
-			if( ! pkg.browserify ) pkg.browserify = {};
-			if( ! pkg.browserify.transform ) pkg.browserify.transform = [];
 			pkg.browserify.transform = pkg.transforms.concat( pkg.browserify.transform );
 		}
+
+		// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
+		// files is using the browserify global transform. however, at the time those transforms are run we
+		// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
+		// resolve relative paths at this time, because once the js files are bundled the tranform will be
+		// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
+		// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
+		// src file to an absolute path (which we do using a browserify global transform), and the second is
+		// to resolve that absolute path to a url (which we do once we know all our package ids).
+		// replace relative ##urls with absolute ones
+		pkg.browserify.transform.unshift( function( file ) {
+			return replaceStringTransform( file, {
+				find : /##asset_url\(\ *(['"])([^'"]*)\1\ *\)/,
+				replace : function( file, wholeMatch, quote, assetSrcPath ) {
+					var assetSrcAbsPath;
+
+					try {
+						assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
+					} catch( err ) {
+						return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
+					}
+
+					return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
+				}
+			} );
+		} );
 
 		if( _this.appTransforms ) {
 			dirPath = fs.realpathSync( dirPath );
@@ -258,34 +285,6 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 	if( this.watch ) watchify( browserifyInstance );
 
 	this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPath );
-
-	// this is kind of a hack. the problem is that the only time we can apply transforms to individual javascript
-	// files is using the browserify global transform. however, at the time those transforms are run we
-	// do not yet know all our package ids, so we can't map the src path the the url yet. but we do need to
-	// resolve relative paths at this time, because once the js files are bundled the tranform will be
-	// passed a new path (that of the bundle), and we no longer be able to resolve those relative paths.
-	// Therefore for the case of js files we do this transform in two phases. The first is to resolve the
-	// src file to an absolute path (which we do using a browserify global transform), and the second is
-	// to resolve that absolute path to a url (which we do once we know all our package ids).
-	browserifyInstance.transform( function( file ) {
-		// replace relative ##urls with absolute ones
-		return replaceStringTransform( file, {
-			find : /##asset_url\(\ *(['"])([^']*)\1\ *\)/,
-			replace : function( file, wholeMatch, quote, assetSrcPath ) {
-				var assetSrcAbsPath;
-
-				try {
-					assetSrcAbsPath = resolve.sync( assetSrcPath, { basedir : path.dirname( file ) } );
-				} catch ( err ) {
-					return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
-				}
-
-				console.log( assetSrcAbsPath );
-
-				return '##asset_url(' + quote + assetSrcAbsPath + quote + ')';
-			}
-		} );
-	} );
 
 	var p = parcelify( browserifyInstance, parcelifyOptions );
 	var jsBundleContents, jsBundlePath = this.getTempBundlePath( 'js' );
@@ -347,13 +346,8 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
 
-		newPackage.addTransform( assetUrlTransform, {
-			packagePathsToIds : _this.packagePathsToIds,
-			outputDirUrl : _this.outputDirUrl
-		}, 'style' );
-
 		newPackage.addTransform( replaceStringTransform, {
-			find: /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
+			find : /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
 			replace : function( file, match, theUrl ) {
 				theUrl = theUrl.trim();
 
@@ -371,6 +365,11 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 				return 'url( \'' + absUrl + '\' )';
 			}
+		}, 'style' );
+
+		newPackage.addTransform( assetUrlTransform, {
+			packagePathsToIds : _this.packagePathsToIds,
+			outputDirUrl : _this.outputDirUrl
 		}, 'style' );
 
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
