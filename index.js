@@ -61,7 +61,8 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		sourceMaps : false,
 		watch : false,
 		browserifyOptions : {},
-		postProcessors : []
+		postProcessors : [],
+		maxParcelsToProcessInParellel : 5
 	} );
 
 	if( options.logLevel ) log.level = options.logLevel;
@@ -77,7 +78,8 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 		'sourceMaps',
 		'watch',
 		'browserifyOptions',
-		'logLevel'
+		'logLevel',
+		'maxParcelsToProcessInParellel'
 	) );
 
 	this.appRootDir = options.appRootDir;
@@ -172,7 +174,7 @@ Cartero.prototype.processParcels = function( callback ) {
 		} );
 
 		var mainsThatWereAdded = _.difference( newMains, oldMains );
-		async.eachLimit( mainsThatWereAdded, 5, function( thisMain, nextMain ) {
+		async.eachLimit( mainsThatWereAdded, _this.maxParcelsToProcessInParellel, function( thisMain, nextMain ) {
 			_this.processMain( thisMain, nextMain );
 		}, function( err ) {
 			if( err ) _this.emit( 'error', err );
