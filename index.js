@@ -237,7 +237,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		// replace relative ##urls with absolute ones
 		pkg.browserify.transform.unshift( function( file ) {
 			return replaceStringTransform( file, {
-				find : /##asset_url\(\ *(['"])([^'"]*)\1\ *\)/,
+				find : /##asset_url\(\ *(['"])([^'"]*)\1\ *\)/g,
 				replace : function( file, wholeMatch, quote, assetSrcPath ) {
 					var assetSrcAbsPath;
 
