@@ -135,7 +135,7 @@ test( 'example3', function( t ) {
 	c.on( 'done', function() {
 		t.deepEqual(
 			fs.readdirSync( outputDirPath ).sort(),
-			packageIds.concat( outputDirFiles ).sort()
+			packageIds.concat( outputDirFiles ).concat( [ 'common_39ebe84e9d92379be5bdf9b8d938b38677a1d620.js' ] ).sort()
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
