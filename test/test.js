@@ -17,8 +17,8 @@ test( 'example1', function( t ) {
 
 	var c = cartero( viewDirPath, outputDirPath, {} );
 
-	c.on( 'packageCreated', function( newPackage, isMain ) {
-		if( isMain ) {
+	c.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.isParcel ) {
 			packageId = newPackage.id;
 		}
 
@@ -35,7 +35,7 @@ test( 'example1', function( t ) {
 	
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_d4e402c31b2ba05559f185f7acf74cd445dfbd80.js' ]
+			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_123cb7749e42a2fddd194619be709bc3a18c7965.js' ].sort()
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( outputDirPath, packageId, 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css' ), 'utf8' ),
@@ -73,8 +73,8 @@ test( 'example2', function( t ) {
 	var c = cartero( viewDirPath, outputDirPath, options );
 	var packageMap = {};
 
-	c.on( 'packageCreated', function( newPackage, isMain ) {
-		if( isMain ) {
+	c.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.isParcel ) {
 			parcelId = newPackage.id;
 		}
 
@@ -106,7 +106,7 @@ test( 'example2', function( t ) {
 
 
 test( 'example3', function( t ) {
-	t.plan( 5 );
+	t.plan( 7 );
 
 	var viewDirPath = path.join( __dirname, 'example3/views' );
 	var outputDirPath = path.join( __dirname, 'example3/static/assets' );
@@ -118,11 +118,11 @@ test( 'example3', function( t ) {
 
 	var c = cartero( viewDirPath, outputDirPath, { assetTypes: [ 'random', 'style' ] } );
 
-	c.on( 'packageCreated', function( newPackage, isMain ) {
+	c.on( 'packageCreated', function( newPackage ) {
 		if( newPackage.package.name === "common-js" )
 			commonJsPackageId = newPackage.id;
 
-		if( isMain ) {
+		if( newPackage.isParcel ) {
 			var parcelId = newPackage.id;
 			parcelIdsByPath[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
 		}
@@ -141,6 +141,7 @@ test( 'example3', function( t ) {
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
 	
 		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page1' ] ) ).sort();
+		var page2PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page2' ] ) ).sort();
 
 		var page1JsBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.js'; } );
 		page1JsBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1JsBundle );
@@ -153,6 +154,13 @@ test( 'example3', function( t ) {
 
 		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
 		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, 'relative css url resolved' );
+		t.ok( page1CssContents.indexOf( 'background : blue' ) !== -1, 'page 1 has correct background color' );
+
+		var page2CssBundle = _.find( page2PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
+		page2CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page2' ], page2CssBundle );
+
+		var page2CssContents = fs.readFileSync( page2CssBundle, 'utf8' );
+		t.ok( page2CssContents.indexOf( 'background : black' ) !== -1, 'page 2 has correct background color' );
 
 		t.ok( _.contains(
 			fs.readdirSync( path.join( outputDirPath, commonJsPackageId ) ).sort(),

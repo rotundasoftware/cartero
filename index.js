@@ -19,6 +19,7 @@ var replaceStringTransform = require( 'replace-string-transform' );
 var globwatcher = require( 'globwatcher' ).globwatcher;
 var Parcel = require( 'parcelify/lib/parcel.js' );
 var log = require( 'npmlog' );
+var factor = require('factor-bundle');
 
 var parcelFinder = require( 'parcel-finder' );
 var browserify = require( 'browserify' );
@@ -91,6 +92,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 	this.finalBundlesByParcelId = {};
 
 	this.parcelMap = {};
+	this.parcelsByEntryPoint = {};
 	this.packagePathsToIds = {};
 
 	this.watching = false;
@@ -144,12 +146,6 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 Cartero.prototype.processParcels = function( callback ) {
 	var _this = this;
 
-	log.info( _this.watching ? 'watch' : '',
-		_this.parcelsDirPath ?
-			'processing parcels in "' + path.relative( process.cwd(), _this.parcelsDirPath ) + '"' :
-			'processing ' + this.mainPaths.length + ' parcels'
-	);
-
 	async.waterfall( [ function( nextWaterfall ) {
 		if( _this.mainPaths ) return nextWaterfall( null, _this.mainPaths );
 
@@ -172,9 +168,7 @@ Cartero.prototype.processParcels = function( callback ) {
 		} );
 
 		var mainsThatWereAdded = _.difference( newMains, oldMains );
-		async.eachLimit( mainsThatWereAdded, 5, function( thisMain, nextMain ) {
-			_this.processMain( thisMain, nextMain );
-		}, function( err ) {
+		_this.processMains( mainsThatWereAdded, function( err ) {
 			if( err ) _this.emit( 'error', err );
 
 			_this.writeMetaDataFile( function( err ) {
@@ -186,24 +180,29 @@ Cartero.prototype.processParcels = function( callback ) {
 	} ] );
 };
 
-Cartero.prototype.processMain = function( mainPath, callback ) {
+Cartero.prototype.processMains = function( mainPaths, callback ) {
 	var _this = this;
 
 	var assetTypes = this.assetTypes;
 	var assetTypesToConcatenate = this.assetTypesToConcatenate;
 	var assetTypesToWriteToDisk = _.difference( assetTypes, assetTypesToConcatenate );
 
-	var tempParcelifyBundles = {};
-	_.each( assetTypes, function( thisAssetType ) {
-		var fileExtension = thisAssetType === 'style' ? 'css' : thisAssetType;
+	var tempParcelifyBundlesByEntryPoint = {};
+	_.each( mainPaths, function( thisMainPath ) {
+		tempParcelifyBundlesByEntryPoint[ thisMainPath ] = {};
 
-		tempParcelifyBundles[ thisAssetType ] = _.contains( assetTypesToConcatenate, thisAssetType )
-			? _this.getTempBundlePath( fileExtension )
-			: null
+		_.each( assetTypes, function( thisAssetType ) {
+			var fileExtension = thisAssetType === 'style' ? 'css' : thisAssetType;
+
+			tempParcelifyBundlesByEntryPoint[ thisMainPath ][ thisAssetType ] = _.contains( assetTypesToConcatenate, thisAssetType )
+				? _this.getTempBundlePath( fileExtension )
+				: null
+		} );
 	} );
 
 	var parcelifyOptions = {
-		bundles : tempParcelifyBundles,
+		bundlesByEntryPoint : tempParcelifyBundlesByEntryPoint,
+		assetTypes : assetTypes,
 		// appTransforms : _this.appTransforms,
 		// appTransformDirs : _this.appTransformDirs,
 		watch : this.watch,
@@ -211,7 +210,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		logLevel : this.logLevel
 	};
 
-	log.info( this.watching ? 'watch' : '', 'processing parcel "%s"', mainPath	);
+	log.info( this.watching ? 'watch' : '', 'processing parcels:\n', mainPaths.map( function( thisPath ) { return '  ' + thisPath; } ).join( '\n' ) );
 
 	var packageFilter = function( pkg, dirPath ) {
 		if( pkg._hasBeenTransformedByCartero ) return pkg;
@@ -277,18 +276,44 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		return pkg;
 	}
 
-	var browserifyOptions = { entries : mainPath, packageFilter : packageFilter, debug : this.sourceMaps };
+	var browserifyOptions = { entries : mainPaths, packageFilter : packageFilter, debug : this.sourceMaps };
 	if( this.watch ) _.extend( browserifyOptions, { cache : {}, packageCache : {} } );
 	if( this.browserifyOptions ) _.extend( browserifyOptions, this.browserifyOptions );
 
 	var browserifyInstance = browserify( browserifyOptions );
 	if( this.watch ) watchify( browserifyInstance );
 
-	this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPath );
+	browserifyInstance._bpack.hasExports = true;
+
+	this.emit( 'browserifyInstanceCreated', browserifyInstance, mainPaths );
 
 	var p = parcelify( browserifyInstance, parcelifyOptions );
-	var jsBundleContents, jsBundlePath = this.getTempBundlePath( 'js' );
-	var thisParcel;
+
+	var tempJsBundlesByEntryPoint;
+	var tempJavascriptBundleEmitter = new EventEmitter();
+
+	tempJavascriptBundleEmitter.setMaxListeners( 0 ); // don't warn if we got lots of listeners, as we need 1 per entry point
+	
+	function createTempJsBundleStreamsByEntryPoint() {
+		tempJsBundlesByEntryPoint = _.map( mainPaths, function( thisEntryPoint ) {
+			var thisJsBundlePath = _this.getTempBundlePath( 'js' );
+			var writeStream = fs.createWriteStream( thisJsBundlePath, { encoding : 'utf8' } );
+
+			writeStream.on( 'finish', function() {
+				tempJavascriptBundleEmitter.emit( 'tempBundleWritten', thisEntryPoint, thisJsBundlePath );
+			} );
+
+			return { path : thisJsBundlePath, stream : writeStream };
+		} )
+	}
+
+	factor( browserifyInstance, {
+		outputs : function() {
+			createTempJsBundleStreamsByEntryPoint();
+			return _.pluck( tempJsBundlesByEntryPoint, 'stream' );
+		},
+		threshold : function() { return false; }
+	} );
 
 	if( this.watch ) {
 		browserifyInstance.on( 'update', function() {
@@ -299,9 +324,43 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 					return;
 				}
 
-				fs.writeFile( jsBundlePath, buf, function( err ) {
-					_this.copyTempBundleToParcelDiretory( thisParcel, 'script', jsBundlePath, true, function() {} );
-				} ); 
+				// async.forEachOf( tempJsBundlesByEntryPoint, function( thisTempBundle, index, nextEach ) {
+				// 	var thisMainPath = mainPaths[ index ];
+
+				// 	thisTempBundle.stream.on( 'finish', function() {
+				// 		var thisParcel = _this.parcelsByEntryPoint[ thisMainPath ];
+
+				// 		console.log( 'script assets for ' + thisMainPath + ' changed.' );
+				
+				// 		_this.copyTempBundleToParcelDiretory( thisParcel, 'script', thisTempBundle.path, false, function( err ) {
+				// 			if( err ) return callback( err );
+
+				// 			_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+				// 				if( err ) return callback( err );
+
+				// 				nextEach();
+				// 			} );
+				// 		} );
+				// 	} );
+				// }, function( err ) {
+				// 	if( err ) return _this.emit( 'error', err );
+				// 	// all done!
+				// } ); 
+			} );
+		} );
+
+		tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( whichEntryPoint, tempBundlePath ) {
+			if( ! _this.watching ) return;
+			
+			var thisParcel = _this.parcelsByEntryPoint[ whichEntryPoint ];
+			_this.copyTempBundleToParcelDiretory( thisParcel, 'script', tempBundlePath, false, function( err ) {
+				if( err ) return callback( err );
+
+				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+					if( err ) return callback( err );
+
+					// done
+				} );
 			} );
 		} );
 	}
@@ -315,33 +374,49 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 				return;
 			}
 
-			jsBundleContents = buf;
 			nextParallel();
 		} );
 	}, function( nextParallel ) {
 		p.on( 'done', nextParallel );
+	}, function( nextParallel ) {
+		var numberOfBundlesWritten = 0;
+
+		tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
+			numberOfBundlesWritten++;
+
+			// don't have to do anything here... we are just waiting until all of our
+			// temp bundles have been written before moving on. see below comments
+
+			if( numberOfBundlesWritten === mainPaths.length ) nextParallel();
+		} );
 	} ], function( err ) {
 		if( err ) return callback( err );
 
-		fs.writeFile( jsBundlePath, jsBundleContents, function( err ) {
-			if( err ) return callback( err );
+		// we have to make sure that parcelify is done before executing this code, since we look up
+		// thisParcel in a structure that is generated via parcelify evants. also, we need to make sure
+		// that all our temp js bundles have been written, since otherwise we will have nothing to
+		// copy. thus all the crazy async stuff involved.
 
-			_this.copyTempBundleToParcelDiretory( thisParcel, 'script', jsBundlePath, false, function( err ) {
+		async.forEachOf( tempJsBundlesByEntryPoint, function( thisTempBundle, index, nextEach ) {
+			var thisMainPath = mainPaths[ index ];
+			var thisParcel = _this.parcelsByEntryPoint[ thisMainPath ];
+
+			_this.copyTempBundleToParcelDiretory( thisParcel, 'script', thisTempBundle.path, false, function( err ) {
 				if( err ) return callback( err );
 
 				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
 					if( err ) return callback( err );
 
-					callback(); // all done!
+					nextEach();
 				} );
 			} );
-		} ); 
+		}, callback ); // all done!
 	} );
 
-	p.on( 'packageCreated', function( newPackage, isMain ) {
-		if( isMain ) {
-			thisParcel = newPackage;
-			_this.addToParcelMap( thisParcel, thisParcel.id );
+	p.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.isParcel ) {
+			_this.parcelsByEntryPoint[ newPackage.mainPath ] = newPackage;
+			_this.addToParcelMap( newPackage, newPackage.id );
 		}
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
@@ -375,11 +450,11 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
 			if( err ) return _this.emit( 'error', err );
 
-			_this.emit( 'packageCreated', newPackage, isMain );
+			_this.emit( 'packageCreated', newPackage );
 		} );
 	} );
 
-	p.on( 'bundleWritten', function( bundlePath, assetType, watchModeUpdate ) {
+	p.on( 'bundleWritten', function( bundlePath, assetType, thisParcel, watchModeUpdate ) {
 		_this.copyTempBundleToParcelDiretory( thisParcel, assetType, bundlePath, watchModeUpdate, function() {} );
 	} );
 
@@ -396,11 +471,13 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 						} );
 				}
 			}, function( nextSeries ) {
-				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
-					if( err ) return _this.emit( 'error', err );
+				async.each( thePackage.dependentParcels, function( thisParcel, nextParallel ) {
+					_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+						if( err ) return _this.emit( 'error', err );
 
-					nextSeries();
-				} );
+						nextParallel();
+					} );
+				}, nextSeries );
 			} ], function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
@@ -412,27 +489,27 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 			_this.writeIndividualAssetsToDisk( thePackage, assetTypesToWriteToDisk, function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
-				if( _this.parcelsDirPath && ( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) ) {
-					// if any package is converted to a parcel, we need to re-process the package (as a parcel).
-					// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
-					parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
-						if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
-							var oldDependentParcels = thePackage.dependentParcels;
+				// if( _this.parcelsDirPath && ( ! ( thePackage instanceof Parcel ) && thePackage === thisParcel ) ) {
+				// 	// if any package is converted to a parcel, we need to re-process the package (as a parcel).
+				// 	// (note the reverse is not true.. we don't need to reprocess parcels if they are "demoted" to packages)
+				// 	parcelFinder.parsePackage( thePackage.path, _this.parcelsDirPath, _this.packageTransform, function( err, isParcel, pkg ) {
+				// 		if( isParcel && _this.packageManifest[ thePackage.id ] === thePackage ) {
+				// 			var oldDependentParcels = thePackage.dependentParcels;
 
-							delete _this.packageManifest[ thePackage.id ];
-							thePackage.destroy();
+				// 			delete _this.packageManifest[ thePackage.id ];
+				// 			thePackage.destroy();
 
-							log.warn( '', 'Recreating package at ' + thePackage.path + ' as Parcel.' );
+				// 			log.warn( '', 'Recreating package at ' + thePackage.path + ' as Parcel.' );
 
-							_this.processMain( pkg.__mainPath, function() {
-								oldDependentParcels.forEach( function( thisDependentParcel ) {
-									thisDependentParcel.calcSortedDependencies();
-									thisDependentParcel.calcParcelAssets( assetTypes );
-								} );
-							} );
-						}
-					} );
-				}
+				// 			_this.processMains( [ pkg.__mainPath ], function() {
+				// 				oldDependentParcels.forEach( function( thisDependentParcel ) {
+				// 					thisDependentParcel.calcSortedDependencies();
+				// 					thisDependentParcel.calcParcelAssets( assetTypes );
+				// 				} );
+				// 			} );
+				// 		}
+				// 	} );
+				// }
 			} );
 		} );
 	}
@@ -440,7 +517,7 @@ Cartero.prototype.processMain = function( mainPath, callback ) {
 
 Cartero.prototype.findMainPaths = function( packageTransform, callback ) {
 	parcelFinder( this.parcelsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
-		if (err) return callback( err );
+		if( err ) return callback( err );
 
 		callback( null, _.reduce( detected, function( memo, thisPkg ) {
 			return memo.concat( thisPkg.__mainPath );
@@ -457,7 +534,6 @@ Cartero.prototype.copyTempBundleToParcelDiretory = function( parcel, assetType, 
 	mkdirp( outputDirPath, function( err ) {
 		if( err ) return callback( err );
 
-			
 		var bundleStream = fs.createReadStream( tempBundlePath );
 		var bundleShasum;
 
