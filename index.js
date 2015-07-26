@@ -201,8 +201,8 @@ Cartero.prototype.processMains = function( mainPaths, callback ) {
 		logLevel : this.logLevel
 	};
 
-	log.info( this.watching ? 'watch' : '', 'processing parcels:', this.mainPaths.map( function( thisPath ) {
-		console.log( thisPath );
+	log.info( '', 'processing entry points:' );
+	log.info( '', this.mainPaths.map( function( thisPath ) {
 		return '  ' + thisPath;
 	} ).join( '\n' ) );
 
