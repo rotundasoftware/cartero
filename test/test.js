@@ -35,7 +35,7 @@ test( 'example1', function( t ) {
 	
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_123cb7749e42a2fddd194619be709bc3a18c7965.js' ].sort()
+			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_08786d2274344b392803ce9659e6d469ede96834.js' ].sort()
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( outputDirPath, packageId, 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css' ), 'utf8' ),
@@ -46,7 +46,7 @@ test( 'example1', function( t ) {
 test( 'example2', function( t ) {
 	t.plan( 3 );
 
-	var viewDirPath = path.join( __dirname, 'example2/views' );
+	var entryPoint = path.join( __dirname, 'example2/views/page1/*.js' );
 	var outputDirPath = path.join( __dirname, 'example2/static/assets' );
 	var parcelId;
 
@@ -70,7 +70,7 @@ test( 'example2', function( t ) {
 		}
 	};
 
-	var c = cartero( viewDirPath, outputDirPath, options );
+	var c = cartero( entryPoint, outputDirPath, options );
 	var packageMap = {};
 
 	c.on( 'packageCreated', function( newPackage ) {
@@ -108,7 +108,8 @@ test( 'example2', function( t ) {
 test( 'example3', function( t ) {
 	t.plan( 7 );
 
-	var viewDirPath = path.join( __dirname, 'example3/views' );
+	var entryPoints = [ path.join( __dirname, 'example3/views/**/*' ) ];
+	var entryPointFilter = function( fileName ) { return path.extname( fileName ) === '.js'; };
 	var outputDirPath = path.join( __dirname, 'example3/static/assets' );
 	var packageMap = {};
 	var packageIds = [];
@@ -116,7 +117,7 @@ test( 'example3', function( t ) {
 
 	var commonJsPackageId = "";
 
-	var c = cartero( viewDirPath, outputDirPath, { assetTypes: [ 'random', 'style' ] } );
+	var c = cartero( entryPoints, outputDirPath, { entryPointFilter : entryPointFilter, assetTypes: [ 'random', 'style' ] } );
 
 	c.on( 'packageCreated', function( newPackage ) {
 		if( newPackage.package.name === "common-js" )
@@ -124,7 +125,7 @@ test( 'example3', function( t ) {
 
 		if( newPackage.isParcel ) {
 			var parcelId = newPackage.id;
-			parcelIdsByPath[ path.relative( viewDirPath, newPackage.path ) ] = parcelId;
+			parcelIdsByPath[ path.relative( path.join( __dirname, 'example3/views' ), newPackage.path ) ] = parcelId;
 		}
 
 		packageMap[ newPackage.path ] = newPackage.id;

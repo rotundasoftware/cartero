@@ -19,7 +19,8 @@ var replaceStringTransform = require( 'replace-string-transform' );
 var globwatcher = require( 'globwatcher' ).globwatcher;
 var Parcel = require( 'parcelify/lib/parcel.js' );
 var log = require( 'npmlog' );
-var factor = require('factor-bundle');
+var factor = require( 'factor-bundle' );
+var glob = require( 'glob' );
 
 var parcelFinder = require( 'parcel-finder' );
 var browserify = require( 'browserify' );
@@ -36,26 +37,24 @@ module.exports = Cartero;
 
 inherits( Cartero, EventEmitter );
 
-function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
-	if( ! ( this instanceof Cartero ) ) return new Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options );
+function Cartero( entryPoints, outputDirPath, options ) {
+	if( ! ( this instanceof Cartero ) ) return new Cartero( entryPoints, outputDirPath, options );
 
 	var _this = this;
 
-	if( ! parcelsDirPathOrArrayOfMains ) throw new Error( 'Required argument parcelsDirPathOrArrayOfMains was not supplied.' );
+	if( ! entryPoints ) throw new Error( 'Required argument entryPoints was not supplied.' );
 	if( ! outputDirPath ) throw new Error( 'Required argument outputDirPath was not supplied.' );
-
-	if( ! _.isArray( parcelsDirPathOrArrayOfMains ) )
-		this.parcelsDirPath = path.resolve( path.dirname( require.main.filename ), parcelsDirPathOrArrayOfMains );
-	else this.mainPaths = parcelsDirPathOrArrayOfMains;
 
 	this.outputDirPath = path.resolve( path.dirname( require.main.filename ), outputDirPath );
 
 	options = _.defaults( {}, options, {
+		entryPointFilter : undefined,
+
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
 	
 		appTransforms : [],
-		appTransformDirs : this.parcelsDirPath ? [ this.parcelsDirPath ] : [],
+		appTransformDirs : _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ? [ entryPoints ] : [],
 
 		outputDirUrl : '/',
 		packageTransform : undefined,
@@ -69,6 +68,7 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 	if( options.logLevel ) log.level = options.logLevel;
 
 	_.extend( this, _.pick( options,
+		'entryPointFilter',
 		'assetTypes',
 		'assetTypesToConcatenate',
 		'appTransforms',
@@ -100,6 +100,13 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 
 	setTimeout( function() {
 		async.series( [ function( nextSeries ) {
+			_this._getMainPathsFromEntryPointsArgument( entryPoints, function( err, mainPaths ) {
+				if( err ) return nextSeries( err );
+
+				_this.mainPaths = mainPaths;
+				nextSeries();
+			} )
+		}, function( nextSeries ) {
 			// delete the output directory
 			rimraf( _this.outputDirPath, nextSeries );
 		}, function( nextSeries ) {
@@ -122,18 +129,11 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 				log.info( isWatchMode ? 'watch' : '', '%s %s written to "%s"', assetType, isBundle ? 'bundle' : 'asset', filePath );
 			} );
 		}, function( nextSeries ) {
-			_this.processParcels( nextSeries );
+			_this.processMains( nextSeries );
 		} ], function( err ) {
 			if( err ) return _this.emit( 'error', err );
 
 			if( options.watch ) {
-				// this is too weird. let's not support dynamically adding / changing the entry points we are dealing with
-				// if( _this.parcelsDirPath ) {
-				// 	var parcelJsonWatcher = globwatcher( path.join( _this.parcelsDirPath, "**/package.json" ) );
-				// 	parcelJsonWatcher.on( 'added', function() { _this.processParcels(); } );
-				// 	parcelJsonWatcher.on( 'changed', function() { _this.processParcels(); } );
-				// }
-
 				_this.watching = true;
 				log.info( 'watching for changes...' );
 			}
@@ -145,34 +145,37 @@ function Cartero( parcelsDirPathOrArrayOfMains, outputDirPath, options ) {
 	return _this;
 }
 
-Cartero.prototype.processParcels = function( callback ) {
+Cartero.prototype._getMainPathsFromEntryPointsArgument = function( entryPoints, callback ) {
+	if( _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ) {
+		// old depreciated logic of supplying the view directory, which we need to can for parcels.
+		var parcelsDirPath = path.resolve( path.dirname( require.main.filename ), entryPoints );
+
+		parcelFinder( parcelsDirPath, { packageTransform : this.packageTransform }, function( err, detected ) {
+			if( err ) return callback( err );
+
+			callback( null, _.reduce( detected, function( memo, thisPkg ) {
+				return memo.concat( thisPkg.__mainPath );
+			}, [] ) );
+		} );
+	} else {
+		if( ! _.isArray( entryPoints ) ) entryPoints = [ entryPoints ];
+
+		var unfilteredEntryPoints = _.reduce( entryPoints, function( mainPathsMemo, thisEntryPoint ) {
+			return mainPathsMemo.concat( glob.sync( thisEntryPoint ) );
+		}, [] );
+
+		if( this.entryPointFilter ) callback( null, _.filter( unfilteredEntryPoints, this.entryPointFilter ) );
+		else callback( null, unfilteredEntryPoints );
+	}
+}
+
+Cartero.prototype.processMains = function( callback ) {
 	var _this = this;
 
-	async.waterfall( [ function( nextWaterfall ) {
-		if( _this.mainPaths ) return nextWaterfall( null, _this.mainPaths );
-
-		_this.findMainPaths( _this.packageTransform, function( err, mainPaths ) {
-			if( err ) return _this.emit( 'error', err );
-
-			nextWaterfall( null, mainPaths );
-		} );
-	}, function( mainPaths ) {
-		_this.processMains( mainPaths, function( err ) {
-			if( err ) _this.emit( 'error', err );
-
-			_this.writeMetaDataFile( function( err ) {
-				if( err ) _this.emit( 'error', err );
-
-				if( callback ) callback();
-			} );
-		} );
-	} ] );
-};
-
-Cartero.prototype.processMains = function( mainPaths, callback ) {
-	var _this = this;
-
-	_this.mainPaths = mainPaths;
+	log.info( '', 'processing entry points:' );
+	log.info( '', this.mainPaths.map( function( thisPath ) {
+		return '  ' + thisPath;
+	} ).join( '\n' ) );
 
 	var assetTypes = this.assetTypes;
 	var assetTypesToConcatenate = this.assetTypesToConcatenate;
@@ -200,11 +203,6 @@ Cartero.prototype.processMains = function( mainPaths, callback ) {
 		existingPackages : this.packageManifest,
 		logLevel : this.logLevel
 	};
-
-	log.info( '', 'processing entry points:' );
-	log.info( '', this.mainPaths.map( function( thisPath ) {
-		return '  ' + thisPath;
-	} ).join( '\n' ) );
 
 	var packageFilter = function( pkg, dirPath ) {
 		if( pkg._hasBeenTransformedByCartero ) return pkg;
@@ -381,7 +379,16 @@ Cartero.prototype.processMains = function( mainPaths, callback ) {
 		// that all our temp js bundles have been written, since otherwise we will have nothing to
 		// copy. thus all the crazy async stuff involved.
 
-		_this.writeAllFinalJavascriptBundles( tempJsBundlesByEntryPoint, needToWriteCommonJsBundle ? commonJsBundleContents : null, callback );
+		_this.writeAllFinalJavascriptBundles( tempJsBundlesByEntryPoint, needToWriteCommonJsBundle ? commonJsBundleContents : null, function( err ) {
+			if( err ) return callback( err );
+
+			// finally, write the meta data file
+			_this.writeMetaDataFile( function( err ) {
+				if( err ) _this.emit( 'error', err );
+
+				if( callback ) callback(); // and we're done
+			} );
+		} );
 	} );
 
 	p.on( 'packageCreated', function( newPackage ) {
@@ -474,16 +481,6 @@ Cartero.prototype.processMains = function( mainPaths, callback ) {
 			} );
 		} );
 	}
-};
-
-Cartero.prototype.findMainPaths = function( packageTransform, callback ) {
-	parcelFinder( this.parcelsDirPath, { packageTransform : packageTransform }, function( err, detected ) {
-		if( err ) return callback( err );
-
-		callback( null, _.reduce( detected, function( memo, thisPkg ) {
-			return memo.concat( thisPkg.__mainPath );
-		}, [] ) );
-	} );
 };
 
 Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, assetType, finalBundlePathWithoutShasumAndExt, callback ) {
@@ -695,7 +692,8 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
 					
-					if( _this.watching ) _this.writeMetaDataFile( function() {} );
+					// why were we doing this? metaData does not contain references to individual assets
+					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
 					nextAsset();
 				} );
