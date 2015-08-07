@@ -14,6 +14,7 @@ var argv = minimist( process.argv.slice(2),
 			maps : 'm',
 			watch : 'w',
 			transform : 't',
+			transformDirs : 'd',
 			postProcessor : 'p',
 			outputDirUrl : 'u',
 			help : 'h'
@@ -41,11 +42,15 @@ outputDirPath = resolvePath( outputDirPath );
 
 var watch = argv.watch;
 
+var appTransformDirs = argv.transformDirs;
+if( typeof appTransformDirs === 'string' ) appTransformDirs = [ appTransformDirs ];
+
 var carteroOptions = {
 	keepSeparate : argv.keepSeparate,
 	sourceMaps : argv.maps,
 	watch : watch,
-	defaultTransforms : argv.transform,
+	appTransforms : argv.transform,
+	appTransformDirs : appTransformDirs,
 	outputDirUrl : argv.outputDirUrl,
 	packageTransform : argv.packageTransform,
 	postProcessors : argv.postProcessor

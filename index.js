@@ -92,7 +92,6 @@ function Cartero( entryPoints, outputDirPath, options ) {
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
 
-	this.parcelMap = {};
 	this.parcelsByEntryPoint = {};
 	this.packagePathsToIds = {};
 
@@ -102,6 +101,11 @@ function Cartero( entryPoints, outputDirPath, options ) {
 		async.series( [ function( nextSeries ) {
 			_this._getMainPathsFromEntryPointsArgument( entryPoints, function( err, mainPaths ) {
 				if( err ) return nextSeries( err );
+
+				if( mainPaths.length === 0 ) {
+					log.error( '', 'No entry points found matching ' + entryPoints );
+					return;
+				}
 
 				_this.mainPaths = mainPaths;
 				nextSeries();
@@ -196,7 +200,6 @@ Cartero.prototype.processMains = function( callback ) {
 
 	var parcelifyOptions = {
 		bundlesByEntryPoint : tempParcelifyBundlesByEntryPoint,
-		assetTypes : assetTypes,
 		// appTransforms : _this.appTransforms,
 		// appTransformDirs : _this.appTransformDirs,
 		watch : this.watch,
@@ -394,7 +397,6 @@ Cartero.prototype.processMains = function( callback ) {
 	p.on( 'packageCreated', function( newPackage ) {
 		if( newPackage.isParcel ) {
 			_this.parcelsByEntryPoint[ newPackage.mainPath ] = newPackage;
-			_this.addToParcelMap( newPackage, newPackage.id );
 		}
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
@@ -723,10 +725,6 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 	}, callback );
 };
 
-Cartero.prototype.addToParcelMap = function( parcel, parcelId ) {
-	this.parcelMap[ this.getPackageMapKeyFromPath( parcel.path ) ] = parcelId;
-};
-
 Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
@@ -735,22 +733,25 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = _this.getPackageMapKeyFromPath( thisPackagePath );
 
-		// parcels need to take precedence over packages. if we have a situation where one package has
-		// multiple incarnations and one is a parcel, we have to make sure the parcel takes precedence.
-		// note that if we had a situation where there was more than one incarnation as a parcel, we
-		// might run into problems. can cross that bridge when we get to it...
-		if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
+		// // parcels need to take precedence over packages. if we have a situation where one package has
+		// // multiple incarnations and one is a parcel, we have to make sure the parcel takes precedence.
+		// // note that if we had a situation where there was more than one incarnation as a parcel, we
+		// // might run into problems. can cross that bridge when we get to it...
+		// if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
 		
-		//thisPackageKey = crypto.createHash( 'sha1' ).update( thisPackageKey ).digest( 'hex' );
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
 
-	_.extend( packageMap, this.parcelMap ); 
+	var entryPointMap = _.reduce( _this.parcelsByEntryPoint, function( entryPointMapMemo, thisParcel ) {
+		entryPointMapMemo[ _this.getPackageMapKeyFromPath( thisParcel.mainPath ) ] = thisParcel.id;
+		return entryPointMapMemo;
+	}, {} );
 
 	var metaData = JSON.stringify( {
-		formatVersion : 1,
-		packageMap : packageMap
+		formatVersion : 2,
+		packageMap : packageMap,
+		entryPointMap : entryPointMap
 	}, null, 4 );
 
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
@@ -760,10 +761,10 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	} );
 };
 
-Cartero.prototype.getPackageMapKeyFromPath = function( packagePath ) {
+Cartero.prototype.getPackageMapKeyFromPath = function( thePath ) {
 	//var key = crypto.createHash( 'sha1' ).update( key ).digest( 'hex' );
-	if( this.appRootDir ) return './' + path.relative( this.appRootDir, packagePath );
-	else return packagePath;
+	if( this.appRootDir ) return './' + path.relative( this.appRootDir, thePath );
+	else return thePath;
 };
 
 /********************* Utility functions *********************/
