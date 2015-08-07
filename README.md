@@ -15,7 +15,7 @@ A package might contain assets for
 * A header or footer
 * An entire web page
 
-cartero is a build tool. cartero does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, using cartero is, well, a whole lot easier.
+cartero is a build tool. It does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, using cartero is, well, a hell of a lot lot easier.
 
 See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools, and [this tutorial](http://www.jslifeandlove.org/intro-to-cartero/) to get started.
 
@@ -24,20 +24,20 @@ See [this article](https://github.com/rotundasoftware/cartero/blob/master/compar
 Build all assets for a multi-page application with the cartero command. For example,
 
 ```
-$ cartero ./views/**/index.js ./static/assets
+$ cartero "./views/**/index.js" "./static/assets"
 ```
 
 This command will gather up the js and other assets required by each JavaScript entry point matching the first argument (in this case, all `index.js` files in the `views` directory), and drop the compiled assets into the output directory specified in the second argument, along with information used at run time by [the hook](#the-hook), to load the appropriate assets for each entry point.
 
-Cartero only processes each asset one time, so compiling assets for many entry points at once is extremely efficient, each additional entry point adding practically no overhead. Cartero also separates out the JavaScript assets that are used by all your entry points into a common bundle, so that the browser cache can be leveraged to load any shared logic quickly on each page. (This magic is done by [factor-bundle](https://github.com/substack/factor-bundle) - thanks for your [wizardry](http://cyber.wizard.institute/), James!)
+cartero only processes each asset one time, so compiling assets for many entry points at once is extremely efficient. Each additional entry point adds practically no overhead. cartero also separates out any JavaScript assets that are used by all your entry points into a common bundle, so that the browser cache can be leveraged to load any shared logic quickly on each page. (This magic is done by [factor-bundle](https://github.com/substack/factor-bundle) - thanks for your [wizardry](http://cyber.wizard.institute/), James!)
 
 Adding a `-w` flag to the cartero command will run cartero in watch mode so that the output is updated whenever assets are changed. Again, cartero's watch mode is extremely efficient, only rebuilding what is necessary for a given change.
 
 ### The hook
 
-At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small ([< 100 LOC](https://github.com/rotundasoftware/cartero-node-hook/blob/master/index.js)) runtime library that your server side logic can use to look up asset urls or paths (based on a simple map output by cartero at build time). At the time of this writing, only a [hook for node.js](https://github.com/rotundasoftware/cartero-node-hook) is available, but one can quickly be written for any server side environment.
+At run time, your application needs to be able to easily figure out where assets are located. For this reason, cartero provides a small ([< 100 LOC](https://github.com/rotundasoftware/cartero-node-hook/blob/master/index.js)) runtime library that your server side logic can use to look up asset urls or paths based on a simple map output by cartero at build time. At the time of this writing, only a [hook for node.js](https://github.com/rotundasoftware/cartero-node-hook) is available, but one can quickly be written for any server side environment.
 
-For example, if `./views/page1/index.js` is an entry point, the following call will return all the `script` and `link` tags needed to load its js and css bundles:
+For example, if `views/page1/index.js` is an entry point, the following call will return all the `script` and `link` tags needed to load the js and css bundles it requires:
 
 ```javascript
 h.getTagsForEntryPoint( 'views/page1/index.js', function( err, scriptTags, styleTags ) {
@@ -59,7 +59,7 @@ h.getAssetUrl( 'views/page1/carnes.png' ), function( err, url ) {
 } );
 ```
 
-## It's in the package.json
+## It's all in the package.json
 
 cartero can gather and compile style and image assets from any module with a `package.json` file. Just include a `style` and / or `image` property in the `package.json` that enumerates the assets the package requires of that type (in [glob notation](https://github.com/isaacs/node-glob#glob-primer)). For example,
 
@@ -75,9 +75,7 @@ cartero can gather and compile style and image assets from any module with a `pa
 }
 ```
 
-The CommonJS `require( 'modules' )` syntax is used to require a package, along with all its css and other assets. The argument to `require` is resolved resolved by [browserify](http://browserify.org/) using the [node resolve algorthim](https://github.com/substack/node-resolve).
-
-Note that `package.json` files can be in any location. You can even put package.json in your `views` folder. Sound weird? Try it. The JavaScript entry point that is used by any given view is, after all, just like a package -- it has its own js, css, and may depend on other packages (or even be depended upon). Does this look weird?
+Note that `package.json` files can be in any location. You can even put `package.json` files in your `views` folder. Sound weird? Try it. The JavaScript entry point that is used by any given view is, after all, just like a package -- it has its own js, css, and may depend on other packages (or even be depended upon). Relax your brain - does the below directory structure make sense?
 
 
 ```
@@ -107,9 +105,9 @@ $ npm install -g cartero
 $ cartero <entryPoints> <outputDir> [options]
 ```
 
-The `cartero` command gathers up all assets required by the JavaScript files matching the `<entryPoints>` argument, transforms and concatinates them as appropriate, and saves the output in `outputDir`.
+The `cartero` command gathers up all assets required by the JavaScript files matching the `<entryPoints>` argument, which is a glob string, and transforms and concatinates them as appropriate, and saves the output in `outputDir`.
 
-At run time, the HTML tags needed to load a parcel's js and css bundles, as well as its other assets, can be found using the [cartero hook's](https://github.com/rotundasoftware/cartero-node-hook). The [cartero express middleware](https://github.com/rotundasoftware/cartero-express-middleware) can be used for an added level of convenience.
+At run time, the HTML tags needed to load the assets required by a particular entry point can be found using the [cartero hook's](https://github.com/rotundasoftware/cartero-node-hook). The [cartero express middleware](https://github.com/rotundasoftware/cartero-express-middleware) can be used for an added level of convenience.
 
 ## Command line options
 
@@ -135,7 +133,7 @@ At run time, the HTML tags needed to load a parcel's js and css bundles, as well
 
 ### Package specific (local) transforms
 
-The safest and most portable way to apply transforms to a package (like Sass -> css or CoffeeScript -> js) is using the `transforms` key in a package's package.json. The key should be an array of names or file paths of [transform modules](https://github.com/substack/module-deps#transforms). For example,
+The safest and most portable way to apply transforms to a package (like Sass -> css or CoffeeScript -> js) is using the `transforms` key in a package's `package.json` file. The key should be an array of names or file paths of [transform modules](https://github.com/substack/module-deps#transforms). For example,
 
 ```
 {
@@ -161,13 +159,17 @@ You can apply transforms to all packages within an entire branch of the director
 $ cartero views/**/index.js static/assets -t sass-css-stream -d ./views
 ```
 
+### Catalog of transforms
+
+Any browserify JavaScript transform will work with cartero. See the [parcelify documentation](https://github.com/rotundasoftware/parcelify#catalog-of-transforms) for a catalog of transforms that apply to other asset types.
+
 ### Built-in transforms
 
 There are two built-in transforms that cartero automatically applies to all packages.
 
 #### The relative to absolute path transform (style assets only)
 
-Cartero automatically applies a transform to your style assets that replaces relative urls with absolute urls (after any local / default transforms are applied). This transform makes relative urls work even after css files are concatenated into bundles. For example, the following url reference in a third party module will work even after concatenation:
+cartero automatically applies a transform to your style assets that replaces relative urls with absolute urls (after any local / default transforms are applied). This transform makes relative urls work even after css files are concatenated into bundles. For example, the following url reference in a third party module will work even after concatenation:
 
 ```css
 div.backdrop {
@@ -191,18 +193,18 @@ The same resolution algorithm can be employed at run time (on the server side) v
 
 ### c = cartero( entryPoints, outputDir, [options] )
 
-`entryPoints` is a glob pattern, or an array of glob patterns. Any JavaScript file matching the pattern(s) will be treated as an entry points. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
+`entryPoints` is a glob pattern, or an array of glob patterns. Any JavaScript file matching the pattern(s) will be treated as an entry point. `outputDir` is the path of the directory into which all of your processed assets will be dropped (along with some meta data). It should be a directory that is exposed to the public so assets can be loaded using script / link tags (e.g. the `static` directory in express applications). Options are as follows:
 
-* `assetTypes` (default: [ 'style', 'image' ]) - The keys in package.json files that enumerate assets that should be copied to the cartero output directory.
+* `assetTypes` (default: [ 'style', 'image' ]) - The keys in `package.json` files that enumerate assets that should be copied to the cartero output directory.
 * `assetTypesToConcatenate` (default: [ 'style' ]) - A subset of `assetTypes` that should be concatenated into bundles. Note JavaScript files are special cased and are always both included and bundled (by browserify).
 * `outputDirUrl` (default: '/') - The base url of the output directory.
 * `appRootDir` (default: undefined) - The root directory of your application. (You generally only need to supply this option if the directory structure of the system on which your application will be run is different than of the system on which cartero is being run.)
-* `appTransforms` (default: undefined) - An array of [transform modules](https://github.com/substack/module-deps#transforms) names / paths or functions to be applied to all packages in directories in the `appTransformDirs` array.
+* `appTransforms` (default: undefined) - An array of [transform module](#tranforms) names / paths or functions to be applied to all packages in directories in the `appTransformDirs` array.
 * `appTransformDirs` (default: undefined) - `appTransforms` are applied to any packages that are within one of the directories in this array. (The recursive search is stopped on `node_module` directories.)
-* `packageTransform` (default: undefined) - A function that transforms package.json files before they are used. The function should be of the signature `function( pkgJson, pkgPath )` and return the parsed, transformed package object. This feature can be used to add default values to package.json files or alter the package.json of third party modules without modifying them directly.
+* `packageTransform` (default: undefined) - A function that transforms `package.json` files before they are used. The function should be of the signature `function( pkgJson, pkgPath )` and return the parsed, transformed package object. This feature can be used to add default values to `package.json` files or alter the `package.json` of third party modules without modifying them directly.
 * `sourceMaps` (default: false) - Enable js source maps (passed through to browserify).
 * `watch` (default: false) - Reprocess assets and bundles (and meta data) when things change.
-* `postProcessors` (default: []) - An array of post-procesor functions or module names / paths. Post-processors should have the same signature as [transform modules](https://github.com/substack/module-deps#transforms).
+* `postProcessors` (default: []) - An array of post-procesor functions or module names / paths. Post-processors should have the same signature as [transform modules](https://github.com/substack/module-deps#transforms). These transforms are applied to all final bundles after all other transforms have been applied. Useful for minification, uglification, etc.
 
 A cartero object is returned, which is an event emitter.
 

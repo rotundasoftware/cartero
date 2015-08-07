@@ -176,7 +176,7 @@ Cartero.prototype._getMainPathsFromEntryPointsArgument = function( entryPoints, 
 Cartero.prototype.processMains = function( callback ) {
 	var _this = this;
 
-	log.info( '', 'processing entry points:' );
+	log.info( '', 'processing ' + this.mainPaths.length + ' entry points:' );
 	log.info( '', this.mainPaths.map( function( thisPath ) {
 		return '  ' + thisPath;
 	} ).join( '\n' ) );
