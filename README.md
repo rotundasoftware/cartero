@@ -156,7 +156,7 @@ All transform modules are called on all assets (including JavaScript files). It 
 You can apply transforms to all packages within an entire branch of the directory tree using the `appTransforms` and `appTransformDirs` options or their corresponding command line arguments. (Packages inside a `node_modules` folder located inside one of the supplied directories are not effected.) For example, to transform all sass files inside the views directory to css,
 
 ```
-$ cartero views/**/index.js static/assets -t sass-css-stream -d ./views
+$ cartero "views/**/index.js" static/assets -t sass-css-stream -d ./views
 ```
 
 ### Catalog of transforms
