@@ -62,6 +62,11 @@ function Cartero( entryPoints, outputDirPath, options ) {
 		sourceMaps : false,
 		watch : false,
 		browserifyOptions : {},
+
+		factorThreshold : function( row, group ) {
+			return this.mainPaths.length > 1 && ( group.length >= this.mainPaths.length || group.length === 0 );
+	    },
+
 		postProcessors : []
 	} );
 
@@ -79,6 +84,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 		'sourceMaps',
 		'watch',
 		'browserifyOptions',
+		'factorThreshold',
 		'logLevel'
 	) );
 
@@ -310,10 +316,10 @@ Cartero.prototype.processMains = function( callback ) {
 			return _.pluck( tempJsBundlesByEntryPoint, 'stream' );
 		},
 		threshold : function( row, group ) {
-			var putIntoCommonBundle = _this.mainPaths.length > 1 && ( group.length >= _this.mainPaths.length || group.length === 0 );
+			var putIntoCommonBundle = _this.factorThreshold( row, group );
 			needToWriteCommonJsBundle = needToWriteCommonJsBundle || putIntoCommonBundle;
-	        return putIntoCommonBundle;
-	    }
+			return putIntoCommonBundle;
+		}
 	} );
 
 	if( this.watch ) {
