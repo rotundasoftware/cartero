@@ -3,7 +3,7 @@ var path = require( 'path' );
 var test = require( 'tape' );
 var fs = require( 'fs' );
 var crypto = require( 'crypto' );
-var _ = require( 'underscore' );
+var _ = require( 'lodash' );
 
 var outputDirFiles = [ 'metaData.json' ];
 
@@ -32,7 +32,7 @@ test( 'example1', function( t ) {
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
-	
+
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
 			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_08786d2274344b392803ce9659e6d469ede96834.js' ].sort()
@@ -140,7 +140,7 @@ test( 'example3', function( t ) {
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
-	
+
 		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page1' ] ) ).sort();
 		var page2PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page2' ] ) ).sort();
 
@@ -149,7 +149,7 @@ test( 'example3', function( t ) {
 
 		var page1JsContents = fs.readFileSync( page1JsBundle, 'utf8' );
 		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, '##asset_url resolved' );
-		
+
 		var page1CssBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
 		page1CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1CssBundle );
 
@@ -169,5 +169,3 @@ test( 'example3', function( t ) {
 		), 'robot.png in common package' );
 	} );
 } );
-
-

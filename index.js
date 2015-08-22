@@ -1,5 +1,5 @@
 
-var _ = require( 'underscore' );
+var _ = require( 'lodash' );
 var fs = require( 'fs' );
 var url = require( 'url' );
 var path = require( 'path' );
@@ -52,7 +52,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
-	
+
 		appTransforms : [],
 		appTransformDirs : _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ? [ entryPoints ] : [],
 
@@ -296,7 +296,7 @@ Cartero.prototype.processMains = function( callback ) {
 	var tempJavascriptBundleEmitter = new EventEmitter();
 
 	tempJavascriptBundleEmitter.setMaxListeners( 0 ); // don't warn if we got lots of listeners, as we need 1 per entry point
-	
+
 	function createTempJsBundleStreamsByEntryPoint() {
 		tempJsBundlesByEntryPoint = _.map( _this.mainPaths, function( thisEntryPoint ) {
 			var thisJsBundlePath = _this.getTempBundlePath( 'js' );
@@ -549,7 +549,7 @@ Cartero.prototype.copyTempBundleToParcelDiretory = function( tempBundlePath, ass
 
 		if( this.watching ) {
 			// if there is an old bundle that already exists for this asset type, delete it. this
-			// happens in watch mode when a new bundle is generated. (note the old bundle 
+			// happens in watch mode when a new bundle is generated. (note the old bundle
 			// likely does not have the same path as the new bundle due to sha1)
 			if( oldBundlePath )	{
 				fs.unlinkSync( oldBundlePath );
@@ -577,7 +577,7 @@ Cartero.prototype.writeCommonJavascriptBundle = function( buf, callback ) {
 
 			if( this.watching && oldBundlePath ) {
 				// if there is an old bundle that already exists, delete it. this
-				// happens in watch mode when a new bundle is generated. (note the old bundle 
+				// happens in watch mode when a new bundle is generated. (note the old bundle
 				// likely does not have the same path as the new bundle due to sha1)
 				fs.unlinkSync( oldBundlePath );
 			}
@@ -699,7 +699,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 					if( err ) return nextAsset( err );
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
-					
+
 					// why were we doing this? metaData does not contain references to individual assets
 					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
@@ -735,7 +735,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
 	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
-	
+
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = _this.getPackageMapKeyFromPath( thisPackagePath );
 
@@ -744,7 +744,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		// // note that if we had a situation where there was more than one incarnation as a parcel, we
 		// // might run into problems. can cross that bridge when we get to it...
 		// if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
-		
+
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
