@@ -670,6 +670,8 @@ Cartero.prototype.getTempBundlePath = function( fileExtension ) {
 
 Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback ) {
 	async.map( postProcessorNames, function( thisPostProcessorName, nextPostProcessorName ) {
+		if( _.isFunction( thisPostProcessorName ) ) return nextPostProcessorName( null, thisPostProcessorName );
+		
 		resolve( thisPostProcessorName, { basedir : process.cwd() }, function( err, modulePath ) {
 			if( err ) return nextPostProcessorName( err );
 
