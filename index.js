@@ -361,6 +361,7 @@ Cartero.prototype.processMains = function( callback ) {
 			if( err ) {
 				delete err.stream; // gets messy if we dump this to the console
 				log.error( '', err );
+				_this.emit( 'error', err);
 				return;
 			}
 
