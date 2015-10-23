@@ -513,7 +513,7 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 
 			// this is part of a hack to apply the ##url transform to javascript files. see comments in transforms/resolveRelativeAssetUrlsToAbsolute
 			var postProcessorsToApply = _.clone( _this.postProcessors );
-			if( assetType === 'script' ) postProcessorsToApply.push( function( file ) { return assetUrlTransform( file, {
+			if( assetType === 'script' ) postProcessorsToApply.unshift( function( file ) { return assetUrlTransform( file, {
 				packagePathsToIds : _this.packagePathsToIds,
 				outputDirUrl : _this.outputDirUrl
 			} ); } );
