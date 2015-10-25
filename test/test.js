@@ -148,13 +148,13 @@ test( 'example3', function( t ) {
 		page1JsBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1JsBundle );
 
 		var page1JsContents = fs.readFileSync( page1JsBundle, 'utf8' );
-		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, '##asset_url resolved' );
-		
+		t.ok( page1JsContents.indexOf( '/' + commonJsPackageId + '/robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png' ) !== -1, '##asset_url resolved' );
+
 		var page1CssBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
 		page1CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1CssBundle );
 
 		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
-		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot.png' ) !== -1, 'relative css url resolved' );
+		t.ok( page1CssContents.indexOf( '/' + commonJsPackageId + '/robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png' ) !== -1, 'relative css url resolved' );
 		t.ok( page1CssContents.indexOf( 'background : blue' ) !== -1, 'page 1 has correct background color' );
 
 		var page2CssBundle = _.find( page2PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
@@ -165,9 +165,57 @@ test( 'example3', function( t ) {
 
 		t.ok( _.contains(
 			fs.readdirSync( path.join( outputDirPath, commonJsPackageId ) ).sort(),
-			'robot.png'
+			'robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png'
 		), 'robot.png in common package' );
 	} );
 } );
 
 
+test( 'example4', function( t ) {
+	t.plan( 5 );
+
+	var viewDirPath = path.join( __dirname, 'example4/views' );
+	var outputDirPath = path.join( __dirname, 'example4/static/assets' );
+	var packageId;
+	var packageMap = {};
+
+	var c = cartero( viewDirPath, outputDirPath, {} );
+
+	c.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.isParcel ) {
+			packageId = newPackage.id;
+		}
+
+		packageMap[ newPackage.path ] = newPackage.id;
+	} );
+
+	c.on( 'done', function() {
+		// Cannot determine the exact name o the files due to the fact that we calculate the shasum after some transformation of the code
+		// for more info check: https://github.com/rotundasoftware/cartero/pull/45
+		var assets = require( path.join( outputDirPath, packageId, 'assets.json' ) );
+		var cssFile = path.relative(packageId, assets.style[ 0 ]);
+		var jsFile = path.relative(packageId, assets.script[ 0 ]);
+		var imgDir = 'img';
+		var imgFile = 'robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png';
+
+		t.ok( fs.existsSync( path.join( outputDirPath, packageId, imgDir, imgFile ) ), 'robot.png created with the new name' );
+
+		t.deepEqual(
+			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
+			[ 'assets.json', cssFile, jsFile, imgDir ].sort()
+		);
+
+		t.deepEqual(
+			fs.readdirSync( path.join( outputDirPath, packageId, 'img') ),
+			[ imgFile ]
+		);
+
+		// Test content of js file and check #asset_url
+		var jsContent = fs.readFileSync( path.join( outputDirPath, packageId, jsFile ), 'utf8' );
+		t.notEqual( jsContent.indexOf( 'var robotPngPath = \'/' + [ packageId, imgDir, imgFile ].join( '/' ) + '\';' ), -1 );
+
+		t.equal( fs.readFileSync( path.join( outputDirPath, packageId, cssFile ), 'utf8' ),
+			'body {\n\tbackground : blue url( \'/' + [ packageId, imgDir, imgFile ].join( '/' ) + '\' );\n}' );
+
+	} );
+} );

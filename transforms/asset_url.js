@@ -22,10 +22,15 @@ module.exports = function( file, options ) {
 			var url = pathMapper( assetSrcAbsPath, function( srcDir ) {
 				return options.packagePathsToIds[ srcDir ] ? '/' + options.packagePathsToIds[ srcDir ] : null; // return val of outputDirPath needs to be absolute path
 			} );
-		
+
 			// all assets urls should be different than their paths.. otherwise we have a problem
 			if( url === assetSrcAbsPath )
 				return _this.emit( 'error', new Error( 'The file "' + assetSrcAbsPath + '" referenced from ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '" is not an asset.' ) );
+
+			var filename = path.basename(assetSrcAbsPath);
+			var newFilename = options.assetMap[assetSrcAbsPath];
+
+			url = path.join( path.dirname( url ), newFilename);
 
 			if( options.outputDirUrl ) {
 				var baseUrl = options.outputDirUrl;
