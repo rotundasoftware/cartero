@@ -408,6 +408,29 @@ Cartero.prototype.processMains = function( callback ) {
 
 		_this.packagePathsToIds[ newPackage.path ] = newPackage.id;
 
+		// calculates the shasum for the assets
+		_this.assetMap = _this.assetMap || {};
+		async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
+			// We dont need to process assets that are in assetTypesToConcatenate
+			if ( _this.assetTypesToConcatenate.indexOf( thisAssetType ) !== -1 ) return nextAssetType();
+
+			async.each( newPackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
+
+				var fileContent = fs.readFileSync( thisAsset.srcPath, 'utf-8' );
+				var shasum = crypto.createHash( 'sha1' );
+
+				shasum.update(fileContent);
+
+				var fileShasum =shasum.digest('hex');
+				var fileName = path.relative( newPackage.path, thisAsset.srcPath );
+				var fileExt = path.extname( fileName );
+				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
+
+				// save the old name and new name for later use with the transforms
+				_this.assetMap[ thisAsset.srcPath ] = newFileName;
+			});
+		});
+
 		newPackage.addTransform( replaceStringTransform, {
 			find : /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
 			replace : function( file, match, theUrl ) {
@@ -417,12 +440,25 @@ Cartero.prototype.processMains = function( callback ) {
 				if( theUrl.charAt( 0 ) === '/' ) return match;
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
+				var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
+				var newAssetName = _this.assetMap[ absoluteAssetPath ];
+
+				if ( newAssetName ) {
+					// replace the url with the new name
+					theUrl = path.join( path.dirname( theUrl ), newAssetName );
+				} else {
+					// this happen when we have packages that have assets references that are not specified
+					// in the image tag in package.json. It happens in modules like jqueryui
+					log.warn( file, 'Asset reference ' + theUrl + ' cannot be resolved.' );
+				}
+
 				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
 				var cssFileDirPathRelativeToPackageDir = path.dirname( '/' + cssFilePathRelativeToPackageDir );
 				if( cssFileDirPathRelativeToPackageDir !== '/' ) cssFileDirPathRelativeToPackageDir += '/';
 
 				// urls in css files are relative to the css file itself
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
+
 				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
 
 				return 'url( \'' + absUrl + '\' )';
@@ -431,7 +467,8 @@ Cartero.prototype.processMains = function( callback ) {
 
 		newPackage.addTransform( assetUrlTransform, {
 			packagePathsToIds : _this.packagePathsToIds,
-			outputDirUrl : _this.outputDirUrl
+			outputDirUrl : _this.outputDirUrl,
+			assetMap: _this.assetMap
 		}, 'style' );
 
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
@@ -515,7 +552,8 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 			var postProcessorsToApply = _.clone( _this.postProcessors );
 			if( assetType === 'script' ) postProcessorsToApply.unshift( function( file ) { return assetUrlTransform( file, {
 				packagePathsToIds : _this.packagePathsToIds,
-				outputDirUrl : _this.outputDirUrl
+				outputDirUrl : _this.outputDirUrl,
+				assetMap: _this.assetMap
 			} ); } );
 
 			if( postProcessorsToApply.length !== 0 ) {
@@ -683,17 +721,17 @@ Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback
 
 Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypesToWriteToDisk, callback ) {
 	var _this = this;
-	var pathsOfWrittenAssets = [];
 	var outputDirectoryPath = this.getPackageOutputDirectory( thePackage );
 
 	assetTypesToWriteToDisk = _.intersection( assetTypesToWriteToDisk, Object.keys( thePackage.assetsByType ) );
 
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
-			var thisAssetDstPath = path.join( outputDirectoryPath, path.relative( thePackage.path, thisAsset.srcPath ) );
-			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
-			pathsOfWrittenAssets.push( thisAssetDstPath );
+			var thisAssetDstPath = path.relative( thePackage.path, thisAsset.srcPath );
+			thisAssetDstPath = path.join( outputDirectoryPath, path.dirname( thisAssetDstPath ), _this.assetMap[ thisAsset.srcPath ] );
+
+			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
 			thisAsset.writeToDisk( thisAssetDstPath, function( err ) {
 				if( err ) return nextAsset( err );
@@ -760,7 +798,8 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var metaData = JSON.stringify( {
 		formatVersion : 2,
 		packageMap : packageMap,
-		entryPointMap : entryPointMap
+		entryPointMap : entryPointMap,
+		assetMap: _this.assetMap
 	}, null, 4 );
 
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
