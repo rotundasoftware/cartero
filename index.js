@@ -174,6 +174,10 @@ Cartero.prototype._getMainPathsFromEntryPointsArgument = function( entryPoints, 
 			return mainPathsMemo.concat( glob.sync( thisEntryPoint ) );
 		}, [] );
 
+		unfilteredEntryPoints = _.map( unfilteredEntryPoints, function( thisEntryPoint ) {
+			return thisEntryPoint.charAt( 0 ) === '/' ? thisEntryPoint : path.resolve( process.cwd(), thisEntryPoint );
+		} );
+
 		if( this.entryPointFilter ) callback( null, _.filter( unfilteredEntryPoints, this.entryPointFilter ) );
 		else callback( null, unfilteredEntryPoints );
 	}
@@ -780,4 +784,25 @@ Cartero.prototype.getPackageMapKeyFromPath = function( thePath ) {
 
 function renameFileExtension( file, toExt ) {
 	return file.replace( new RegExp( path.extname( file ) + "$" ), toExt );
+}
+
+function printDependencies( thePackage, level, traversedPackagePaths ) {
+	// for debugging
+
+	if( ! traversedPackagePaths ) traversedPackagePaths = [];
+
+	var levelStr = '';
+	for( var curLevel = level; curLevel > 0; curLevel-- ) levelStr += '   ';
+
+	var haveAlreadyTraversed = _.contains( traversedPackagePaths, thePackage.path );
+
+	console.log( levelStr + thePackage.path + ( haveAlreadyTraversed ? ' *' : '' ) );
+
+	if( ! haveAlreadyTraversed ) {
+		traversedPackagePaths.push( thePackage.path );
+
+		_.each( thePackage.dependencies, function( thisDependency ) {
+			printDependencies( thisDependency, level + 1, traversedPackagePaths );
+		} );
+	}
 }
