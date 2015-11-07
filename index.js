@@ -1,4 +1,3 @@
-
 var _ = require( 'underscore' );
 var fs = require( 'fs' );
 var url = require( 'url' );
@@ -52,7 +51,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
-	
+
 		appTransforms : [],
 		appTransformDirs : _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ? [ entryPoints ] : [],
 
@@ -440,16 +439,22 @@ Cartero.prototype.processMains = function( callback ) {
 			replace : function( file, match, theUrl ) {
 				theUrl = theUrl.trim();
 
+        debugger;
+        //TODO
 				// absolute urls stay the same.
 				if( theUrl.charAt( 0 ) === '/' ) return match;
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
-				var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
-				var newAssetName = _this.assetMap[ absoluteAssetPath ];
+        var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
+				//var newAssetPath = _this.assetMap[ absoluteAssetPath ];
+				//var newAssetName = path.baseName(absoluteAssetPath); //so close but missing the subdir (images/) so this is just the image name TODO
+        var newAssetName = _this.assetMap[ absoluteAssetPath ];
 
 				if ( newAssetName ) {
 					// replace the url with the new name
-					theUrl = path.join( path.dirname( theUrl ), newAssetName );
+					//theUrl = path.join( path.dirname( theUrl ), newAssetName );
+          theUrl = newAssetName;
+          console.log('theUrl: ', theUrl);
 				} else {
 					// this happen when we have packages that have assets references that are not specified
 					// in the image tag in package.json. It happens in modules like jqueryui
@@ -461,9 +466,16 @@ Cartero.prototype.processMains = function( callback ) {
 				if( cssFileDirPathRelativeToPackageDir !== '/' ) cssFileDirPathRelativeToPackageDir += '/';
 
 				// urls in css files are relative to the css file itself
+        debugger;
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
 
+        console.log('cssFileDirPathRelativeToPackageDir: ', cssFileDirPathRelativeToPackageDir);
+
+        console.log('absUrl: ',absUrl);
+
 				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
+
+        console.log('final absUrl: ',absUrl);
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -714,7 +726,6 @@ Cartero.prototype.getTempBundlePath = function( fileExtension ) {
 Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback ) {
 	async.map( postProcessorNames, function( thisPostProcessorName, nextPostProcessorName ) {
 		if( _.isFunction( thisPostProcessorName ) ) return nextPostProcessorName( null, thisPostProcessorName );
-		
 		resolve( thisPostProcessorName, { basedir : process.cwd() }, function( err, modulePath ) {
 			if( err ) return nextPostProcessorName( err );
 
@@ -733,6 +744,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
 
 			var thisAssetDstPath = path.relative( thePackage.path, thisAsset.srcPath );
+
 			thisAssetDstPath = path.join( outputDirectoryPath, path.dirname( thisAssetDstPath ), _this.assetMap[ thisAsset.srcPath ] );
 
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
@@ -744,7 +756,9 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 					if( err ) return nextAsset( err );
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
-					
+
+          _this.assetMap[thisAsset.srcPath] = thisAssetDstPath; //TODO figure out correct place for this, for writing metaData.json assetMap correctly
+
 					// why were we doing this? metaData does not contain references to individual assets
 					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
@@ -780,7 +794,6 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
 	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
-	
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = _this.getPackageMapKeyFromPath( thisPackagePath );
 
@@ -789,7 +802,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		// // note that if we had a situation where there was more than one incarnation as a parcel, we
 		// // might run into problems. can cross that bridge when we get to it...
 		// if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
-		
+
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
