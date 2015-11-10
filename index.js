@@ -180,7 +180,7 @@ Cartero.prototype._getMainPathsFromEntryPointsArgument = function( entryPoints, 
 		if( this.entryPointFilter ) callback( null, _.filter( unfilteredEntryPoints, this.entryPointFilter ) );
 		else callback( null, unfilteredEntryPoints );
 	}
-}
+};
 
 Cartero.prototype.processMains = function( callback ) {
 	var _this = this;
@@ -430,7 +430,11 @@ Cartero.prototype.processMains = function( callback ) {
 				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
 
 				// save the old name and new name for later use with the transforms
-				_this.assetMap[ thisAsset.srcPath ] = newFileName;
+        var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
+        var relativeAssetDir = path.dirname(thisAssetDstPath);
+        var relativeAssetPath = path.join(newPackage.id, relativeAssetDir, newFileName); //ex: fingerprint/images/photo_fingerprint.png--'images' is relativeAssetDir
+
+        _this.assetMap[ thisAsset.srcPath ] = relativeAssetPath;
 			});
 		});
 
@@ -439,22 +443,18 @@ Cartero.prototype.processMains = function( callback ) {
 			replace : function( file, match, theUrl ) {
 				theUrl = theUrl.trim();
 
-        debugger;
         //TODO
 				// absolute urls stay the same.
 				if( theUrl.charAt( 0 ) === '/' ) return match;
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
         var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
-				//var newAssetPath = _this.assetMap[ absoluteAssetPath ];
-				//var newAssetName = path.baseName(absoluteAssetPath); //so close but missing the subdir (images/) so this is just the image name TODO
         var newAssetName = _this.assetMap[ absoluteAssetPath ];
 
 				if ( newAssetName ) {
 					// replace the url with the new name
-					//theUrl = path.join( path.dirname( theUrl ), newAssetName );
-          theUrl = newAssetName;
-          console.log('theUrl: ', theUrl);
+          theUrl = path.relative(path.dirname(file), newAssetName);
+
 				} else {
 					// this happen when we have packages that have assets references that are not specified
 					// in the image tag in package.json. It happens in modules like jqueryui
@@ -466,16 +466,9 @@ Cartero.prototype.processMains = function( callback ) {
 				if( cssFileDirPathRelativeToPackageDir !== '/' ) cssFileDirPathRelativeToPackageDir += '/';
 
 				// urls in css files are relative to the css file itself
-        debugger;
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
 
-        console.log('cssFileDirPathRelativeToPackageDir: ', cssFileDirPathRelativeToPackageDir);
-
-        console.log('absUrl: ',absUrl);
-
-				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
-
-        console.log('final absUrl: ',absUrl);
+        absUrl = path.join(_this.outputDirUrl, absUrl);
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -743,9 +736,8 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
 
-			var thisAssetDstPath = path.relative( thePackage.path, thisAsset.srcPath );
-
-			thisAssetDstPath = path.join( outputDirectoryPath, path.dirname( thisAssetDstPath ), _this.assetMap[ thisAsset.srcPath ] );
+      var assetsDir = path.dirname(outputDirectoryPath);
+      var thisAssetDstPath = path.join(assetsDir, _this.assetMap[thisAsset.srcPath]); //assetMap contains path starting from fingerprint folder
 
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
@@ -756,8 +748,6 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 					if( err ) return nextAsset( err );
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
-
-          _this.assetMap[thisAsset.srcPath] = thisAssetDstPath; //TODO figure out correct place for this, for writing metaData.json assetMap correctly
 
 					// why were we doing this? metaData does not contain references to individual assets
 					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
