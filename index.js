@@ -64,7 +64,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 		factorThreshold : function( row, group ) {
 			return this.mainPaths.length > 1 && ( group.length >= this.mainPaths.length || group.length === 0 );
-	    },
+			},
 
 		postProcessors : []
 	} );
@@ -430,11 +430,11 @@ Cartero.prototype.processMains = function( callback ) {
 				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
 
 				// save the old name and new name for later use with the transforms
-        var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
-        var relativeAssetDir = path.dirname(thisAssetDstPath);
-        var relativeAssetPath = path.join(newPackage.id, relativeAssetDir, newFileName); //ex: fingerprint/images/photo_fingerprint.png--'images' is relativeAssetDir
+				var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
+				var relativeAssetDir = path.dirname( thisAssetDstPath );
+				var relativeAssetPath = path.join( newPackage.id, relativeAssetDir, newFileName ); //ex: fingerprint/images/photo_fingerprint.png--'images' is relativeAssetDir
 
-        _this.assetMap[ thisAsset.srcPath ] = relativeAssetPath;
+				_this.assetMap[ thisAsset.srcPath ] = relativeAssetPath;
 			});
 		});
 
@@ -443,17 +443,16 @@ Cartero.prototype.processMains = function( callback ) {
 			replace : function( file, match, theUrl ) {
 				theUrl = theUrl.trim();
 
-        //TODO
 				// absolute urls stay the same.
 				if( theUrl.charAt( 0 ) === '/' ) return match;
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
-        var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
-        var newAssetName = _this.assetMap[ absoluteAssetPath ];
+				var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
+				var newAssetName = _this.assetMap[ absoluteAssetPath ];
 
 				if ( newAssetName ) {
 					// replace the url with the new name
-          theUrl = path.relative(path.dirname(file), newAssetName);
+					theUrl = path.relative( path.dirname( file ), newAssetName );
 
 				} else {
 					// this happen when we have packages that have assets references that are not specified
@@ -468,7 +467,7 @@ Cartero.prototype.processMains = function( callback ) {
 				// urls in css files are relative to the css file itself
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
 
-        absUrl = path.join(_this.outputDirUrl, absUrl);
+				absUrl = path.join( _this.outputDirUrl, absUrl );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -597,7 +596,7 @@ Cartero.prototype.copyTempBundleToParcelDiretory = function( tempBundlePath, ass
 
 		if( this.watching ) {
 			// if there is an old bundle that already exists for this asset type, delete it. this
-			// happens in watch mode when a new bundle is generated. (note the old bundle 
+			// happens in watch mode when a new bundle is generated. (note the old bundle
 			// likely does not have the same path as the new bundle due to sha1)
 			if( oldBundlePath )	{
 				fs.unlinkSync( oldBundlePath );
@@ -736,8 +735,8 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
 
-      var assetsDir = path.dirname(outputDirectoryPath);
-      var thisAssetDstPath = path.join(assetsDir, _this.assetMap[thisAsset.srcPath]); //assetMap contains path starting from fingerprint folder
+			var assetsDir = path.dirname( outputDirectoryPath );
+			var thisAssetDstPath = path.join( assetsDir, _this.assetMap[ thisAsset.srcPath ] ); //assetMap contains path starting from fingerprint folder
 
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
