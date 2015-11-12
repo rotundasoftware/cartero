@@ -802,7 +802,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	}, {} );
 
 	var metaData = JSON.stringify( {
-		formatVersion : 2,
+		formatVersion : 3,
 		packageMap : packageMap,
 		entryPointMap : entryPointMap,
 		assetMap: _this.assetMap
