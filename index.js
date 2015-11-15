@@ -1,4 +1,3 @@
-
 var _ = require( 'underscore' );
 var fs = require( 'fs' );
 var url = require( 'url' );
@@ -52,7 +51,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 		assetTypes : [ 'style', 'image' ],
 		assetTypesToConcatenate : [ 'style' ],
-	
+
 		appTransforms : [],
 		appTransformDirs : _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ? [ entryPoints ] : [],
 
@@ -65,7 +64,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 		factorThreshold : function( row, group ) {
 			return this.mainPaths.length > 1 && ( group.length >= this.mainPaths.length || group.length === 0 );
-	    },
+			},
 
 		postProcessors : []
 	} );
@@ -181,7 +180,7 @@ Cartero.prototype._getMainPathsFromEntryPointsArgument = function( entryPoints, 
 		if( this.entryPointFilter ) callback( null, _.filter( unfilteredEntryPoints, this.entryPointFilter ) );
 		else callback( null, unfilteredEntryPoints );
 	}
-}
+};
 
 Cartero.prototype.processMains = function( callback ) {
 	var _this = this;
@@ -431,7 +430,11 @@ Cartero.prototype.processMains = function( callback ) {
 				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
 
 				// save the old name and new name for later use with the transforms
-				_this.assetMap[ thisAsset.srcPath ] = newFileName;
+				var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
+				var relativeAssetDir = path.dirname( thisAssetDstPath );
+				var relativeAssetPath = path.join( newPackage.id, relativeAssetDir, newFileName ); //ex: fingerprint/images/photo_fingerprint.png--'images' is relativeAssetDir
+
+				_this.assetMap[ thisAsset.srcPath ] = relativeAssetPath;
 			});
 		});
 
@@ -449,7 +452,8 @@ Cartero.prototype.processMains = function( callback ) {
 
 				if ( newAssetName ) {
 					// replace the url with the new name
-					theUrl = path.join( path.dirname( theUrl ), newAssetName );
+					theUrl = path.relative( path.dirname( file ), newAssetName );
+
 				} else {
 					// this happen when we have packages that have assets references that are not specified
 					// in the image tag in package.json. It happens in modules like jqueryui
@@ -463,7 +467,7 @@ Cartero.prototype.processMains = function( callback ) {
 				// urls in css files are relative to the css file itself
 				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
 
-				absUrl = _this.outputDirUrl + newPackage.id + absUrl;
+				absUrl = path.join( _this.outputDirUrl, absUrl );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -592,7 +596,7 @@ Cartero.prototype.copyTempBundleToParcelDiretory = function( tempBundlePath, ass
 
 		if( this.watching ) {
 			// if there is an old bundle that already exists for this asset type, delete it. this
-			// happens in watch mode when a new bundle is generated. (note the old bundle 
+			// happens in watch mode when a new bundle is generated. (note the old bundle
 			// likely does not have the same path as the new bundle due to sha1)
 			if( oldBundlePath )	{
 				fs.unlinkSync( oldBundlePath );
@@ -714,7 +718,6 @@ Cartero.prototype.getTempBundlePath = function( fileExtension ) {
 Cartero.prototype.resolvePostProcessors = function( postProcessorNames, callback ) {
 	async.map( postProcessorNames, function( thisPostProcessorName, nextPostProcessorName ) {
 		if( _.isFunction( thisPostProcessorName ) ) return nextPostProcessorName( null, thisPostProcessorName );
-		
 		resolve( thisPostProcessorName, { basedir : process.cwd() }, function( err, modulePath ) {
 			if( err ) return nextPostProcessorName( err );
 
@@ -732,8 +735,8 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
 
-			var thisAssetDstPath = path.relative( thePackage.path, thisAsset.srcPath );
-			thisAssetDstPath = path.join( outputDirectoryPath, path.dirname( thisAssetDstPath ), _this.assetMap[ thisAsset.srcPath ] );
+			var assetsDir = path.dirname( outputDirectoryPath );
+			var thisAssetDstPath = path.join( assetsDir, _this.assetMap[ thisAsset.srcPath ] ); //assetMap contains path starting from fingerprint folder
 
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
@@ -744,7 +747,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 					if( err ) return nextAsset( err );
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
-					
+
 					// why were we doing this? metaData does not contain references to individual assets
 					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
@@ -780,7 +783,6 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
 
 	var metaDataFilePath = path.join( _this.outputDirPath, kMetaDataFileName );
-	
 	var packageMap = _.reduce( _this.packagePathsToIds, function( memo, thisPackageId, thisPackagePath ) {
 		var thisPackageKey = _this.getPackageMapKeyFromPath( thisPackagePath );
 
@@ -789,7 +791,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		// // note that if we had a situation where there was more than one incarnation as a parcel, we
 		// // might run into problems. can cross that bridge when we get to it...
 		// if( _this.parcelMap[ thisPackageKey ] ) thisPackageId = _this.parcelMap[ thisPackageKey ];
-		
+
 		memo[ thisPackageKey ] = thisPackageId;
 		return memo;
 	}, {} );
@@ -800,7 +802,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	}, {} );
 
 	var metaData = JSON.stringify( {
-		formatVersion : 2,
+		formatVersion : 3,
 		packageMap : packageMap,
 		entryPointMap : entryPointMap,
 		assetMap: _this.assetMap

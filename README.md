@@ -54,9 +54,7 @@ You can also ask the cartero hook to lookup the url of a specific asset. For exa
 
 
 ```javascript
-h.getAssetUrl( 'views/page1/carnes.png' ), function( err, url ) {
-  res.locals.imgUrl = url;
-} );
+var imageUrl = h.getAssetUrl( 'views/page1/carnes.png' );
 ```
 
 ## It's all in the package.json

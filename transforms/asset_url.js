@@ -27,10 +27,9 @@ module.exports = function( file, options ) {
 			if( url === assetSrcAbsPath )
 				return _this.emit( 'error', new Error( 'The file "' + assetSrcAbsPath + '" referenced from ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '" is not an asset.' ) );
 
-			var filename = path.basename(assetSrcAbsPath);
-			var newFilename = options.assetMap[assetSrcAbsPath];
+			var newFilePath = options.assetMap[assetSrcAbsPath];
 
-			url = path.join( path.dirname( url ), newFilename);
+			url = newFilePath; //ex - fingerprint/image/photo_fingerprint.png, no need for path.dirname(url) + path.basename(assetSrcAbsPath)
 
 			if( options.outputDirUrl ) {
 				var baseUrl = options.outputDirUrl;
