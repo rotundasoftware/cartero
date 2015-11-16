@@ -22,7 +22,7 @@ test( 'example1', function( t ) {
 			packageId = newPackage.id;
 		}
 
-		packageMap[ newPackage.path ] = newPackage.id;
+		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
 	} );
 
 	c.on( 'done', function() {
@@ -78,7 +78,7 @@ test( 'example2', function( t ) {
 			parcelId = newPackage.id;
 		}
 
-		packageMap[ newPackage.path ] = newPackage.id;
+		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
 	} );
 
 	var bundles = {};
@@ -128,7 +128,7 @@ test( 'example3', function( t ) {
 			parcelIdsByPath[ path.relative( path.join( __dirname, 'example3/views' ), newPackage.path ) ] = parcelId;
 		}
 
-		packageMap[ newPackage.path ] = newPackage.id;
+		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
 
 		packageIds.push( newPackage.id );
 	} );
@@ -186,7 +186,7 @@ test( 'example4', function( t ) {
 			packageId = newPackage.id;
 		}
 
-		packageMap[ newPackage.path ] = newPackage.id;
+		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
 	} );
 
 	c.on( 'done', function() {

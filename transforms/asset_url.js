@@ -1,7 +1,6 @@
 var through = require('through');
 var resolve = require( "resolve" );
 var path = require( "path" );
-var pathMapper = require( "path-mapper" );
 
 module.exports = function( file, options ) {
 	var data = '';
@@ -19,17 +18,10 @@ module.exports = function( file, options ) {
 				return _this.emit( 'error', new Error( 'Could not resolve ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '": ' + err ) );
 			}
 
-			var url = pathMapper( assetSrcAbsPath, function( srcDir ) {
-				return options.packagePathsToIds[ srcDir ] ? '/' + options.packagePathsToIds[ srcDir ] : null; // return val of outputDirPath needs to be absolute path
-			} );
+			var newFilePathRelativeToOutputDir = options.assetMap[ path.relative( options.appRootDir, assetSrcAbsPath ) ];
 
-			// all assets urls should be different than their paths.. otherwise we have a problem
-			if( url === assetSrcAbsPath )
-				return _this.emit( 'error', new Error( 'The file "' + assetSrcAbsPath + '" referenced from ##asset_url( "' + assetSrcPath + '" ) in file "' + file + '" is not an asset.' ) );
-
-			var newFilePath = options.assetMap[assetSrcAbsPath];
-
-			url = newFilePath; //ex - fingerprint/image/photo_fingerprint.png, no need for path.dirname(url) + path.basename(assetSrcAbsPath)
+			// urls are symmetric to paths
+			url = newFilePathRelativeToOutputDir; // ex: <packageId>/image/photo_<shasum>.png
 
 			if( options.outputDirUrl ) {
 				var baseUrl = options.outputDirUrl;

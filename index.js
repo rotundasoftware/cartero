@@ -55,6 +55,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 		appTransforms : [],
 		appTransformDirs : _.isString( entryPoints ) && fs.existsSync( entryPoints ) && fs.lstatSync( entryPoints ).isDirectory() ? [ entryPoints ] : [],
 
+		appRootDir : '/',
 		outputDirUrl : '/',
 		packageTransform : undefined,
 
@@ -422,22 +423,29 @@ Cartero.prototype.processMains = function( callback ) {
 				var fileContent = fs.readFileSync( thisAsset.srcPath, 'utf-8' );
 				var shasum = crypto.createHash( 'sha1' );
 
-				shasum.update(fileContent);
+				shasum.update( fileContent );
 
-				var fileShasum =shasum.digest('hex');
+				var fileShasum = shasum.digest('hex');
 				var fileName = path.relative( newPackage.path, thisAsset.srcPath );
 				var fileExt = path.extname( fileName );
 				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
 
-				// save the old name and new name for later use with the transforms
+				// save the old and new path so that our asset_url transforms can figure out
+				// the asset url (which is symmetric to the new relative path) later
 				var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
 				var relativeAssetDir = path.dirname( thisAssetDstPath );
-				var relativeAssetPath = path.join( newPackage.id, relativeAssetDir, newFileName ); //ex: fingerprint/images/photo_fingerprint.png--'images' is relativeAssetDir
 
-				_this.assetMap[ thisAsset.srcPath ] = relativeAssetPath;
-			});
-		});
+				// relativeAssetPath will be the path of the asset relative to the output directory
+				// example: <packageId>/images/photo_<shasum>.png
+				var relativeAssetPath = path.join( newPackage.id, relativeAssetDir, newFileName );
 
+				// the keys of assetMap are relative paths from appRootDir to the source asset files.
+				// the values are relative paths from outputDir to the output asset files
+				_this.assetMap[ path.relative( _this.appRootDir, thisAsset.srcPath ) ] = relativeAssetPath;
+			} );
+		} );
+
+		// add the transform that will replace "url()" references in style assets
 		newPackage.addTransform( replaceStringTransform, {
 			find : /url\(\s*[\"\']?([^)\'\"]+)\s*[\"\']?\s*\)/g,
 			replace : function( file, match, theUrl ) {
@@ -448,26 +456,18 @@ Cartero.prototype.processMains = function( callback ) {
 				if( theUrl.indexOf( 'data:' ) === 0 ) return match; // data url, don't mess with this
 
 				var absoluteAssetPath = path.resolve( path.dirname( file ), theUrl );
-				var newAssetName = _this.assetMap[ absoluteAssetPath ];
+				var newAssetUrlRelativeToOutputDir = _this.assetMap[ path.relative( _this.appRootDir, absoluteAssetPath ) ]; // example: <packageId>/images/photo_<shasum>.png
 
-				if ( newAssetName ) {
-					// replace the url with the new name
-					theUrl = path.relative( path.dirname( file ), newAssetName );
+				var relativeUrlFromCssFileDirToNewAsset;
 
-				} else {
+				if( ! newAssetUrlRelativeToOutputDir ) {
 					// this happen when we have packages that have assets references that are not specified
 					// in the image tag in package.json. It happens in modules like jqueryui
-					log.warn( file, 'Asset reference ' + theUrl + ' cannot be resolved.' );
+					log.warn( '', 'Url reference "' + theUrl + '" from "' + file + '" could not be resolved.' );
+					return 'url( \'' + theUrl + '\' )';
 				}
 
-				var cssFilePathRelativeToPackageDir = path.relative( newPackage.path, file );
-				var cssFileDirPathRelativeToPackageDir = path.dirname( '/' + cssFilePathRelativeToPackageDir );
-				if( cssFileDirPathRelativeToPackageDir !== '/' ) cssFileDirPathRelativeToPackageDir += '/';
-
-				// urls in css files are relative to the css file itself
-				var absUrl = url.resolve( cssFileDirPathRelativeToPackageDir, theUrl );
-
-				absUrl = path.join( _this.outputDirUrl, absUrl );
+				absUrl = path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
@@ -476,7 +476,8 @@ Cartero.prototype.processMains = function( callback ) {
 		newPackage.addTransform( assetUrlTransform, {
 			packagePathsToIds : _this.packagePathsToIds,
 			outputDirUrl : _this.outputDirUrl,
-			assetMap: _this.assetMap
+			assetMap: _this.assetMap,
+			appRootDir : _this.appRootDir
 		}, 'style' );
 
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
@@ -561,7 +562,8 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 			if( assetType === 'script' ) postProcessorsToApply.unshift( function( file ) { return assetUrlTransform( file, {
 				packagePathsToIds : _this.packagePathsToIds,
 				outputDirUrl : _this.outputDirUrl,
-				assetMap: _this.assetMap
+				assetMap: _this.assetMap,
+				appRootDir : _this.appRootDir
 			} ); } );
 
 			if( postProcessorsToApply.length !== 0 ) {
@@ -734,10 +736,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
-
-			var assetsDir = path.dirname( outputDirectoryPath );
-			var thisAssetDstPath = path.join( assetsDir, _this.assetMap[ thisAsset.srcPath ] ); //assetMap contains path starting from fingerprint folder
-
+			var thisAssetDstPath = path.join( _this.outputDirPath, _this.assetMap[ path.relative( _this.appRootDir, thisAsset.srcPath ) ] ); // assetMap contains path starting from fingerprint folder
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
 
 			thisAsset.writeToDisk( thisAssetDstPath, function( err ) {
@@ -817,8 +816,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 
 Cartero.prototype.getPackageMapKeyFromPath = function( thePath ) {
 	//var key = crypto.createHash( 'sha1' ).update( key ).digest( 'hex' );
-	if( this.appRootDir ) return './' + path.relative( this.appRootDir, thePath );
-	else return thePath;
+	return path.relative( this.appRootDir, thePath );
 };
 
 /********************* Utility functions *********************/
