@@ -1,8 +1,8 @@
 # Change Log
 
-### v4.0.0
-* BREAKING CHANGE: Change metaData.json assetMap to contain path from asset package Id to asset filename (insted of just asset filename)
-* NOTE: hooks written for cartero < v4.0.0 will NOT work with cartero v4.0.0 and later.
+### v6.0.0
+* BREAKING CHANGE: Change metaData.json assetMap to contain path from asset package Id to asset filename (insted of just asset filename) and change all urls to relative to appRootDir
+* NOTE: hooks written for cartero < v6.0.0 will NOT work with cartero v6.0.0 and later.
 * There were no API changes in this version but since a hook is required we bumped the major version number.
 
 ### v3.0.0

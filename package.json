@@ -47,7 +47,6 @@
     "npmlog": "1.2.1",
     "parcel-finder": "^0.2.3",
     "parcelify": "^2.1.0",
-    "path-mapper": "^0.1.3",
     "replace-string-transform": "^0.1.0",
     "resolve": "^1.1.6",
     "rimraf": "^2.2.6",
