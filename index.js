@@ -419,29 +419,7 @@ Cartero.prototype.processMains = function( callback ) {
 			if ( _this.assetTypesToConcatenate.indexOf( thisAssetType ) !== -1 ) return nextAssetType();
 
 			async.each( newPackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
-
-				var fileContent = fs.readFileSync( thisAsset.srcPath, 'utf-8' );
-				var shasum = crypto.createHash( 'sha1' );
-
-				shasum.update( fileContent );
-
-				var fileShasum = shasum.digest('hex');
-				var fileName = path.relative( newPackage.path, thisAsset.srcPath );
-				var fileExt = path.extname( fileName );
-				var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
-
-				// save the old and new path so that our asset_url transforms can figure out
-				// the asset url (which is symmetric to the new relative path) later
-				var thisAssetDstPath = path.relative( newPackage.path, thisAsset.srcPath );
-				var relativeAssetDir = path.dirname( thisAssetDstPath );
-
-				// relativeAssetPath will be the path of the asset relative to the output directory
-				// example: <packageId>/images/photo_<shasum>.png
-				var relativeAssetPath = path.join( newPackage.id, relativeAssetDir, newFileName );
-
-				// the keys of assetMap are relative paths from appRootDir to the source asset files.
-				// the values are relative paths from outputDir to the output asset files
-				_this.assetMap[ path.relative( _this.appRootDir, thisAsset.srcPath ) ] = relativeAssetPath;
+				_this.addAssetToAssetMap( newPackage, thisAsset );
 			} );
 		} );
 
@@ -505,9 +483,10 @@ Cartero.prototype.processMains = function( callback ) {
 		p.on( 'assetUpdated', function( eventType, asset, thePackage ) {
 			async.series( [ function( nextSeries ) {
 				if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
-					if( eventType === 'added' || eventType === 'changed' )
+					if( eventType === 'added' || eventType === 'changed' ) {
+						_this.addAssetToAssetMap( thePackage, asset );
 						_this.writeIndividualAssetsToDisk( thePackage, [ asset.type ], nextSeries );
-					else
+					} else
 						fs.unlink( asset.dstPath, function( err ) {
 							if( err ) return _this.emit( 'error', err );
 							nextSeries();
@@ -755,6 +734,31 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 			} );
 		}, nextAssetType );
 	}, callback );
+};
+
+Cartero.prototype.addAssetToAssetMap = function( thePackage, asset ) {
+	var fileContent = fs.readFileSync( asset.srcPath, 'utf-8' );
+	var shasum = crypto.createHash( 'sha1' );
+
+	shasum.update( fileContent );
+
+	var fileShasum = shasum.digest( 'hex' );
+	var fileName = path.relative( thePackage.path, asset.srcPath );
+	var fileExt = path.extname( fileName );
+	var newFileName = path.basename( fileName, fileExt ) + '_' + fileShasum + fileExt;
+
+	// save the old and new path so that our asset_url transforms can figure out
+	// the asset url (which is symmetric to the new relative path) later
+	var thisAssetDstPath = path.relative( thePackage.path, asset.srcPath );
+	var relativeAssetDir = path.dirname( thisAssetDstPath );
+
+	// relativeAssetPath will be the path of the asset relative to the output directory
+	// example: <packageId>/images/photo_<shasum>.png
+	var relativeAssetPath = path.join( thePackage.id, relativeAssetDir, newFileName );
+
+	// the keys of assetMap are relative paths from appRootDir to the source asset files.
+	// the values are relative paths from outputDir to the output asset files
+	this.assetMap[ path.relative( this.appRootDir, asset.srcPath ) ] = relativeAssetPath;
 };
 
 Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
