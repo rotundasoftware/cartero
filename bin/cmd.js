@@ -44,7 +44,7 @@ var watch = argv.watch;
 
 var appTransformDirs = argv.transformDirs;
 if( typeof appTransformDirs === 'string' ) appTransformDirs = [ appTransformDirs ];
-
+if( typeof transform === 'string' ) transform = [ transform ];
 var carteroOptions = {
 	keepSeparate : argv.keepSeparate,
 	sourceMaps : argv.maps,
