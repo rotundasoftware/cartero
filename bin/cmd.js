@@ -43,13 +43,14 @@ outputDirPath = resolvePath( outputDirPath );
 var watch = argv.watch;
 
 var appTransformDirs = argv.transformDirs;
+var appTransforms = argv.transform;
 if( typeof appTransformDirs === 'string' ) appTransformDirs = [ appTransformDirs ];
-if( typeof transform === 'string' ) transform = [ transform ];
+if( typeof appTransforms === 'string' ) appTransforms = [ appTransforms ];
 var carteroOptions = {
 	keepSeparate : argv.keepSeparate,
 	sourceMaps : argv.maps,
 	watch : watch,
-	appTransforms : argv.transform,
+	appTransforms : appTransforms,
 	appTransformDirs : appTransformDirs,
 	outputDirUrl : argv.outputDirUrl,
 	packageTransform : argv.packageTransform,
