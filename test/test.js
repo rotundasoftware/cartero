@@ -177,6 +177,7 @@ test( 'example4', function( t ) {
 	var viewDirPath = path.join( __dirname, 'example4/views' );
 	var outputDirPath = path.join( __dirname, 'example4/static/assets' );
 	var packageId;
+	var packagePath;
 	var packageMap = {};
 
 	var c = cartero( viewDirPath, outputDirPath, {} );
@@ -186,15 +187,17 @@ test( 'example4', function( t ) {
 			packageId = newPackage.id;
 		}
 
+		packagePath = newPackage.mainPath.slice(1);
 		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
 	} );
 
 	c.on( 'done', function() {
 		// Cannot determine the exact name o the files due to the fact that we calculate the shasum after some transformation of the code
 		// for more info check: https://github.com/rotundasoftware/cartero/pull/45
-		var assets = require( path.join( outputDirPath, packageId, 'assets.json' ) );
-		var cssFile = path.relative(packageId, assets.style[ 0 ]);
-		var jsFile = path.relative(packageId, assets.script[ 0 ]);
+		//
+		var metaData = require( path.join( outputDirPath, 'metaData.json' ) );
+		var cssFile = path.relative(packageId, metaData.entryPoints[ packagePath ].style[ 0 ]);
+		var jsFile = path.relative(packageId, metaData.entryPoints[ packagePath ].script[ 0 ]);
 		var imgDir = 'img';
 		var imgFile = 'robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png';
 
@@ -202,7 +205,7 @@ test( 'example4', function( t ) {
 
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
-			[ 'assets.json', cssFile, jsFile, imgDir ].sort()
+			[ cssFile, jsFile, imgDir ].sort()
 		);
 
 		t.deepEqual(
