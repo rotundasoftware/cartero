@@ -101,6 +101,9 @@ function Cartero( entryPoints, outputDirPath, options ) {
 	this.parcelsByEntryPoint = {};
 	this.packagePathsToIds = {};
 
+	this.entryPoints = {};
+	this.metaDataFileAlreadyWrited = false;
+
 	this.watching = false;
 
 	setTimeout( function() {
@@ -472,7 +475,6 @@ Cartero.prototype.processMains = function( callback ) {
 			if( watchModeUpdate ) {
 				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
 					if( err ) return _this.emit( 'error', err );
-
 					// done
 				} );
 			}
@@ -677,15 +679,15 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, callback ) {
 		} );
 	} );
 
+	_this.entryPoints[ _this.getPackageMapKeyFromPath( parcel.mainPath ) ] = content;
 	var packageDirPath = this.getPackageOutputDirectory( parcel );
-	mkdirp( packageDirPath, function( err ) {
-		var assetsJsonPath = path.join( packageDirPath, kAssetsJsonName );
-		fs.writeFile( assetsJsonPath, JSON.stringify( content, null, 4 ), function( err ) {
-			if( err ) return callback( err );
+	if( _this.watching && this.metaDataFileAlreadyWrited ) {
+		_this.writeMetaDataFile( function() {
+			if( err ) _this.emit( 'error', err );
 
-			return callback();
+			if( callback ) callback();
 		} );
-	} );
+	} else callback();
 };
 
 Cartero.prototype.getPackageOutputDirectory = function( thePackage ) {
@@ -805,14 +807,16 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	}, {} );
 
 	var metaData = JSON.stringify( {
-		formatVersion : 3,
+		formatVersion : 4,
 		packageMap : packageMap,
 		entryPointMap : entryPointMap,
+		entryPoints : _this.entryPoints,
 		assetMap: _this.assetMap
 	}, null, 4 );
 
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
 		if( err ) return callback( err );
+		_this.metaDataFileAlreadyWrited = true;
 
 		callback();
 	} );

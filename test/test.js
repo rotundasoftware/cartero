@@ -35,7 +35,7 @@ test( 'example1', function( t ) {
 	
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
-			[ 'assets.json', 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_08786d2274344b392803ce9659e6d469ede96834.js' ].sort()
+			[ 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_08786d2274344b392803ce9659e6d469ede96834.js' ].sort()
 		);
 
 		t.deepEqual( fs.readFileSync( path.join( outputDirPath, packageId, 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css' ), 'utf8' ),
@@ -99,7 +99,7 @@ test( 'example2', function( t ) {
 		var bundleDir = path.join( outputDirPath, parcelId );
 		t.deepEqual(
 			fs.readdirSync( bundleDir ).sort(),
-			[ 'assets.json', path.relative( bundleDir, bundles.style ), path.relative( bundleDir, bundles.script ) ].sort()
+			[ path.relative( bundleDir, bundles.style ), path.relative( bundleDir, bundles.script ) ].sort()
 		);
 	} );
 } );
