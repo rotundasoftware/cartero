@@ -196,8 +196,8 @@ test( 'example4', function( t ) {
 		// for more info check: https://github.com/rotundasoftware/cartero/pull/45
 		//
 		var metaData = require( path.join( outputDirPath, 'metaData.json' ) );
-		var cssFile = path.relative(packageId, metaData.entryPoints[ packagePath ].style[ 0 ]);
-		var jsFile = path.relative(packageId, metaData.entryPoints[ packagePath ].script[ 0 ]);
+		var cssFile = path.relative(packageId, metaData.assetsRequiredByEntryPoint[ packagePath ].style[ 0 ]);
+		var jsFile = path.relative(packageId, metaData.assetsRequiredByEntryPoint[ packagePath ].script[ 0 ]);
 		var imgDir = 'img';
 		var imgFile = 'robot_9018f21e83ce46f3ea2e3b73e5d75ece75407df7.png';
 
