@@ -101,7 +101,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 	this.parcelsByEntryPoint = {};
 	this.packagePathsToIds = {};
 
-	this.entryPoints = {};
+	this.assetsRequiredByEntryPoint = {};
 	this.metaDataFileAlreadyWrited = false;
 
 	this.watching = false;
@@ -679,10 +679,10 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, callback ) {
 		} );
 	} );
 
-	_this.entryPoints[ _this.getPackageMapKeyFromPath( parcel.mainPath ) ] = content;
+	_this.assetsRequiredByEntryPoint[ _this.getPackageMapKeyFromPath( parcel.mainPath ) ] = content;
 	var packageDirPath = this.getPackageOutputDirectory( parcel );
 	if( _this.watching && this.metaDataFileAlreadyWrited ) {
-		_this.writeMetaDataFile( function() {
+		_this.writeMetaDataFile( function( err ) {
 			if( err ) _this.emit( 'error', err );
 
 			if( callback ) callback();
@@ -810,7 +810,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		formatVersion : 4,
 		packageMap : packageMap,
 		entryPointMap : entryPointMap,
-		entryPoints : _this.entryPoints,
+		assetsRequiredByEntryPoint : _this.assetsRequiredByEntryPoint,
 		assetMap: _this.assetMap
 	}, null, 4 );
 
