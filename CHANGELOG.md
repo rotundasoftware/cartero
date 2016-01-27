@@ -1,5 +1,8 @@
 # Change Log
 
+### v6.1.0
+* Meta data format was changed. Now all meta data is stored in the metaData.json file. asset.json files are no more. This change does not break any existing public facing APIs, but it paved the way for a cool new feature: You can now optionally supply the raw meta data object to the cartero node hook, instead of having the hook loading it from the file system. This change makes it very easy to use cartero with a CDN, since the meta data can now be loaded from the CDN just like all the other assets.
+
 ### v6.0.0
 * BREAKING CHANGE: Change metaData.json assetMap to contain path from asset package Id to asset filename (insted of just asset filename) and change all urls to relative to appRootDir
 * NOTE: hooks written for cartero < v6.0.0 will NOT work with cartero v6.0.0 and later.
