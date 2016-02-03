@@ -448,9 +448,9 @@ Cartero.prototype.processMains = function( callback ) {
 					return 'url( \'' + theUrl + '\' )';
 				}
 
-				absUrl = path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
-
-				return 'url( \'' + absUrl + '\' )';
+				// make this url relative to the <packageId> to not tide the css assets
+				// to the filesystem where was compiled
+				return 'url( \'../' + newAssetUrlRelativeToOutputDir + '\' )';
 			}
 		}, 'style' );
 
