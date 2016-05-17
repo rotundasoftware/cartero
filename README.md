@@ -163,7 +163,7 @@ Any browserify JavaScript transform will work with cartero. See the [parcelify d
 
 ### Built-in transforms
 
-There are two built-in transforms that cartero automatically applies to all packages.
+There are three built-in transforms that cartero automatically applies to all packages.
 
 #### The relative to absolute path transform (style assets only)
 
@@ -177,7 +177,7 @@ div.backdrop {
 
 #### The ##asset_url() transform (to resolve asset urls)
 
-At times it is necessary to resolve the url of an asset at build time, for example in order to reference an image in one package from another. For this reason, cartero applies a special transform to all assets that replaces expressions of the form `##asset_url( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
+At times it is necessary to resolve the url of an asset at build time, for example in order to reference an image in one package from another. For this reason, cartero applies a special transform to all javascript and style assets that replaces expressions of the form `##asset_url( path )` with the url of the asset at `path` (after any local / default transforms are applied). The path is resolved to a file using the node resolve algorithm and then mapped to the url that file will have once in the cartero output directory. For instance, in `page1/index.js`:
 
 ```javascript
 myModule = require( 'my-module' );
@@ -186,6 +186,18 @@ $( 'img.my-module' ).attr( 'src', '##asset_url( "my-module/icon.png" )' );
 ```
 
 The same resolution algorithm can be employed at run time (on the server side) via the [cartero hook](https://github.com/rotundasoftware/cartero-node-hook) using the `getAssetUrl` method.
+
+#### The ##resolve() transform (to resolve node-style paths to absolute paths)
+
+Just like to the `##asset_url()` transform, but evaluates to the absolute path of the referenced asset. For example, in a [nunjucks](https://mozilla.github.io/nunjucks/) template, this transform could be used to reference a template in one module from another:
+
+```jinja
+{% extends "##resolve('other-module/template.nunj')" %}
+
+{% block body %}
+  ...
+{% endblock %}
+```
 
 ## API
 

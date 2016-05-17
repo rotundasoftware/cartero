@@ -27,6 +27,7 @@ var watchify = require( 'watchify' );
 var parcelify = require( 'parcelify' );
 
 var assetUrlTransform = require( './transforms/asset_url' );
+var resolveTransform = require( './transforms/resolve' );
 
 var kMetaDataFileName = 'metaData.json';
 var kAssetsJsonName = 'assets.json';
@@ -259,6 +260,12 @@ Cartero.prototype.processMains = function( callback ) {
 			} );
 		} );
 
+		pkg.browserify.transform.unshift( function( file ) {
+			return resolveTransform( file, {
+				appRootDir : _this.appRootDir
+			} );
+		} );
+
 		if( _this.appTransforms ) {
 			dirPath = fs.realpathSync( dirPath );
 
@@ -460,6 +467,12 @@ Cartero.prototype.processMains = function( callback ) {
 			assetMap: _this.assetMap,
 			appRootDir : _this.appRootDir
 		}, 'style' );
+
+		newPackage.addTransform( function( file ) {
+			return resolveTransform( file, {
+				appRootDir : _this.appRootDir
+			} );
+		}, {}, 'style' );
 
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
 			if( err ) return _this.emit( 'error', err );
