@@ -104,6 +104,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 	this.assetsRequiredByEntryPoint = {};
 	this.metaDataFileAlreadyWrited = false;
+	this.postProcessorTasks = [];
 
 	this.watching = false;
 
@@ -310,7 +311,7 @@ Cartero.prototype.processMains = function( callback ) {
 	var tempJavascriptBundleEmitter = new EventEmitter();
 
 	tempJavascriptBundleEmitter.setMaxListeners( 0 ); // don't warn if we got lots of listeners, as we need 1 per entry point
-	
+
 	function createTempJsBundleStreamsByEntryPoint() {
 		tempJsBundlesByEntryPoint = _.map( _this.mainPaths, function( thisEntryPoint ) {
 			var thisJsBundlePath = _this.getTempBundlePath( 'js' );
@@ -336,32 +337,59 @@ Cartero.prototype.processMains = function( callback ) {
 		}
 	} );
 
+	var parallelTasks = [
+		function checkBrowserifyBundleDoneTask(nextParallel) {
+			browserifyInstance.bundle( function( err, buf ) {
+				if( err ) {
+					delete err.stream; // gets messy if we dump this to the console
+					log.error( '', err );
+					return;
+				}
+				commonJsBundleContents = buf;
+				nextParallel();
+			});
+		},
+
+		function checkParcelifyDoneTask(nextParallel) {
+			p.on('done', nextParallel);
+		},
+
+		function checkEntryPointBundlesDoneTask(nextParallel) {
+			var numberOfBundlesWritten = 0;
+
+			tempJavascriptBundleEmitter.on('tempBundleWritten', function(thisMainPath, tempBundlePath) {
+				numberOfBundlesWritten++;
+				// don't have to do anything here... we are just waiting until all of our
+				// temp bundles have been written before moving on. see below comments
+				if (numberOfBundlesWritten === _this.mainPaths.length) {
+					nextParallel();
+				}
+			});
+		},
+
+		// Make sure all postProcessing bundles have finished since it may complete
+		// after all entry point js bundles resolve.
+		function checkPostProcessingBundlesDoneTask(nextParallel) {
+			var counter = 0;
+			if (_this.postProcessors.length === 0) {
+				return nextParallel();
+			}
+
+			function _postProcessedFinishedHandler(event) {
+				counter++;
+				if (counter === _this.postProcessorTasks.length) {
+					_this.removeListener('postProcessedBundleFinish', _postProcessedFinishedHandler);
+					return nextParallel();
+				}
+			}
+			_this.removeListener('postProcessedBundleFinish', _postProcessedFinishedHandler);
+			_this.on('postProcessedBundleFinish', _postProcessedFinishedHandler);
+		}
+	]
+
 	if( this.watch ) {
 		browserifyInstance.on( 'update', function() {
-			async.parallel( [ function( nextParallel ) {
-				browserifyInstance.bundle( function( err, buf ) {
-					if( err ) {
-						delete err.stream; // gets messy if we dump this to the console
-						log.error( '', err );
-						return;
-					}
-
-					commonJsBundleContents = buf;
-					nextParallel();
-				} );
-			}, function( nextParallel ) {
-				var numberOfBundlesWritten = 0;
-
-				tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
-					numberOfBundlesWritten++;
-
-					// don't have to do anything here... we are just waiting until all of our
-					// temp bundles have been written before moving on.
-
-					if( numberOfBundlesWritten === _this.mainPaths.length ) nextParallel();
-				} );
-			} ], function( err ) {
-
+			async.parallel(parallelTasks, function( err ) {
 				_this.writeAllFinalJavascriptBundles( tempJsBundlesByEntryPoint, needToWriteCommonJsBundle ? commonJsBundleContents : null, function() {
 					// done
 				} );
@@ -370,32 +398,7 @@ Cartero.prototype.processMains = function( callback ) {
 	}
 
 	// in parallel, let parcelify and browserify do their things
-	async.parallel( [ function( nextParallel ) {
-		browserifyInstance.bundle( function( err, buf ) {
-			if( err ) {
-				delete err.stream; // gets messy if we dump this to the console
-				log.error( '', err );
-				_this.emit( 'error', err);
-				return;
-			}
-
-			commonJsBundleContents = buf;
-			nextParallel();
-		} );
-	}, function( nextParallel ) {
-		p.on( 'done', nextParallel );
-	}, function( nextParallel ) {
-		var numberOfBundlesWritten = 0;
-
-		tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
-			numberOfBundlesWritten++;
-
-			// don't have to do anything here... we are just waiting until all of our
-			// temp bundles have been written before moving on. see below comments
-
-			if( numberOfBundlesWritten === _this.mainPaths.length ) nextParallel();
-		} );
-	} ], function( err ) {
+	async.parallel(parallelTasks, function(err) {
 		if( err ) return callback( err );
 
 		// we have to make sure that parcelify is done before executing this code, since we look up
@@ -415,7 +418,7 @@ Cartero.prototype.processMains = function( callback ) {
 		} );
 	} );
 
-	p.on( 'packageCreated', function( newPackage ) {
+	p.on('packageCreated', function( newPackage ) {
 		if( newPackage.isParcel ) {
 			_this.parcelsByEntryPoint[ newPackage.mainPath ] = newPackage;
 		}
@@ -561,6 +564,12 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 			} ); } );
 
 			if( postProcessorsToApply.length !== 0 ) {
+				// Keep track of all not script bundles if we have post processors to
+				// apply. This is so we know when these bundles are resolved.
+				if (assetType !== 'script') {
+					_this.postProcessorTasks.push(finalBundlePath);
+				}
+
 				// apply post processors
 				bundleStream = bundleStream.pipe( combine.apply( null, postProcessorsToApply.map( function( thisPostProcessor ) {
 					return thisPostProcessor( finalBundlePath );
@@ -569,6 +578,12 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 
 			bundleStream.pipe( fs.createWriteStream( finalBundlePath ).on( 'close', function() {
 				fs.unlink( tempBundlePath, function() {} );
+
+				// Notify that a postProcessed bundle has finished
+				if (_this.postProcessorTasks.indexOf(finalBundlePath) > -1) {
+					_this.emit('postProcessedBundleFinish');
+				}
+
 				_this.emit( 'fileWritten', finalBundlePath, assetType, true, this.watching );
 
 				callback( null, finalBundlePath );
@@ -620,7 +635,7 @@ Cartero.prototype.writeCommonJavascriptBundle = function( buf, callback ) {
 
 			if( this.watching && oldBundlePath ) {
 				// if there is an old bundle that already exists, delete it. this
-				// happens in watch mode when a new bundle is generated. (note the old bundle 
+				// happens in watch mode when a new bundle is generated. (note the old bundle
 				// likely does not have the same path as the new bundle due to sha1)
 				fs.unlinkSync( oldBundlePath );
 			}
