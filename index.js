@@ -31,7 +31,7 @@ var resolveTransform = require( './transforms/resolve' );
 
 var kMetaDataFileName = 'metaData.json';
 var kAssetsJsonName = 'assets.json';
-var kCommonJavascriptBundleName = 'common';
+var kCommonBundleName = 'common';
 
 module.exports = Cartero;
 
@@ -98,6 +98,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 	this.packageManifest = {};
 	this.finalBundlesByParcelId = {};
+	this.finalCommonBundles = {};
 
 	this.parcelsByEntryPoint = {};
 	this.packagePathsToIds = {};
@@ -306,28 +307,29 @@ Cartero.prototype.processMains = function( callback ) {
 
 	var needToWriteCommonJsBundle = false;
 	var commonJsBundleContents;
-	var tempJsBundlesByEntryPoint;
 	var tempJavascriptBundleEmitter = new EventEmitter();
+
+	var tempBundlesByEntryPoint = {}; // hash of entry points to asset types hashes e.g. { "<entryPointPath>" : { script : "<scriptTempBundlePath", style : "<styleTempBundlePath>" } }
+	var tempCommonBundles = {}; // hash of entry asset types { script : "<commonScriptTempBundlePath", style : "<commonStyleTempBundlePath>" } }
 
 	tempJavascriptBundleEmitter.setMaxListeners( 0 ); // don't warn if we got lots of listeners, as we need 1 per entry point
 	
-	function createTempJsBundleStreamsByEntryPoint() {
-		tempJsBundlesByEntryPoint = _.map( _this.mainPaths, function( thisEntryPoint ) {
-			var thisJsBundlePath = _this.getTempBundlePath( 'js' );
-			var writeStream = fs.createWriteStream( thisJsBundlePath, { encoding : 'utf8' } );
-
-			writeStream.on( 'finish', function() {
-				tempJavascriptBundleEmitter.emit( 'tempBundleWritten', thisEntryPoint, thisJsBundlePath );
-			} );
-
-			return { path : thisJsBundlePath, stream : writeStream };
-		} )
-	}
-
 	factor( browserifyInstance, {
 		outputs : function() {
-			createTempJsBundleStreamsByEntryPoint();
-			return _.pluck( tempJsBundlesByEntryPoint, 'stream' );
+			var tempBundleOutputStreams = [];
+
+			_.each( _this.mainPaths, function( thisEntryPoint ) {
+				var thisJsBundlePath = _this.getTempBundlePath( 'js' );
+				var writeStream = fs.createWriteStream( thisJsBundlePath, { encoding : 'utf8' } );
+
+				writeStream.on( 'finish', function() {
+					tempJavascriptBundleEmitter.emit( 'tempBundleWritten', thisEntryPoint, thisJsBundlePath );
+				} );
+
+				tempBundleOutputStreams.push( writeStream );
+			} );
+
+			return tempBundleOutputStreams;
 		},
 		threshold : function( row, group ) {
 			var putIntoCommonBundle = _this.factorThreshold( row, group );
@@ -336,8 +338,26 @@ Cartero.prototype.processMains = function( callback ) {
 		}
 	} );
 
+	function waitForAndRegisterBrowserifyBundles( nextParallel ) {
+		var numberOfBundlesWritten = 0;
+
+		tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
+			numberOfBundlesWritten++;
+
+			tempBundlesByEntryPoint[ thisMainPath ] = tempBundlesByEntryPoint[ thisMainPath ] || {};
+			tempBundlesByEntryPoint[ thisMainPath ].script = tempBundlePath;
+
+			// don't have to do anything here... we are just waiting until all of our
+			// temp bundles have been written before moving on. see below comments
+
+			if( numberOfBundlesWritten === _this.mainPaths.length ) nextParallel();
+		} );
+	}
+
 	if( this.watch ) {
 		browserifyInstance.on( 'update', function() {
+			log.info( 'Javascript change detected; recreating javascript bundles...' );
+
 			async.parallel( [ function( nextParallel ) {
 				browserifyInstance.bundle( function( err, buf ) {
 					if( err ) {
@@ -350,20 +370,18 @@ Cartero.prototype.processMains = function( callback ) {
 					nextParallel();
 				} );
 			}, function( nextParallel ) {
-				var numberOfBundlesWritten = 0;
-
-				tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
-					numberOfBundlesWritten++;
-
-					// don't have to do anything here... we are just waiting until all of our
-					// temp bundles have been written before moving on.
-
-					if( numberOfBundlesWritten === _this.mainPaths.length ) nextParallel();
-				} );
+				waitForAndRegisterBrowserifyBundles( nextParallel );
 			} ], function( err ) {
+				if( err ) return _this.emit( 'error', err );
 
-				_this.writeAllFinalJavascriptBundles( tempJsBundlesByEntryPoint, needToWriteCommonJsBundle ? commonJsBundleContents : null, function() {
-					// done
+				_this.writeFinalBundles( tempBundlesByEntryPoint, tempCommonBundles, function( err ) {
+					if( err ) return _this.emit( 'error', err );
+				
+					_this.writeMetaDataFile( function( err ) {
+						if( err ) return _this.emit( 'error', err );
+
+						// done
+					} );
 				} );
 			} );
 		} );
@@ -375,7 +393,7 @@ Cartero.prototype.processMains = function( callback ) {
 			if( err ) {
 				delete err.stream; // gets messy if we dump this to the console
 				log.error( '', err );
-				_this.emit( 'error', err);
+				_this.emit( 'error', err );
 				return;
 			}
 
@@ -385,16 +403,7 @@ Cartero.prototype.processMains = function( callback ) {
 	}, function( nextParallel ) {
 		p.on( 'done', nextParallel );
 	}, function( nextParallel ) {
-		var numberOfBundlesWritten = 0;
-
-		tempJavascriptBundleEmitter.on( 'tempBundleWritten', function( thisMainPath, tempBundlePath ) {
-			numberOfBundlesWritten++;
-
-			// don't have to do anything here... we are just waiting until all of our
-			// temp bundles have been written before moving on. see below comments
-
-			if( numberOfBundlesWritten === _this.mainPaths.length ) nextParallel();
-		} );
+		waitForAndRegisterBrowserifyBundles( nextParallel );
 	} ], function( err ) {
 		if( err ) return callback( err );
 
@@ -403,15 +412,22 @@ Cartero.prototype.processMains = function( callback ) {
 		// that all our temp js bundles have been written, since otherwise we will have nothing to
 		// copy. thus all the crazy async stuff involved.
 
-		_this.writeAllFinalJavascriptBundles( tempJsBundlesByEntryPoint, needToWriteCommonJsBundle ? commonJsBundleContents : null, function( err ) {
-			if( err ) return callback( err );
+		async.series( [ function( nextSeries ) {
+			if( ! needToWriteCommonJsBundle ) return nextSeries();
 
+			if( needToWriteCommonJsBundle ) {
+				tempCommonBundles.script = _this.getTempBundlePath( 'js' );
+				fs.writeFile( tempCommonBundles.script, commonJsBundleContents, nextSeries );
+			}
+		}, function( nextSeries ) {
+			_this.writeFinalBundles( tempBundlesByEntryPoint, tempCommonBundles, nextSeries );
+		}, function( nextSeries ) {
 			// finally, write the meta data file
-			_this.writeMetaDataFile( function( err ) {
-				if( err ) _this.emit( 'error', err );
+			_this.writeMetaDataFile( nextSeries );
+		} ], function( err ) {
+			if( err ) _this.emit( 'error', err );
 
-				if( callback ) callback(); // and we're done
-			} );
+			if( callback ) callback(); // and we're done
 		} );
 	} );
 
@@ -482,16 +498,20 @@ Cartero.prototype.processMains = function( callback ) {
 	} );
 
 	p.on( 'bundleWritten', function( bundlePath, assetType, thisParcel, watchModeUpdate ) {
-		_this.copyTempBundleToParcelDiretory( bundlePath, assetType, thisParcel, function( err ) {
-			if( err ) return _this.emit( 'error', err );
+		tempBundlesByEntryPoint[ thisParcel.mainPath ] = tempBundlesByEntryPoint[ thisParcel.mainPath ] || {};
+		tempBundlesByEntryPoint[ thisParcel.mainPath ][ assetType ] = bundlePath;
 
-			if( watchModeUpdate ) {
-				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
+		if( watchModeUpdate ) {
+			_this.writeFinalBundles( tempBundlesByEntryPoint, tempCommonBundles, function( err ) {
+				if( err ) return _this.emit( 'error', err );
+
+				_this.writeMetaDataFile( function( err ) {
 					if( err ) return _this.emit( 'error', err );
+					
 					// done
 				} );
-			}
-		} );
+			} );
+		}
 	} );
 
 	if( _this.watch ) {
@@ -501,24 +521,24 @@ Cartero.prototype.processMains = function( callback ) {
 					if( eventType === 'added' || eventType === 'changed' ) {
 						_this.addAssetToAssetMap( thePackage, asset );
 						_this.writeIndividualAssetsToDisk( thePackage, [ asset.type ], nextSeries );
-					} else
-						fs.unlink( asset.dstPath, function( err ) {
-							if( err ) return _this.emit( 'error', err );
-							nextSeries();
-						} );
+					} else {
+						if( fs.existsSync( asset.dstPath ) ) fs.unlinkSync( asset.dstPath );
+						nextSeries();
+					}
 				}
 			}, function( nextSeries ) {
 				async.each( thePackage.dependentParcels, function( thisParcel, nextParallel ) {
-					_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
-						if( err ) return _this.emit( 'error', err );
-
-						nextParallel();
-					} );
+					_this.compileAssetsRequiredByParcel( thisParcel );
+					nextParallel();
 				}, nextSeries );
 			} ], function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
-				// done
+				_this.writeMetaDataFile( function( err ) {
+					if( err ) return _this.emit( 'error', err );
+					
+					// done
+				} );
 			} );
 		} );
 
@@ -526,7 +546,11 @@ Cartero.prototype.processMains = function( callback ) {
 			_this.writeIndividualAssetsToDisk( thePackage, assetTypesToWriteToDisk, function( err ) {
 				if( err ) return _this.emit( 'error', err );
 
-				// done
+				_this.writeMetaDataFile( function( err ) {
+					if( err ) return _this.emit( 'error', err );
+					
+					// done
+				} );
 			} );
 		} );
 	}
@@ -568,7 +592,7 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 			}
 
 			bundleStream.pipe( fs.createWriteStream( finalBundlePath ).on( 'close', function() {
-				fs.unlink( tempBundlePath, function() {} );
+				if( fs.existsSync( tempBundlePath ) ) fs.unlinkSync( tempBundlePath );
 				_this.emit( 'fileWritten', finalBundlePath, assetType, true, this.watching );
 
 				callback( null, finalBundlePath );
@@ -577,111 +601,87 @@ Cartero.prototype.copyTempBundleToFinalDestination = function( tempBundlePath, a
 	} );
 };
 
-Cartero.prototype.copyTempBundleToParcelDiretory = function( tempBundlePath, assetType, parcel, callback ) {
-	var _this = this;
-	var outputDirPath = this.getPackageOutputDirectory( parcel );
-	var parcelBaseName = path.basename( parcel.path );
-	var finalBundlePathWithoutShasumAndExt = path.join( outputDirPath, parcelBaseName + '_bundle' );
-	var oldBundlePath = _this.finalBundlesByParcelId[ parcel.id ] && _this.finalBundlesByParcelId[ parcel.id ][ assetType ];
-
-	this.copyTempBundleToFinalDestination( tempBundlePath, assetType, finalBundlePathWithoutShasumAndExt, function( err, finalBundlePath ) {
-		if( err ) return callback( err );
-
-		if( ! _this.finalBundlesByParcelId[ parcel.id ] ) _this.finalBundlesByParcelId[ parcel.id ] = {};
-		_this.finalBundlesByParcelId[ parcel.id ][ assetType ] = finalBundlePath;
-
-		if( this.watching ) {
-			// if there is an old bundle that already exists for this asset type, delete it. this
-			// happens in watch mode when a new bundle is generated. (note the old bundle
-			// likely does not have the same path as the new bundle due to sha1)
-			if( oldBundlePath )	{
-				fs.unlinkSync( oldBundlePath );
-				delete _this.finalBundlesByParcelId[ parcel.id ][ assetType ];
-			}
-		}
-
-		callback();
-	} );
-};
-
-Cartero.prototype.writeCommonJavascriptBundle = function( buf, callback ) {
-	var _this = this;
-	var tempBundlePath = this.getTempBundlePath( 'js' );
-	var oldBundlePath = this.commonJsBundlePath;
-
-	fs.writeFile( tempBundlePath, buf, function( err ) {
-		if( err ) return callback( err );
-
-		var commonBundlePathWithoutShasumAndExt = path.join( _this.outputDirPath, kCommonJavascriptBundleName );
-		_this.copyTempBundleToFinalDestination( tempBundlePath, 'script', commonBundlePathWithoutShasumAndExt, function( err, finalBundlePath ) {
-			if( err ) return callback( err );
-
-			_this.commonJsBundlePath = finalBundlePath;
-
-			if( this.watching && oldBundlePath ) {
-				// if there is an old bundle that already exists, delete it. this
-				// happens in watch mode when a new bundle is generated. (note the old bundle 
-				// likely does not have the same path as the new bundle due to sha1)
-				fs.unlinkSync( oldBundlePath );
-			}
-
-			callback();
-		} );
-	} );
-};
-
-Cartero.prototype.writeAllFinalJavascriptBundles = function( tempJsBundlesByEntryPoint, commonJsBundleContents, callback ) {
+Cartero.prototype.writeFinalBundles = function( tempBundlesByEntryPoint, tempCommonBundles, callback ) {
 	var _this = this;
 
 	async.series( [ function( nextSeries ) {
 		// need to write common bundle first, if there is one, so we know its path when writing parcel asset json files
-		if( commonJsBundleContents ) _this.writeCommonJavascriptBundle( commonJsBundleContents, function( err ) {
-			if( err ) _this.emit( 'error', err );
+		async.forEachOf( tempCommonBundles, function( thisTempCommonBundlePath, assetType, nextEach ) {
+			var commonBundlePathWithoutShasumAndExt = path.join( _this.outputDirPath, kCommonBundleName );
+			var oldBundlePath = _this.finalCommonBundles[ assetType ];
 
-			nextSeries();
-		} );
-		else {
-			this.commonJsBundleContents = null;
-			nextSeries();
-		}
+			delete tempCommonBundles[ assetType ];
+
+			_this.copyTempBundleToFinalDestination( thisTempCommonBundlePath, assetType, commonBundlePathWithoutShasumAndExt, function( err, finalBundlePath ) {
+				if( err ) return nextEach( err );
+
+				_this.finalCommonBundles[ assetType ] = finalBundlePath;
+
+				if( _this.watching ) {
+					// if there is an old bundle that already exists, delete it. this
+					// happens in watch mode when a new bundle is generated. (note the old bundle 
+					// likely does not have the same path as the new bundle due to sha1)
+					if( oldBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
+				}
+
+				nextEach();
+			} );
+		}, nextSeries );
 	}, function( nextSeries ) {
-		async.forEachOf( tempJsBundlesByEntryPoint, function( thisTempBundle, index, nextEach ) {
-			var thisMainPath = _this.mainPaths[ index ];
+		
+		async.forEachOf( tempBundlesByEntryPoint, function( thisParcelTempBundles, thisMainPath, nextEntryPoint ) {
 			var thisParcel = _this.parcelsByEntryPoint[ thisMainPath ];
 
-			_this.copyTempBundleToParcelDiretory( thisTempBundle.path, 'script', thisParcel, function( err ) {
-				if( err ) return callback( err );
+			async.forEachOf( thisParcelTempBundles, function( thisTempBundlePath, assetType, nextAssetType ) {
+				var outputDirPath = _this.getPackageOutputDirectory( thisParcel );
+				var parcelBaseName = path.basename( thisParcel.path );
+				var finalBundlePathWithoutShasumAndExt = path.join( outputDirPath, parcelBaseName + '_bundle' );
+				var oldBundlePath = _this.finalBundlesByParcelId[ thisParcel.id ] && _this.finalBundlesByParcelId[ thisParcel.id ][ assetType ];
 
-				_this.writeAssetsJsonForParcel( thisParcel, function( err ) {
-					if( err ) return callback( err );
+				delete tempBundlesByEntryPoint[ thisMainPath ][ assetType ];
+				
+				_this.copyTempBundleToFinalDestination( thisTempBundlePath, assetType, finalBundlePathWithoutShasumAndExt, function( err, finalBundlePath ) {
+					if( err ) return nextAssetType( err );
 
-					nextEach();
+					_this.finalBundlesByParcelId[ thisParcel.id ] = _this.finalBundlesByParcelId[ thisParcel.id ] || {};
+					_this.finalBundlesByParcelId[ thisParcel.id ][ assetType ] = finalBundlePath;
+
+					if( _this.watching ) {
+						// if there is an old bundle that already exists for this asset type, delete it. this
+						// happens in watch mode when a new bundle is generated. (note the old bundle
+						// likely does not have the same path as the new bundle due to sha1)
+
+						if( oldBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
+					}
+
+					nextAssetType();
 				} );
+			}, function( err ) {
+				if( err ) return nextEntryPoint( err );
+				
+				delete tempBundlesByEntryPoint[ thisMainPath ];
+				 _this.compileAssetsRequiredByParcel( thisParcel );
+
+				nextEntryPoint();
 			} );
 		}, nextSeries );
 	} ], callback );
 };
 
-Cartero.prototype.writeAssetsJsonForParcel = function( parcel, callback ) {
+Cartero.prototype.compileAssetsRequiredByParcel = function( parcel ) {
 	var _this = this;
 	var bundles = _this.finalBundlesByParcelId[ parcel.id ];
 
 	var content = {};
 
 	// if we have a common bundle, it needs to come before parcel specific bundle
-	if( this.commonJsBundlePath ) {
-		content.script = content.script || [];
-		content.script.push( path.relative( this.outputDirPath, this.commonJsBundlePath ) );
-	}
+	_.each( this.finalCommonBundles, function( thisBundlePath, thisAssetType ) {
+		content[ thisAssetType ] = content[ thisAssetType ] || [];
+		content[ thisAssetType ].push( path.relative( _this.outputDirPath, thisBundlePath ) );
+	} );
 
-	if( bundles && bundles.script ) {
-		content.script = content.script || [];
-		content.script.push( path.relative( this.outputDirPath, bundles.script ) );
-	}
-
-	_.without( _this.assetTypes, 'script' ).forEach( function( thisAssetType ) {
-		var concatenateThisAssetType = _.contains( _this.assetTypesToConcatenate, thisAssetType );
-
+	_.each( _this.assetTypes.concat( [ 'script' ] ), function( thisAssetType ) {
+		var concatenateThisAssetType = thisAssetType === 'script' || _.contains( _this.assetTypesToConcatenate, thisAssetType );
 		var filesOfThisType;
 
 		if( concatenateThisAssetType ) filesOfThisType = bundles && bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
@@ -693,14 +693,6 @@ Cartero.prototype.writeAssetsJsonForParcel = function( parcel, callback ) {
 	} );
 
 	_this.assetsRequiredByEntryPoint[ _this.getPackageMapKeyFromPath( parcel.mainPath ) ] = content;
-	var packageDirPath = this.getPackageOutputDirectory( parcel );
-	if( _this.watching && this.metaDataFileAlreadyWrited ) {
-		_this.writeMetaDataFile( function( err ) {
-			if( err ) _this.emit( 'error', err );
-
-			if( callback ) callback();
-		} );
-	} else callback();
 };
 
 Cartero.prototype.getPackageOutputDirectory = function( thePackage ) {

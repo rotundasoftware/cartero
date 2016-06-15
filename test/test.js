@@ -4,6 +4,7 @@ var test = require( 'tape' );
 var fs = require( 'fs' );
 var crypto = require( 'crypto' );
 var _ = require( 'underscore' );
+var cssPostProcessorStream = require('./css-post-processor-stream.js');
 
 var outputDirFiles = [ 'metaData.json' ];
 
@@ -32,7 +33,7 @@ test( 'example1', function( t ) {
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
-	
+
 		t.deepEqual(
 			fs.readdirSync( path.join( outputDirPath, packageId ) ).sort(),
 			[ 'page1_bundle_9238125c90e5cfc790e8a5ac8926185dfb162b8c.css', 'page1_bundle_08786d2274344b392803ce9659e6d469ede96834.js' ].sort()
@@ -140,7 +141,7 @@ test( 'example3', function( t ) {
 		);
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
-	
+
 		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page1' ] ) ).sort();
 		var page2PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page2' ] ) ).sort();
 
@@ -220,5 +221,64 @@ test( 'example4', function( t ) {
 		t.equal( fs.readFileSync( path.join( outputDirPath, packageId, cssFile ), 'utf8' ),
 			'body {\n\tbackground : blue url( \'/' + [ packageId, imgDir, imgFile ].join( '/' ) + '\' );\n}' );
 
+	} );
+} );
+
+
+test( 'example5 – postProcessors', function( t ) {
+	t.plan( 4 );
+
+	var entryPoints = [ path.join( __dirname, 'example5/views/**/*' ) ];
+	var entryPointFilter = function( fileName ) {
+		return path.extname( fileName ) === '.js';
+	};
+	var outputDirPath = path.join( __dirname, 'example5/static/assets' );
+	var packageMap = {};
+	var packageIds = [];
+	var parcelIdsByPath = {};
+	var commonJsPackageId = '';
+	var c = cartero(entryPoints, outputDirPath, {
+		entryPointFilter: entryPointFilter,
+		assetTypes: ['style'],
+		postProcessors: [function(file) {
+	    return cssPostProcessorStream(file);
+		}]
+	});
+
+	c.on( 'packageCreated', function( newPackage ) {
+		if( newPackage.package.name === "common-js" )
+			commonJsPackageId = newPackage.id;
+
+		if( newPackage.isParcel ) {
+			var parcelId = newPackage.id;
+			parcelIdsByPath[ path.relative( path.join( __dirname, 'example5/views' ), newPackage.path ) ] = parcelId;
+		}
+
+		packageMap[ newPackage.path.slice(1) ] = newPackage.id;
+		packageIds.push( newPackage.id );
+	} );
+
+	c.on( 'done', function() {
+		t.deepEqual(
+			fs.readdirSync( outputDirPath ).sort(),
+			packageIds.concat( outputDirFiles ).concat( [ 'common_39ebe84e9d92379be5bdf9b8d938b38677a1d620.js' ] ).sort()
+		);
+
+		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
+
+		var page1PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page1' ] ) ).sort();
+		var page2PackageFiles = fs.readdirSync( path.join( outputDirPath, parcelIdsByPath[ 'page2' ] ) ).sort();
+
+		var page1CssBundle = _.find( page1PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
+		page1CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page1' ], page1CssBundle );
+
+		var page1CssContents = fs.readFileSync( page1CssBundle, 'utf8' );
+		t.ok( page1CssContents.indexOf( 'background : blue' ) !== -1, 'page 1 has correct background color' );
+
+		var page2CssBundle = _.find( page2PackageFiles, function( thisFile ) { return path.extname( thisFile ) === '.css'; } );
+		page2CssBundle = path.join( outputDirPath, parcelIdsByPath[ 'page2' ], page2CssBundle );
+
+		var page2CssContents = fs.readFileSync( page2CssBundle, 'utf8' );
+		t.ok( page2CssContents.indexOf( 'background : black' ) !== -1, 'page 2 has correct background color' );
 	} );
 } );
