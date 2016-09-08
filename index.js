@@ -482,13 +482,13 @@ Cartero.prototype.processMains = function( callback ) {
 			outputDirUrl : _this.outputDirUrl,
 			assetMap: _this.assetMap,
 			appRootDir : _this.appRootDir
-		}, 'style' );
+		}, 'style', true );
 
 		newPackage.addTransform( function( file ) {
 			return resolveTransform( file, {
 				appRootDir : _this.appRootDir
 			} );
-		}, {}, 'style' );
+		}, {}, 'style', true );
 
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
 			if( err ) return _this.emit( 'error', err );
@@ -621,7 +621,7 @@ Cartero.prototype.writeFinalBundles = function( tempBundlesByEntryPoint, tempCom
 					// if there is an old bundle that already exists, delete it. this
 					// happens in watch mode when a new bundle is generated. (note the old bundle 
 					// likely does not have the same path as the new bundle due to sha1)
-					if( oldBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
+					if( oldBundlePath && oldBundlePath !== finalBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
 				}
 
 				nextEach();
@@ -651,7 +651,7 @@ Cartero.prototype.writeFinalBundles = function( tempBundlesByEntryPoint, tempCom
 						// happens in watch mode when a new bundle is generated. (note the old bundle
 						// likely does not have the same path as the new bundle due to sha1)
 
-						if( oldBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
+						if( oldBundlePath && oldBundlePath !== finalBundlePath && fs.existsSync( oldBundlePath ) ) fs.unlinkSync( oldBundlePath );
 					}
 
 					nextAssetType();
