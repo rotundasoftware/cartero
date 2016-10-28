@@ -107,7 +107,7 @@ test( 'example2', function( t ) {
 
 
 test( 'example3', function( t ) {
-	t.plan( 7 );
+	t.plan( 10 );
 
 	var entryPoints = [ path.join( __dirname, 'example3/views/**/*' ) ];
 	var entryPointFilter = function( fileName ) { return path.extname( fileName ) === '.js'; };
@@ -139,6 +139,11 @@ test( 'example3', function( t ) {
 			fs.readdirSync( outputDirPath ).sort(),
 			packageIds.concat( outputDirFiles ).concat( [ 'common_39ebe84e9d92379be5bdf9b8d938b38677a1d620.js' ] ).sort()
 		);
+
+		_.each(_.values(JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).assetsRequiredByEntryPoint),
+			function(el) {
+				t.equal(_.contains(el.script, 'common_39ebe84e9d92379be5bdf9b8d938b38677a1d620.js'), true);
+			});
 
 		t.deepEqual( JSON.parse( fs.readFileSync( path.join( outputDirPath, 'metaData.json' ), 'utf8' ) ).packageMap, packageMap );
 

@@ -713,9 +713,9 @@ Cartero.prototype.compileAssetsRequiredByParcel = function( parcel ) {
 		if( concatenateThisAssetType ) filesOfThisType = bundles && bundles[ thisAssetType ] ? [ bundles[ thisAssetType ] ] : [];
 		else filesOfThisType = _.pluck( parcel.parcelAssetsByType[ thisAssetType ], 'dstPath' );
 
-		content[ thisAssetType ] = _.map( filesOfThisType, function( absPath ) {
+		content[ thisAssetType ] = _.union( content[ thisAssetType ], _.map( filesOfThisType, function( absPath ) {
 			return path.relative( _this.outputDirPath, absPath );
-		} );
+		} ));
 	} );
 
 	_this.assetsRequiredByEntryPoint[ _this.getPackageMapKeyFromPath( parcel.mainPath ) ] = content;
