@@ -545,7 +545,12 @@ Cartero.prototype.processMains = function( callback ) {
 			async.series( [ function( nextSeries ) {
 				if( _.contains( assetTypesToWriteToDisk, asset.type ) ) {
 					if( eventType === 'added' || eventType === 'changed' ) {
-						_this.addAssetToAssetMap( thePackage, asset );
+						// if this asset has been changed, do NOT update the entry in the asset map, beacuse that could
+						// cause the shasum to change, which means that any existing references to this asset (for example, in
+						// stylesheets) would break, since they will still reference the old shasum. no worries, just keep
+						// the shasum the same in this case (i.e. don't update the asset map) and everybody is happy.
+						if( eventType === 'added' ) _this.addAssetToAssetMap( thePackage, asset );
+
 						_this.writeIndividualAssetsToDisk( thePackage, [ asset.type ], nextSeries );
 					} else {
 						if( fs.existsSync( asset.dstPath ) ) fs.unlinkSync( asset.dstPath );
@@ -747,6 +752,7 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 	assetTypesToWriteToDisk = _.intersection( assetTypesToWriteToDisk, Object.keys( thePackage.assetsByType ) );
 
 	async.each( assetTypesToWriteToDisk, function( thisAssetType, nextAssetType ) {
+	
 		async.each( thePackage.assetsByType[ thisAssetType ], function( thisAsset, nextAsset ) {
 			var thisAssetDstPath = path.join( _this.outputDirPath, _this.assetMap[ path.relative( _this.appRootDir, thisAsset.srcPath ) ] ); // assetMap contains path starting from fingerprint folder
 			if( thisAssetType === 'style' ) thisAssetDstPath = renameFileExtension( thisAssetDstPath, '.css' );
@@ -759,14 +765,18 @@ Cartero.prototype.writeIndividualAssetsToDisk = function( thePackage, assetTypes
 
 					_this.emit( 'fileWritten', thisAssetDstPath, thisAssetType, false, _this.watching );
 
-					// why were we doing this? metaData does not contain references to individual assets
 					// if( _this.watching ) _this.writeMetaDataFile( function() {} );
 
 					nextAsset();
 				} );
 			} );
 		}, nextAssetType );
-	}, callback );
+	}, function( err ) {
+		// why were we doing this? metaData does not contain references to individual assets
+		// if( _this.watching ) _this.writeMetaDataFile( callback );
+
+		callback();
+	} );
 };
 
 Cartero.prototype.addAssetToAssetMap = function( thePackage, asset ) {
@@ -801,19 +811,37 @@ Cartero.prototype.applyPostProcessorsToFiles = function( filePaths, callback ) {
 
 	async.each( filePaths, function( thisFilePath, nextFilePath ) {
 		var stream = fs.createReadStream( thisFilePath );
-		var throughStream;
 
 		stream = stream.pipe( combine.apply( null, _this.postProcessors.map( function( thisPostProcessor ) {
 			return thisPostProcessor( thisFilePath );
 		} ) ) );
 
-		stream.on( 'end', function() {
-			throughStream.pipe( fs.createWriteStream( thisFilePath ).on( 'close', nextFilePath ) );
-		} );
+		var tempFilePath = path.join( tmpdir, 'cartero_asset' + Math.random() + Math.random() );
 
-		throughStream = stream.pipe( through2() );
+		stream.pipe( fs.createWriteStream( tempFilePath ).on( 'close', function( err ) {
+			if( err ) return nextFilePath( err );
+
+			fs.createReadStream( tempFilePath ).pipe( fs.createWriteStream( thisFilePath ).on( 'close', function( err ) {
+				fs.unlink( tempFilePath, nextFilePath );
+			} ) );
+		} ) );
 	}, callback );
 };
+
+
+// f( postProcessorsToApply.length !== 0 ) {
+// 	// apply post processors
+// 	bundleStream = bundleStream.pipe( combine.apply( null, postProcessorsToApply.map( function( thisPostProcessor ) {
+// 		return thisPostProcessor( finalBundlePath );
+// 	} ) ) );
+// }
+
+// bundleStream.pipe( fs.createWriteStream( finalBundlePath ).on( 'close', function() {
+// 	if( fs.existsSync( tempBundlePath ) ) fs.unlinkSync( tempBundlePath );
+// 	_this.emit( 'fileWritten', finalBundlePath, assetType, true, this.watching );
+
+// 	callback( null, finalBundlePath );
+// } ) );
 
 Cartero.prototype.writeMetaDataFile = function( callback ) {
 	var _this = this;
