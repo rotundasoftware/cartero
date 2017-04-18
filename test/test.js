@@ -224,7 +224,7 @@ test( 'example4', function( t ) {
 		t.notEqual( jsContent.indexOf( 'var robotPngPath = \'/' + [ packageId, imgDir, imgFile ].join( '/' ) + '\';' ), -1 );
 
 		t.equal( fs.readFileSync( path.join( outputDirPath, packageId, cssFile ), 'utf8' ),
-			'body {\n\tbackground : blue url( \'/' + [ packageId, imgDir, imgFile ].join( '/' ) + '\' );\n}' );
+			'body {\n\tbackground : blue url( \'../' + [ packageId, imgDir, imgFile ].join( '/' ) + '\' );\n}' );
 
 	} );
 } );
