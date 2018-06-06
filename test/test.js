@@ -118,7 +118,7 @@ test( 'example3', function( t ) {
 
 	var commonJsPackageId = "";
 
-	var c = cartero( entryPoints, outputDirPath, { entryPointFilter : entryPointFilter, assetTypes: [ 'random', 'style' ] } );
+	var c = cartero( entryPoints, outputDirPath, { entryPointFilter : entryPointFilter, assetTypes: [ 'random', 'style' ], outputDirUrl : 'https://cdn.myapp.com' } );
 
 	c.on( 'packageCreated', function( newPackage ) {
 		if( newPackage.package.name === "common-js" )

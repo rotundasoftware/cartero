@@ -92,8 +92,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 	this.appRootDir = options.appRootDir;
 	this.outputDirUrl = options.outputDirUrl;
 
-	// normalize outputDirUrl so that it starts and ends with a forward slash
-	if( this.outputDirUrl.charAt( 0 ) !== '/' ) this.outputDirUrl = '/' + this.outputDirUrl;
+	// normalize outputDirUrl so that it ends with a forward slash
 	if( this.outputDirUrl.charAt( this.outputDirUrl.length - 1 ) !== '/' ) this.outputDirUrl += '/';
 
 	this.packageManifest = {};
