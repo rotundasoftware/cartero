@@ -457,6 +457,8 @@ Cartero.prototype.processMains = function( callback ) {
 	} );
 
 	p.on( 'packageCreated', function( newPackage ) {
+		var outputDirUrlIsRemote = /^(http|https|\/\/)/.test( _this.outputDirUrl ) ? true : false;
+
 		if( newPackage.isParcel ) {
 			_this.parcelsByEntryPoint[ newPackage.mainPath ] = newPackage;
 		}
@@ -496,7 +498,11 @@ Cartero.prototype.processMains = function( callback ) {
 					return 'url( \'' + theUrl + '\' )';
 				}
 
-				absUrl = path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
+
+				// use url.resolve if the outputDirUrl is remote
+				absUrl = outputDirUrlIsRemote ?
+					url.resolve( _this.outputDirUrl, newAssetUrlRelativeToOutputDir ) :
+					path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
