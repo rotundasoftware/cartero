@@ -91,6 +91,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 
 	this.appRootDir = options.appRootDir;
 	this.outputDirUrl = options.outputDirUrl;
+	this.outputDirUrlIsRemote = /^(http|https|\/\/)/.test( this.outputDirUrl ) ? true : false;
 
 	// normalize outputDirUrl so that it ends with a forward slash
 	if( this.outputDirUrl.charAt( this.outputDirUrl.length - 1 ) !== '/' ) this.outputDirUrl += '/';
@@ -496,7 +497,11 @@ Cartero.prototype.processMains = function( callback ) {
 					return 'url( \'' + theUrl + '\' )';
 				}
 
-				absUrl = path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
+
+				// use url.resolve if the outputDirUrl is remote
+				absUrl = _this.outputDirUrlIsRemote ?
+					url.resolve( _this.outputDirUrl, newAssetUrlRelativeToOutputDir ) :
+					path.join( _this.outputDirUrl, newAssetUrlRelativeToOutputDir );
 
 				return 'url( \'' + absUrl + '\' )';
 			}
