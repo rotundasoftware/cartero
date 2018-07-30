@@ -1,3 +1,4 @@
+var _ = require('underscore');
 var through = require('through');
 var resolve = require( "resolve" );
 var path = require( "path" );
@@ -20,6 +21,10 @@ module.exports = function( file, options ) {
 
 			var newFilePathRelativeToOutputDir = options.assetMap[ path.relative( options.appRootDir, assetSrcAbsPath ) ];
 
+			if( _.isUndefined( newFilePathRelativeToOutputDir ) ) {
+				throw new Error( 'There is no asset with the path "' + assetSrcPath + '". (If this is an image, has it been included in the package.json of its module with the "image" key?)' );
+			}
+			
 			// urls are symmetric to paths
 			url = newFilePathRelativeToOutputDir; // ex: <packageId>/image/photo_<shasum>.png
 
