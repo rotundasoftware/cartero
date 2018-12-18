@@ -521,10 +521,10 @@ Cartero.prototype.processMains = function( callback ) {
 			} );
 		}, {}, 'style', true );
 
+		_this.emit( 'packageCreated', newPackage );
+		
 		_this.writeIndividualAssetsToDisk( newPackage, assetTypesToWriteToDisk, function( err ) {
 			if( err ) return _this.emit( 'error', err );
-
-			_this.emit( 'packageCreated', newPackage );
 		} );
 	} );
 
