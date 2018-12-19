@@ -125,7 +125,7 @@ function Cartero( entryPoints, outputDirPath, options ) {
 			rimraf( _this.outputDirPath, nextSeries );
 		}, function( nextSeries ) {
 			// now remake it
-			fs.mkdir( _this.outputDirPath, { recursive: true }, nextSeries );
+			mkdirp( _this.outputDirPath, nextSeries );
 		}, function( nextSeries ) {
 			_this.resolvePostProcessors( options.postProcessors, function( err, res ) {
 				if( err ) return nextSeries( err );
