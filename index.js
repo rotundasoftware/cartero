@@ -103,7 +103,6 @@ function Cartero( entryPoints, outputDirPath, options ) {
 	this.packagePathsToIds = {};
 
 	this.assetsRequiredByEntryPoint = {};
-	this.metaDataFileAlreadyWrited = false;
 
 	this.watching = false;
 
@@ -880,7 +879,6 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
 		if( err ) return callback( err );
-		_this.metaDataFileAlreadyWrited = true;
 		_this.emit( 'metaDataFileWrited' );
 
 		callback();
