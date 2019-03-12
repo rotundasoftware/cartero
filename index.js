@@ -881,6 +881,7 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
 		if( err ) return callback( err );
 		_this.metaDataFileAlreadyWrited = true;
+		_this.emit( 'metaDataFileWrited' );
 
 		callback();
 	} );
