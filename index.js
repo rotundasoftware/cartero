@@ -404,6 +404,7 @@ Cartero.prototype.processMains = function( callback ) {
 					_this.writeMetaDataFile( function( err ) {
 						if( err ) return _this.emit( 'error', err );
 
+						_this.emit( 'updated' );
 						// done
 					} );
 				} );
@@ -560,6 +561,9 @@ Cartero.prototype.processMains = function( callback ) {
 						if( fs.existsSync( asset.dstPath ) ) fs.unlinkSync( asset.dstPath );
 						nextSeries();
 					}
+				} else {
+					// emit update for notifiy changes that not update the asset map ( e.g stylesheets ).
+					_this.emit( 'updated' );
 				}
 			}, function( nextSeries ) {
 				async.each( thePackage.dependentParcels, function( thisParcel, nextParallel ) {
@@ -572,6 +576,7 @@ Cartero.prototype.processMains = function( callback ) {
 				_this.writeMetaDataFile( function( err ) {
 					if( err ) return _this.emit( 'error', err );
 					
+					_this.emit( 'updated' );
 					// done
 				} );
 			} );
@@ -879,7 +884,6 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 
 	fs.writeFile( metaDataFilePath, metaData, function( err ) {
 		if( err ) return callback( err );
-		_this.emit( 'metaDataFileWrited' );
 
 		callback();
 	} );
