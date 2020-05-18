@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "async": "^1.4.0",
-    "browserify": "^11.0.1",
+    "browserify": "git://github.com/rotundasoftware/browserify.git",
     "concat-stream": "^1.4.4",
     "factor-bundle": "^2.5.0",
     "glob": "^5.0.14",
