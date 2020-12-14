@@ -6,7 +6,7 @@ cartero is an asset pipeline built on [npm](https://www.npmjs.org) and [browseri
 
 ## Overview
 
-cartero eliminates the friction involved in applying modular design principles to front end assets in multi-page web applications. Use directories to group together assets (js, css, images, etc.) for each UI component, and cartero will take care of ensuring that all the appropriate assets are then loaded on the pages that require them, and just those pages. Depending on a package is as simple as `require( 'pork-and-beans' )`. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code.
+cartero eliminates much of the friction involved in the build process when applying modular design principles to front end assets in multi-page web applications. Use directories to group together assets (js, css, images, etc.) for each UI component, and cartero will take care of ensuring that all the appropriate assets are then loaded on the pages that require them, and just those pages. Depending on a package is as simple as `require( 'pork-and-beans' )`. And since cartero is built on [npm](https://www.npmjs.org), the official node.js package manager, you can easily publish your packages and / or depend on other npm packages in your own code.
 
 A package might contain assets for
 
