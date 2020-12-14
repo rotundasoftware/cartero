@@ -15,7 +15,7 @@ A package might contain assets for
 * A header or footer
 * An entire web page
 
-cartero is a build tool. It does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, using cartero is, well, a hell of a lot lot easier.
+cartero is a build tool. It does not introduce many new concepts, and the same modular organizational structure it facilitates could also be achieved by stringing together other build tools and the appropriate `<script>`, `<link>`, and `<img>` tags. However, using cartero is, well, a lot easier.
 
 See [this article](https://github.com/rotundasoftware/cartero/blob/master/comparison.md) for more info on how cartero compares to other tools, and [this tutorial](http://www.jslifeandlove.org/intro-to-cartero/) to get started.
 
