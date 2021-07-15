@@ -874,16 +874,20 @@ Cartero.prototype.writeMetaDataFile = function( callback ) {
 		return entryPointMapMemo;
 	}, {} );
 
-	var metaData = JSON.stringify( {
+	var metaData = {
 		formatVersion : 4,
 		packageMap : packageMap,
 		entryPointMap : entryPointMap,
 		assetsRequiredByEntryPoint : _this.assetsRequiredByEntryPoint,
 		assetMap: _this.assetMap
-	}, null, 4 );
+	};
 
-	fs.writeFile( metaDataFilePath, metaData, function( err ) {
+	var metaDataAsJson = JSON.stringify( metaData, null, 4 );
+
+	fs.writeFile( metaDataFilePath, metaDataAsJson, function( err ) {
 		if( err ) return callback( err );
+
+		_this.emit( 'metaDataWritten', metaDataFilePath, metaData );
 
 		callback();
 	} );
