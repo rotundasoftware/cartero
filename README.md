@@ -127,7 +127,7 @@ At run time, the HTML tags needed to load the assets required by a particular en
 --help, -h              Show this message.
 ```
 
-## Tranforms
+## Transforms
 
 ### Package specific (local) transforms
 
