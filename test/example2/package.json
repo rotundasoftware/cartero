@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"jquery": "~2.1.0",
+		"jquery": "~3.5.0",
 		"jqueryui-browser": "~1.10.2-1"
 	},
 
